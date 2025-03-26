@@ -1,0 +1,100 @@
+{{ define "room" }}
+<!-- Кнопка "Назад" -->
+<a href="/admin/rooms" class="btn btn-outline-secondary btn-sm mb-3">
+    <i class="bi bi-arrow-left"></i> Назад
+</a>
+
+<h2 class="mb-3">Информация о комнате: {{ .Room.Number }}</h2>
+
+<!-- Карточка информации о комнате -->
+<div class="card shadow-sm p-3 mb-3">
+    <div class="row">
+        <div class="col-md-6">
+            <p><strong>Тип:</strong> {{ .Room.Type }}</p>
+            <p><strong>Статус:</strong> {{ .Room.Status }}</p>
+            <p><strong>Жильцов:</strong> {{ .Room.UserCount }}</p>
+            <p><strong>Общежитие:</strong> {{ .Room.HostelNumber }}</p>
+        </div>
+        <div class="col-md-4">
+            <!-- Отображение иконок мебели -->
+            <h5>Мебель в комнате:</h5>
+            <ul class="list-unstyled">
+                {{ range .Inventory }}
+                    <p>- <strong>{{ .Name }}</strong></p>
+                {{ else }}
+                    <p class="text-muted">В комнате нет мебели</p>
+                {{ end }}
+            </ul>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary me-2 mb-2" data-bs-toggle="modal" data-bs-target="#addResidentModal">
+                <i class="bi bi-person-plus"></i> Добавить жильца
+            </button>
+            <form action="/admin/rooms/room_info/{{ .Room.ID }}/freeze" method="post" class="d-inline">
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-snow"></i> Заморозить
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для добавления жильца -->
+<div class="modal fade" id="addResidentModal" tabindex="-1" aria-labelledby="addResidentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addResidentModalLabel">Добавить нового жильца</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="/admin/rooms/room_info/{{ .Room.ID }}/add_resident_into_room" method="post">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Имя</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="room" class="form-label">Комната</label>
+                        <input type="text" class="form-control" id="room" name="room" value="{{ .Room.Number }}" readonly>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Добавить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Перечень жильцов -->
+<h3>Жильцы:</h3>
+<div class="row">
+    {{ range .Residents }}
+    <div class="col-md-4 mb-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">{{ .Username }}</h5>
+                <p class="card-text text-muted">{{ .Email }}</p>
+                <div class="d-flex justify-content-between">
+                    <a href="/admin/rooms/room_info/resident/{{ .ID }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-person-circle"></i> Профиль
+                    </a>
+                    <!-- Кнопка для удаления -->
+                    <form action="/admin/rooms/room_info/delete_from_room" method="post">
+                        <input type="hidden" name="email" value="{{ .Email }}">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-trash"></i> Удалить
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ else }}
+    <p class="text-muted">В этой комнате пока нет жильцов.</p>
+    {{ end }}
+</div>
+
+{{ end }}

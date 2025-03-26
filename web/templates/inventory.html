@@ -1,0 +1,153 @@
+{{ define "admin_inventory" }}
+<h2>Инвентарь</h2>
+<div class="container mt-4">
+    <div class="row">
+        <!-- Таблица жильцов -->
+        <div class="col-md-9">
+            <!-- Поле поиска -->
+            <div class="mb-3">
+                <input type="text" class="form-control" id="searchInput" placeholder="Поиск по комнате или инвентарному номеру...">
+            </div>
+            
+            <table class="table mt-4" id="residentsTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Тип</th>
+                        <th>Количество</th>
+                        <th>Инв. номер</th>
+                        <th>Комната</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ range .Inventory }}
+                    <tr class="resident-row">
+                        <td>{{ .ID }}</td>
+                        <td class="inv-name">{{ .Name }}</td>
+                        <td>{{ .Count }}</td>
+                        <td>{{ .InvNumber }}</td>
+                        <td class="room-number">{{ .RoomNumber }}</td>
+                        <td>
+                            <form action="/inventory/delete_inventory/{{ .ID }}" method="post">
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {{ end }}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Блок фильтров -->
+        <div class="col-md-3" style="margin-top: 45px;">
+            <div class="card p-3 mb-4" style="flex: 1;">
+                <h3>Фильтры</h3>
+                <form action="inventory" method="get" class="row g-3">
+                    <div class="col-12">
+                        <label for="filterInstitute" class="form-label">Мебель</label>
+                        <select name="institute" class="form-select" id="filterInstitute">
+                            <option value="" selected>Вся мебель</option>
+                            <option value="Стул">Стул</option>
+                            <option value="Стол">Стол</option>
+                            <option value="Шкаф">Шкаф</option>
+                            <option value="Тумбочка">Тумбочка</option>
+                            <option value="Стеллаж">Стеллаж</option>
+                            <option value="Кровать">Кровать</option>
+                        </select>
+                    </div>
+                </form>
+                <label class="form-label mt-3">Добавление инвентаря</label>
+                <!-- Кнопка добавления -->
+                <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addInventoryModal">
+                    Добавить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addInventoryModal" tabindex="-1" aria-labelledby="addInventoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addInventoryModalLabel">Добавить инвентарь</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="/inventory/add_inventory" method="post">
+                    <div class="mb-3">
+                        <label for="furniture" class="form-label">Мебель</label>
+                        <select class="form-control" id="furniture" name="furniture" required>
+                            <option value="" selected disabled>Выберите мебель</option>
+                            <option value="Стул">Стул</option>
+                            <option value="Стол">Стол</option>
+                            <option value="Шкаф">Шкаф</option>
+                            <option value="Тумбочка">Тумбочка</option>
+                            <option value="Стеллаж">Стеллаж</option>
+                            <option value="Кровать">Кровать</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="inv_number" class="form-label">Инвентарный номер</label>
+                        <input type="number" class="form-control" id="inv_number" name="inv_number">
+                    </div>         
+                    <div class="mb-3">
+                        <label for="room" class="form-label">Комната</label>
+                        <input type="number" class="form-control" id="room" name="room">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Добавить</button>
+                </form>
+            </div>           
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const filterSelect = document.getElementById("filterInstitute");
+        const rows = document.querySelectorAll("#residentsTable tbody tr");
+    
+        // Функция для фильтрации таблицы
+        function applyFilters() {
+            const selectedFurniture = filterSelect.value.toLowerCase();
+    
+            rows.forEach(row => {
+                const furnitureType = row.querySelector(".inv-name").textContent.toLowerCase();
+    
+                if (selectedFurniture === "" || furnitureType === selectedFurniture) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+    
+        // Слушатель изменения выбора в фильтре
+        filterSelect.addEventListener("change", applyFilters);
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const searchInput = document.getElementById("searchInput");
+        const rows = document.querySelectorAll("#residentsTable tbody tr");
+    
+        searchInput.addEventListener("input", function() {
+            const searchTerm = searchInput.value.toLowerCase();
+    
+            rows.forEach(row => {
+                const roomNumber = row.querySelector(".room-number").textContent.toLowerCase();
+                const invNumber = row.querySelector("td:nth-child(4)").textContent.toLowerCase();
+    
+                if (roomNumber.includes(searchTerm) || invNumber.includes(searchTerm)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        });
+    });
+</script>
+
+{{ end }}

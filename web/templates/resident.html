@@ -1,0 +1,154 @@
+{{ define "resident" }}
+<!-- Кнопка "Назад" -->
+<a href="/admin/residents" class="btn btn-outline-secondary btn-sm mb-3">
+    <i class="bi bi-arrow-left"></i> Назад
+</a>
+
+<h2>Информация о жильце: {{ .Resident.Username }}</h2>
+
+<!-- Контейнер для вывода данных -->
+<div class="container">
+    <div class="row mb-3">
+        <input type="hidden" id="residentId" value="{{ .Resident.ID }}">
+        <div class="col-12 col-md-6">
+            <label for="username" class="form-label">Имя</label>
+            <input type="text" class="form-control" id="username" name="username" value="{{ .Resident.Username }}" disabled>
+        </div>
+        <div class="col-12 col-md-6">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ .Resident.Email }}">
+        </div>
+    </div>
+    
+    <div class="row mb-3">
+        <div class="col-12 col-md-6">
+            <label for="institute" class="form-label">Институт</label>
+            <input type="text" class="form-control" id="institute" name="institute" value="{{ if .Resident.Institute.Valid }}{{ .Resident.Institute.String }}{{ else }}Нет данных{{ end }}">
+        </div>
+        <div class="col-12 col-md-6">
+            <label for="role" class="form-label">Роль</label>
+            <input type="text" class="form-control" id="role" name="role" value="{{ .Resident.Role }}">
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-12 col-md-6">
+            <label for="room" class="form-label">Комната</label>
+            <input type="text" class="form-control" id="room" name="room" value="{{ .Resident.RoomNumber }}">
+        </div>
+        <div class="col-12 col-md-6">
+            <label for="password" class="form-label">Пароль</label>
+            <div class="input-group">
+                <input type="password" class="form-control" id="password" name="password" value="{{ .Resident.Password }}">
+                <button type="button" class="btn btn-outline-secondary" id="togglePassword">Показать</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Кнопки для редактирования и удаления -->
+    <div class="d-flex justify-content-between">
+        <button type="button" class="btn btn-primary" id="saveButton">Сохранить изменения</button>
+
+        {{ if eq .Role "admin" }}
+        <!-- Кнопка для вызова модального окна -->
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">Удалить пользователя</button>
+        {{ end }}
+    </div>
+</div>
+
+<!-- Модальное окно для подтверждения удаления -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Подтверждение удаления</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Вы уверены, что хотите удалить этого пользователя? Это действие необратимо.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <form action="/admin/residents/resident/{{ .Resident.ID }}/delete_resident" method="POST" id="deleteForm">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button type="submit" class="btn btn-danger">Удалить</button>
+                </form>                
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Контейнер для уведомлений -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="toastContainer"></div>
+</div>
+
+
+<script>
+    // Логика для обработки кнопки "Сохранить изменения"
+    document.getElementById("saveButton").addEventListener("click", function() {
+        let residentId = document.getElementById("residentId").value;
+        let username = document.getElementById("username").value;
+        let email = document.getElementById("email").value;
+        let institute = document.getElementById("institute").value;
+        let role = document.getElementById("role").value;
+        let password = document.getElementById("password").value;
+    
+        fetch(`/update_resident/${residentId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: residentId, username, email, institute, role, password })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Ошибка при обновлении данных");
+            return response.json();
+        })
+        .then(data => {
+            console.log("Ответ сервера:", data);
+            showToast("Данные успешно обновлены!", "success");
+        })
+        .catch(error => {
+            console.error("Ошибка:", error);
+            showToast("Не удалось сохранить изменения", "danger");
+        });
+    });
+    
+    // Функция для показа уведомлений
+    function showToast(message, type) {
+        let toastContainer = document.getElementById("toastContainer");
+    
+        let toast = document.createElement("div");
+        toast.className = `toast align-items-center text-bg-${type} border-0 show`;
+        toast.role = "alert";
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+    
+        toastContainer.appendChild(toast);
+    
+        setTimeout(() => {
+            toast.classList.remove("show");
+            setTimeout(() => toast.remove(), 500);
+        }, 3000);
+    }       
+    
+    // Логика для переключения между скрытым и видимым паролем
+    document.getElementById("togglePassword").addEventListener("click", function() {
+        const passwordField = document.getElementById("password");
+        const passwordButton = document.getElementById("togglePassword");
+
+        // Переключаем тип поля и текст кнопки
+        if (passwordField.type === "password") {
+            passwordField.type = "text";
+            passwordButton.textContent = "Скрыть";
+        } else {
+            passwordField.type = "password";
+            passwordButton.textContent = "Показать";
+        }
+    });
+</script>
+
+{{ end }}

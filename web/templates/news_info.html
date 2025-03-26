@@ -1,0 +1,18 @@
+{{ define "news_info" }}
+<div class="container mt-4">
+    <a href="/news" class="btn btn-outline-secondary btn-sm mb-3">
+        <i class="bi bi-arrow-left"></i> Назад
+    </a>
+
+    <h2>{{ .News.Title }}</h2>
+    <p class="text-muted">Дата публикации: {{ .News.Date }}</p>
+
+    <div class="badge {{ if eq .News.NewsType "Срочная" }}bg-danger{{ else }}bg-secondary{{ end }}">
+        {{ .News.NewsType }}
+    </div>
+
+    <hr>
+
+    <p>{{ .News.Text }}</p>
+</div>
+{{ end }}

@@ -1,0 +1,191 @@
+{{ define "service" }}
+<a href="/services" class="btn btn-outline-secondary btn-sm mb-3">
+    <i class="bi bi-arrow-left"></i> Назад
+</a>
+
+<div class="card">
+    <div class="card-body">
+        <h2 class="card-title">
+            {{ if eq .Role "admin" }}Информация об услуге: {{ .Service.Name }} {{ else if eq .Role "user" }} {{ .Service.Name }} {{ end }}
+        </h2>
+
+        {{ if eq .Role "admin"}}
+        <!-- Форма редактирования услуги (только для админа) -->
+        <form id="serviceForm" method="POST" action="/services/edit/{{ .Service.ID }}">
+            <input type="hidden" name="_method" value="PUT">
+            
+            <div class="mb-3">
+                <label for="serviceName" class="form-label">Название</label>
+                <input type="text" class="form-control" id="serviceName" name="name" value="{{ .Service.Name }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="serviceDescription" class="form-label">Описание</label>
+                <textarea class="form-control" id="serviceDescription" name="description" rows="3" required>{{ .Service.Description }}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Тип</label>
+                <select class="form-select" name="type" required>
+                    <option value="payment" {{ if eq .Service.Type "payment" }}selected{{ end }}>Платная</option>
+                    <option value="free" {{ if eq .Service.Type "free" }}selected{{ end }}>Бесплатная</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="serviceAmount" class="form-label">Стоимость</label>
+                <input type="number" class="form-control" id="serviceAmount" name="amount" value="{{ .Service.Amount }}">
+            </div>
+
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="isDate" name="is_date" {{ if .Service.Is_date }}checked{{ end }}>
+                <label class="form-check-label" for="isDate">Указывать дату</label>
+            </div>
+
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="isHostel" name="is_hostel" {{ if .Service.Is_hostel }}checked{{ end }}>
+                <label class="form-check-label" for="isHostel">Указывать общежитие</label>
+            </div>
+
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="isPhone" name="is_phone" {{ if .Service.Is_phone }}checked{{ end }}>
+                <label class="form-check-label" for="isPhone">Указывать телефон</label>
+            </div>            
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button type="submit" id="saveButton" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Сохранить
+                </button>
+
+                <!-- Кнопка для удаления с модальным окном -->
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i class="bi bi-trash"></i> Удалить
+                </button>
+            </div>
+        </form>
+
+        {{ else if eq .Role "user" }}
+            <!-- Отображение услуги для обычного пользователя -->
+            <p><strong>Описание:</strong> {{ .Service.Description }}</p>
+            <p><strong>Тип:</strong> {{ if eq .Service.Type "Платная" }}Платная{{ else }}Бесплатная{{ end }}</p>
+            {{ if eq .Service.Type "Платная" }}
+            <p><strong>Стоимость:</strong> {{ .Service.Amount }} руб.</p>
+            {{ end }}
+
+            <!-- Кнопка оставить заявку (открывает модальное окно) -->
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#requestModal">
+                <i class="bi bi-envelope"></i> Оставить заявку
+            </button>
+
+            <!-- Модальное окно для подачи заявки -->
+            <div class="modal fade" id="requestModal" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="requestModalLabel">Оставить заявку</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form method="POST" action="/services/send_request/{{ .Service.ID }}">
+                                <div class="mb-3">
+                                    <label for="serviceName" class="form-label">Название</label>
+                                    <input type="text" class="form-control" id="serviceName" name="name" value="{{ .Service.Name }}" readonly>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="serviceType" class="form-label">Тип</label>
+                                    <input type="text" class="form-control" id="serviceType" name="type" value="{{ if eq .Service.Type "Платная" }}Платная{{ else }}Бесплатная{{ end }}" readonly>
+                                </div>
+
+                                {{ if eq .Service.Type "Платная" }}
+                                <div class="mb-3">
+                                    <label for="serviceAmount" class="form-label">Стоимость</label>
+                                    <input type="text" class="form-control" id="serviceAmount" name="amount" value="{{ .Service.Amount }} руб." readonly>
+                                </div>
+                                {{ end }}
+
+                                {{ if .Service.Is_date }}
+                                <div class="mb-3">
+                                    <label for="requestDate" class="form-label">Выберите дату</label>
+                                    <input type="date" class="form-control" id="requestDate" name="request_date" required>
+                                </div>
+                                {{ end }}
+
+                                {{ if .Service.Is_hostel }}
+                                <div class="mb-3">
+                                    <label for="hostelSelect" class="form-label">Выберите общежитие</label>
+                                    <select class="form-select" id="hostelSelect" name="hostel" required>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                        <option value="6">6</option>
+                                        <option value="7">7</option>
+                                        <option value="9">9</option>
+                                        <option value="11">11</option>
+                                        <option value="12">12</option>
+                                    </select>
+                                </div>
+                                {{ end }}
+
+                                {{ if .Service.Is_phone }}
+                                <div class="mb-3">
+                                    <label for="phoneInput" class="form-label">Введите ваш телефон</label>
+                                    <input type="tel" class="form-control" id="phoneInput" name="phone" placeholder="+7" required>
+                                    <small>В формате: +79123456789</small>
+                                </div>
+                                {{ end }}
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                                    <button type="submit" class="btn btn-primary">Отправить заявку</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {{ end }}
+    </div>
+</div>
+
+{{ if eq .Role "admin" }}
+<!-- Модальное окно подтверждения удаления -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Подтверждение удаления</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Вы уверены, что хотите удалить услугу?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <form method="POST" action="/services/delete/{{ .Service.ID }}">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Удалить
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{{ end }}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let form = document.getElementById("serviceForm");
+        let saveButton = document.getElementById("saveButton");
+        
+        if (form) {
+            form.addEventListener("input", function () {
+                saveButton.style.display = "block";
+            });
+        }
+    });
+</script>
+
+{{ end }}

@@ -1,0 +1,87 @@
+{{ define "admin_documents" }}
+<div class="container mt-4">
+    <h2 class="mb-3">Документы</h2>
+
+    <!-- Блок с действиями -->
+    <div class="d-flex gap-3 mb-4">
+        <button class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Создать новый документ
+        </button>
+        <button class="btn btn-outline-secondary">
+            <i class="bi bi-search"></i> Собрать информацию
+        </button>
+    </div>
+
+    <!-- Список видов экспорта -->
+    <div class="card">
+        <div class="card-header">
+            Виды экспорта
+        </div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Общая статистика по всем общежитиям
+                    <button class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-download"></i> Скачать
+                    </button>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Создание договора на заселение
+                    <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#createContractModal">
+                        <i class="bi bi-download"></i> Создать
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для создания договора на заселение -->
+<div class="modal fade" id="createContractModal" tabindex="-1" aria-labelledby="createContractModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createContractModalLabel">Создание договора на заселение</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="/documents/create_contract" method="POST">
+                    <div class="mb-3">
+                        <label for="firstName" class="form-label">Имя</label>
+                        <input type="text" class="form-control" id="firstName" name="firstName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="lastName" class="form-label">Фамилия</label>
+                        <input type="text" class="form-control" id="lastName" name="lastName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="middleName" class="form-label">Отчество</label>
+                        <input type="text" class="form-control" id="middleName" name="middleName">
+                    </div>
+                    <div class="mb-3">
+                        <label for="checkInDate" class="form-label">Дата заселения</label>
+                        <input type="date" class="form-control" id="checkInDate" name="checkInDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="checkOutDate" class="form-label">Дата выселения</label>
+                        <input type="date" class="form-control" id="checkOutDate" name="checkOutDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="roomNumber" class="form-label">Номер комнаты</label>
+                        <input type="text" class="form-control" id="roomNumber" name="roomNumber" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Сумма</label>
+                        <input type="number" class="form-control" id="amount" name="amount" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                        <button type="submit" class="btn btn-primary">Создать</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ end }}

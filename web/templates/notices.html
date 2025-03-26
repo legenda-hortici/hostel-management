@@ -1,0 +1,53 @@
+{{ define "notices" }}
+<div class="container mt-4">
+    <a href="/" class="btn btn-outline-secondary btn-sm mb-3">
+        <i class="bi bi-arrow-left"></i> Назад
+    </a>
+    <h2>Объявления</h2>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <form action="/notices" method="GET" class="d-flex">
+                <input type="text" name="search" class="form-control me-2" placeholder="Поиск новостей..." value="">
+                <button type="submit" class="btn btn-primary">Найти</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Блок карточек новостей (8 колонок) -->
+        <div class="col-md-8">
+            {{ range .Notices }}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">{{ .Title }}</h5>
+                    <p class="card-text">{{ .Annotation }}</p>
+                    <a href="/notices/{{ .ID }}" class="btn btn-primary btn-sm">Читать далее</a>
+                </div>
+            </div>
+            {{ else }}
+            <div class="alert alert-info">
+                Объявлений не найдено.
+            </div>
+            {{ end }}
+        </div>
+
+        <!-- Блок фильтров (4 колонки) -->
+        <div class="col-md-4">
+            <h4>Новые объявления</h4>
+            {{ range .LatestNotes }}
+            <a href="/notices/{{ .ID }}" class="card news-card mt-3" style="text-decoration: none; color: inherit;">
+                <div class="card-body text-center">
+                    <h6 class="card-title text-truncate">{{ .Title }}</h6>
+                    <p class="card-text text-truncate small">{{ .Annotation }}</p>
+                </div>
+            </a>
+            {{ else }}
+            <div class="alert alert-info">
+                Объявлений не найдено.
+            </div>
+            {{ end }}
+        </div>
+    </div>
+</div>
+{{ end }}

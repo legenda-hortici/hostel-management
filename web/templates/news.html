@@ -1,0 +1,82 @@
+{{ define "news" }}
+<div class="container mt-4">
+    <!-- Кнопка "Назад" -->
+    <a href="/" class="btn btn-outline-secondary btn-sm mb-3">
+        <i class="bi bi-arrow-left"></i> Назад
+    </a>
+
+    <!-- Заголовок страницы -->
+    <h2>Новости</h2>
+
+    <!-- Поисковая строка -->
+    <div class="mb-3">
+        <input type="text" class="form-control" id="searchNews" placeholder="Поиск по новостям..." oninput="applyFilters()">
+    </div>
+
+    <!-- Основной контент -->
+    <div class="row">
+        <!-- Блок карточек новостей (8 колонок) -->
+        <div class="col-md-8">
+            <div class="news-cards-container">
+                {{ range .News }}
+                <div class="card mb-3 news-card">
+                    <div class="card-body">
+                        <h5 class="card-title news-title">{{ .Title }}</h5>
+                        <p class="card-text news-annotation">{{ .Annotation }}</p>
+                        <a href="/news/{{ .ID }}" class="btn btn-primary btn-sm">Читать далее</a>
+                    </div>
+                </div>
+                {{ else }}
+                <div class="alert alert-info">
+                    Новостей не найдено.
+                </div>
+                {{ end }}
+            </div>
+        </div>
+
+        <!-- Блок фильтров (4 колонки) -->
+        <div class="col-md-4">
+            <h4>Свежие новости</h4>
+            {{ range .LatestNews }}
+            <a href="/news/{{ .ID }}" class="card mt-3" style="text-decoration: none; color: inherit;">
+                <div class="card-body text-center">
+                    <h6 class="card-title text-truncate">{{ .Title }}</h6>
+                    <p class="card-text text-truncate small">{{ .Annotation }}</p>
+                </div>
+            </a>
+            {{ else }}
+            <div class="alert alert-info">
+                Новостей не найдено.
+            </div>
+            {{ end }}
+        </div>
+    </div>
+</div>
+
+<script>
+    function applyFilters() {
+        const searchTerm = document.getElementById("searchNews").value.toLowerCase();
+        const newsCards = document.querySelectorAll(".news-card");
+        
+        let hasVisibleCards = false;
+
+        newsCards.forEach(card => {
+            const title = card.querySelector(".news-title").textContent.toLowerCase();
+            const annotation = card.querySelector(".news-annotation").textContent.toLowerCase();
+            
+            if (searchTerm === "" || title.includes(searchTerm) || annotation.includes(searchTerm)) {
+                card.style.display = "block";
+                hasVisibleCards = true;
+            } else {
+                card.style.display = "none";
+            }
+        });
+
+        // Если нет видимых карточек, показываем сообщение
+        const noResultsAlert = document.querySelector(".news-cards-container .alert-info");
+        if (noResultsAlert) {
+            noResultsAlert.style.display = hasVisibleCards ? "none" : "block";
+        }
+    }
+</script>
+{{ end }}

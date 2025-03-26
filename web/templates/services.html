@@ -1,0 +1,246 @@
+{{ define "services" }}
+<h2 class="mb-4">Услуги</h2>
+
+{{ if eq .Role "admin" }}
+    <div class="row mb-4">
+        <div class="col-md-11">
+            <input type="text" id="serviceSearch" class="form-control" placeholder="Поиск услуги по названию" onkeyup="filterServices()">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <h3>Список</h3>
+            <ul class="list-group mb-4" id="serviceList">
+                {{ range .Services }}
+                    <li class="list-group-item d-flex justify-content-between align-items-center service-item mb-2">
+                        <strong>{{ .Name }}</strong>
+                        <button class="btn btn-success btn-sm" title="Подробнее об услуге" onclick="location.href='/services/{{ .ID }}'">
+                            <i class="bi bi-info-square-fill"></i>
+                        </button>                        
+                    </li>
+                {{ end }}
+            </ul>
+        </div>        
+        <div class="col-md-4">
+            <h3>Заявки</h3>
+            <ul class="list-group mb-4" id="statementList">
+                {{ range .Statements }}
+                    <li class="list-group-item d-flex justify-content-between align-items-center mb-2 statement-item" data-status="{{ .Status }}">
+                        <span>
+                            <strong>{{ .Name }}</strong> - {{ .Username }}
+                            <!-- Плашка статуса -->
+                            <span class="badge 
+                                {{ if eq .Status "Ожидает" }}bg-warning
+                                {{ else if eq .Status "Одобрено" }}bg-success
+                                {{ else if eq .Status "Отклонено" }}bg-danger
+                                {{ end }} text-white">
+                                {{ .Status }}
+                            </span>
+                        </span>
+                        <button class="btn btn-primary btn-sm" title="Подробнее о заявке" onclick="location.href='/services/request_info/{{ .ID }}'">
+                            <i class="bi bi-info-square-fill"></i>
+                        </button>
+                    </li>
+                {{ end }}
+            </ul>
+        </div>
+        
+        <div class="col-md-3 d-flex flex-column">
+            <div class="card p-3 mb-4">
+                <h3>Фильтры</h3>
+                <select id="filterStatus" class="form-select" onchange="filterStatements()">
+                    <option value="">Все статусы</option>
+                    <option value="Ожидает">Ожидает</option>
+                    <option value="Одобрено">Одобрено</option>
+                    <option value="Отклонено">Отклонено</option>
+                </select>
+                <label class="form-label mt-3">Добавление услуги</label>
+                <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addServiceModal">Добавить</button>
+            </div>
+        </div> 
+    </div>
+    
+    <!-- Модальное окно -->
+    <div class="modal fade" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addServiceModalLabel">Добавить услугу</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="/services/add">
+                        <div class="mb-3">
+                            <label for="serviceName" class="form-label">Название</label>
+                            <input type="text" class="form-control" id="serviceName" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Тип</label>
+                            <select class="form-select" name="type" required>
+                                <option value="payment">Платная</option>
+                                <option value="free">Бесплатная</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="serviceCost" class="form-label">Стоимость</label>
+                            <input type="number" class="form-control" id="serviceCost" name="cost" min="0" value="0">
+                        </div>
+                        <div class="mb-3">
+                            <label for="serviceDescription" class="form-label">Описание</label>
+                            <textarea class="form-control" id="serviceDescription" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="toggleDate" name="require_date">
+                            <label class="form-check-label" for="toggleDate">Указывать дату</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="toggleHostel" name="require_hostel">
+                            <label class="form-check-label" for="toggleHostel">Указывать общежитие</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="togglePhone" name="require_phone">
+                            <label class="form-check-label" for="togglePhone">Указывать телефон</label>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function filterStatements() {
+            const filterStatus = document.getElementById("filterStatus").value.toLowerCase();
+            const statements = document.querySelectorAll(".statement-item");
+            
+            statements.forEach(function(statement) {
+                const status = statement.getAttribute("data-status").toLowerCase();
+                if (filterStatus === "" || status.includes(filterStatus)) {
+                    statement.style.display = "";
+                } else {
+                    statement.style.display = "none";
+                }
+            });
+        }
+
+        // Вызываем функцию для фильтрации, если уже есть фильтр
+        document.addEventListener("DOMContentLoaded", filterStatements);
+    </script>
+
+{{ else if eq .Role "user" }}
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <input type="text" id="serviceSearch" class="form-control" placeholder="Поиск услуги по названию" onkeyup="filterServices()">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <h3>Список</h3>
+            <ul class="list-group mb-4" id="serviceList">
+                {{ range .Services }}
+                    <li class="list-group-item d-flex justify-content-between align-items-center service-item mb-2">
+                        <strong>{{ .Name }}</strong>
+                        <button class="btn btn-success btn-sm" title="Подробнее об услуге" onclick="location.href='/services/{{ .ID }}'">
+                            <i class="bi bi-info-square-fill"></i>
+                        </button>                        
+                    </li>
+                {{ end }}
+            </ul>
+        </div>
+        <div class="col-md-4">
+            <h3>Мои заявки</h3>
+            <ul class="list-group mb-4">
+                {{ if .userStatements }}
+                    {{ range .userStatements }}
+                        <li class="list-group-item d-flex justify-content-between align-items-center mb-2">
+                            <span>
+                                <strong>{{ .Name }}</strong>
+                                <span class="badge 
+                                    {{ if eq .Status "Ожидает" }}bg-warning
+                                    {{ else if eq .Status "Одобрено" }}bg-success
+                                    {{ else if eq .Status "Отклонено" }}bg-danger
+                                    {{ end }} text-white">
+                                    {{ .Status }}
+                                </span>
+                            </span>
+                            <button class="btn btn-primary btn-sm open-modal" data-id="{{ .ID }}" data-name="{{ .Name }}" data-status="{{ .Status }}">
+                                <i class="bi bi-info-square-fill"></i>
+                            </button>
+                        </li>
+                    {{ end }}
+                {{ else }}
+                    <li class="list-group-item">
+                        Нет рассмотренных заявок.
+                    </li>
+                {{ end }}
+            </ul>
+        </div>
+        <div class="col-md-3 d-flex flex-column">
+            <div class="card p-3">
+                <h3>Фильтры</h3>
+                <form method="GET" action="/services" class="row g-3">
+                    <div class="col-12">
+                        <select name="status" class="form-select">
+                            <option value="">Все статусы</option>
+                            <option value="Ожидает">Ожидает</option>
+                            <option value="Одобрено">Одобрено</option>
+                            <option value="Отклонено">Отклонено</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">Применить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно -->
+    <div class="modal fade" id="requestModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Детали заявки</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Название:</strong> <span id="modalName"></span></p>
+                    <p><strong>Статус:</strong> <span id="modalStatus"></span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подключение JavaScript -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".open-modal").forEach(button => {
+                button.addEventListener("click", function () {
+                    // Получаем данные прямо из кнопки
+                    const name = this.getAttribute("data-name");
+                    const status = this.getAttribute("data-status");
+        
+                    // Вставляем данные в модальное окно
+                    document.getElementById("modalName").textContent = name;
+                    document.getElementById("modalStatus").textContent = status;
+        
+                    // Открываем модальное окно
+                    let modal = new bootstrap.Modal(document.getElementById("requestModal"));
+                    modal.show();
+                });
+            });
+        });        
+    </script>
+        
+
+{{ else }}
+    <p class="text-danger">У вас нет доступа к этой странице.</p>
+{{ end }}
+
+{{ end }}
