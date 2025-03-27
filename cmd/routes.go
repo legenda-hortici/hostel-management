@@ -32,7 +32,7 @@ func RegisterRoutes(r *gin.Engine) error {
 	authHandler := auth.NewAuthHandler(authService)
 	userHandler := handlers.NewUserHandler(userService, roomService, userHelper)
 	roomHandler := handlers.NewRoomHandler(roomService, roomHelper)
-	serviceHandler := handlers.NewServiceHandler(serviceService, userService, statementService)
+	serviceHandler := handlers.NewServiceHandler(serviceService, userService, statementService, roomService)
 
 	// Публичные маршруты
 	public := r.Group("/")
@@ -70,11 +70,22 @@ func RegisterRoutes(r *gin.Engine) error {
 		admin.POST("/residents/resident/:id/delete_resident", userHandler.DeleteResidentHandler)
 
 		admin.GET("/services", serviceHandler.ServicesHandler)
+		admin.GET("/services/service/:id", serviceHandler.ServiceInfoHandler)
+		admin.POST("/services/add_service", serviceHandler.AddServiceHandler)
+		admin.POST("/services/service/:id/delete", serviceHandler.DeleteServiceHandler)
+		admin.POST("/services/service/:id/edit", serviceHandler.UpdateServiceHandler)
+		admin.GET("/services/request_info/:id", serviceHandler.RequestInfoHandler)
+		admin.POST("/services/request_info/:id/approve", serviceHandler.AcceptRequestHandler)
+		admin.POST("/services/request_info/:id/reject", serviceHandler.RejectRequestHandler)
+
+		admin.GET("/documents", handlers.DocumentsHandler)
+		admin.POST("/documents/create_contract", handlers.CreateContractHandler)
+
 
 		// admin.GET("/inventory", handlers.AdminInventoryHandler)
 		// admin.GET("/news", handlers.AdminNewsHandler)
 		// admin.GET("/notices", handlers.AdminNoticesHandler)
-		// admin.GET("/documents", handlers.AdminDocumentsHandler)
+
 		// admin.GET("/support", handlers.AdminSupportHandler)
 	}
 

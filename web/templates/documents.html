@@ -2,16 +2,6 @@
 <div class="container mt-4">
     <h2 class="mb-3">Документы</h2>
 
-    <!-- Блок с действиями -->
-    <div class="d-flex gap-3 mb-4">
-        <button class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> Создать новый документ
-        </button>
-        <button class="btn btn-outline-secondary">
-            <i class="bi bi-search"></i> Собрать информацию
-        </button>
-    </div>
-
     <!-- Список видов экспорта -->
     <div class="card">
         <div class="card-header">
@@ -45,7 +35,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form action="/documents/create_contract" method="POST">
+                <form action="/admin/documents/create_contract" method="POST">
                     <div class="mb-3">
                         <label for="firstName" class="form-label">Имя</label>
                         <input type="text" class="form-control" id="firstName" name="firstName" required>

@@ -1,12 +1,12 @@
 package models
 
 type Service struct {
-	ID          int
-	Name        string
-	Type        string
-	Amount      int
-	Description string
-	Is_date     bool
-	Is_hostel   bool
-	Is_phone    bool
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Amount      int    `json:"amount"`
+	Description string `json:"description"`
+	Is_date     bool   `json:"is_date"`
+	Is_hostel   bool   `json:"is_hostel"`
+	Is_phone    bool   `json:"is_phone"`
 }

@@ -10,4 +10,5 @@ type Statement struct {
 	Status   string
 	Hostel   int
 	Users_id int
+	Username string
 }

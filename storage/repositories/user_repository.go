@@ -60,7 +60,7 @@ func (r *userRepository) GetByID(id int) (*models.User, error) {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("пользователь не найден")
+			return nil, fmt.Errorf("пользователь не найден: id %d", user.ID)
 		}
 		return nil, err
 	}

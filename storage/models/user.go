@@ -5,6 +5,7 @@ import (
 )
 
 type User struct {
+	Number       int
 	ID           int
 	Username     string
 	Role         string

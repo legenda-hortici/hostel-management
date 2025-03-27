@@ -14,7 +14,7 @@
                 {{ range .Services }}
                     <li class="list-group-item d-flex justify-content-between align-items-center service-item mb-2">
                         <strong>{{ .Name }}</strong>
-                        <button class="btn btn-success btn-sm" title="Подробнее об услуге" onclick="location.href='/services/{{ .ID }}'">
+                        <button class="btn btn-success btn-sm" title="Подробнее об услуге" onclick="location.href='/admin/services/service/{{ .ID }}'">
                             <i class="bi bi-info-square-fill"></i>
                         </button>                        
                     </li>
@@ -37,7 +37,7 @@
                                 {{ .Status }}
                             </span>
                         </span>
-                        <button class="btn btn-primary btn-sm" title="Подробнее о заявке" onclick="location.href='/services/request_info/{{ .ID }}'">
+                        <button class="btn btn-primary btn-sm" title="Подробнее о заявке" onclick="location.href='/admin/services/request_info/{{ .ID }}'">
                             <i class="bi bi-info-square-fill"></i>
                         </button>
                     </li>
@@ -69,7 +69,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
                 </div>
                 <div class="modal-body">
-                    <form method="POST" action="/services/add">
+                    <form method="POST" action="/admin/services/add_service">
                         <div class="mb-3">
                             <label for="serviceName" class="form-label">Название</label>
                             <input type="text" class="form-control" id="serviceName" name="name" required>

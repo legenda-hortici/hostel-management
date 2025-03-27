@@ -26,6 +26,7 @@ type RoomRepository interface {
 	UpdateRoomStatus(roomID int, status string) error
 	FreezeRoom(roomID int) error
 	GetInventoryByRoomID(id int) ([]models.Inventory, error)
+	GetRoomNumberByRoomID(userID int) (int, error)
 }
 
 type roomRepository struct {
@@ -306,4 +307,13 @@ func (r *roomRepository) FreezeRoom(roomID int) error {
 
 func (r *roomRepository) GetInventoryByRoomID(id int) ([]models.Inventory, error) {
 	return r.inventoryRepo.GetInventoryByRoomID(id)
+}
+
+func (r *roomRepository) GetRoomNumberByRoomID(roomID int) (int, error) {
+	var roomNumber int
+	err := r.db.QueryRow("SELECT r.number FROM Rooms r JOIN Users u ON r.id = u.Rooms_id WHERE u.Rooms_id = ?", roomID).Scan(&roomNumber)
+	if err != nil {
+		return 0, err
+	}
+	return roomNumber, nil
 }

@@ -5,7 +5,6 @@ import (
 	"hostel-management/internal/services"
 	"hostel-management/internal/session"
 	"hostel-management/storage/models"
-	"log"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -15,14 +14,15 @@ type ServiceHandler struct {
 	serviceService   services.ServiceService
 	userService      services.UserService
 	statementService services.StatementService
-	serviceHelper    helpers.ServiceHelper
+	roomService      services.RoomService
 }
 
-func NewServiceHandler(serviceService services.ServiceService, userService services.UserService, statementService services.StatementService) *ServiceHandler {
+func NewServiceHandler(serviceService services.ServiceService, userService services.UserService, statementService services.StatementService, roomService services.RoomService) *ServiceHandler {
 	return &ServiceHandler{
 		serviceService:   serviceService,
 		userService:      userService,
 		statementService: statementService,
+		roomService:      roomService,
 	}
 }
 
@@ -44,11 +44,15 @@ func (h *ServiceHandler) ServicesHandler(c *gin.Context) {
 		c.String(500, "Ошибка получения заявок: "+err.Error())
 		return
 	}
-	log.Println(statements)
 
 	for statement := range statements {
 		statements[statement].Status = helpers.TranslateStatus(statements[statement].Status)
-
+		user, err := h.userService.GetUserByID(statements[statement].Users_id)
+		if err != nil {
+			c.String(500, "Ошибка получения пользователя: "+err.Error())
+			return
+		}
+		statements[statement].Username = user.Username
 	}
 
 	data := map[string]interface{}{
@@ -80,10 +84,15 @@ func (h *ServiceHandler) AddServiceHandler(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(303, "/services")
+	c.Redirect(303, "/admin/services")
 }
 
 func (h *ServiceHandler) ServiceInfoHandler(c *gin.Context) {
+	role, exists := session.GetUserRole(c)
+	if !exists {
+		c.String(403, "Access denied")
+		return
+	}
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -99,13 +108,15 @@ func (h *ServiceHandler) ServiceInfoHandler(c *gin.Context) {
 
 	data := map[string]interface{}{
 		"Page":    "service_info",
+		"Role":    role,
 		"Service": service,
 	}
 	c.HTML(200, "layout.html", data)
 }
 
 func (h *ServiceHandler) UpdateServiceHandler(c *gin.Context) {
-	if c.Request.Method != "PUT" {
+	// Проверяем скрытое поле _method
+	if c.Request.Method != "POST" || c.Request.FormValue("_method") != "PUT" {
 		c.String(405, "Method not allowed")
 		return
 	}
@@ -117,10 +128,23 @@ func (h *ServiceHandler) UpdateServiceHandler(c *gin.Context) {
 		return
 	}
 
-	var service models.Service
-	if err := c.ShouldBindJSON(&service); err != nil {
-		c.String(400, "Invalid request body")
-		return
+	service := models.Service{
+		ID:          id,
+		Name:        c.PostForm("name"),
+		Type:        c.PostForm("type"),
+		Description: c.PostForm("description"),
+		Amount:      0,
+		Is_date:     c.PostForm("is_date") == "on",
+		Is_hostel:   c.PostForm("is_hostel") == "on",
+		Is_phone:    c.PostForm("is_phone") == "on",
+	}
+
+	if amountStr := c.PostForm("amount"); amountStr != "" {
+		service.Amount, err = strconv.Atoi(amountStr)
+		if err != nil {
+			c.String(400, "Invalid amount")
+			return
+		}
 	}
 
 	err = h.serviceService.UpdateServiceByID(id, service)
@@ -129,7 +153,7 @@ func (h *ServiceHandler) UpdateServiceHandler(c *gin.Context) {
 		return
 	}
 
-	c.Status(200)
+	c.Redirect(303, "/admin/services/service/"+idStr)
 }
 
 func (h *ServiceHandler) DeleteServiceHandler(c *gin.Context) {
@@ -151,7 +175,7 @@ func (h *ServiceHandler) DeleteServiceHandler(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(303, "/services")
+	c.Redirect(303, "/admin/services")
 }
 
 func (h *ServiceHandler) RequestServiceHandler(c *gin.Context) {
@@ -218,10 +242,17 @@ func (h *ServiceHandler) RequestInfoHandler(c *gin.Context) {
 		return
 	}
 
+	roomNumber, err := h.roomService.GetRoomNumberByRoomID(user.Room_id)
+	if err != nil {
+		c.String(500, "Failed to get room number")
+		return
+	}
+	user.RoomNumber = roomNumber
+
 	data := map[string]interface{}{
-		"Page":    "request_info",
-		"Request": request,
-		"User":    user,
+		"Page":      "request_info",
+		"Statement": request,
+		"User":      user,
 	}
 	c.HTML(200, "layout.html", data)
 }
@@ -245,7 +276,7 @@ func (h *ServiceHandler) AcceptRequestHandler(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(303, "/services")
+	c.Redirect(303, "/admin/services/request_info/"+idStr)
 }
 
 func (h *ServiceHandler) RejectRequestHandler(c *gin.Context) {
@@ -267,5 +298,5 @@ func (h *ServiceHandler) RejectRequestHandler(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(303, "/services")
+	c.Redirect(303, "/admin/services/request_info/"+idStr)
 }

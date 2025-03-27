@@ -60,6 +60,7 @@ func (h *UserHandler) ResidentsHandler(c *gin.Context) {
 	}
 
 	for i := range residents {
+		residents[i].Number = i + 1
 		if residents[i].Room_id > 0 {
 			room, err := h.roomService.GetRoomByID(residents[i].Room_id)
 			if err != nil {

@@ -25,7 +25,7 @@ func NewStatementRepository() StatementRepository {
 }
 
 func (r *statementRepository) GetAllStatements() ([]models.Statement, error) {
-	query := "SELECT * FROM Statements"
+	query := "SELECT id, name, type, amount, date, phone, status, hostel, users_id FROM Statements"
 	rows, err := db.DB.Query(query)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (r *statementRepository) GetStatementRequestByID(id int) (models.Statement,
 	row := db.DB.QueryRow(query, id)
 
 	statement := models.Statement{}
-	err := row.Scan(&statement.ID, &statement.Name, &statement.Type, &statement.Amount, &statement.Date, &statement.Phone, &statement.Status, &statement.Hostel, &statement.Users_id)
+	err := row.Scan(&statement.ID, &statement.Name, &statement.Type, &statement.Amount, &statement.Date, &statement.Phone, &statement.Status, &statement.Users_id, &statement.Hostel)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return models.Statement{}, fmt.Errorf("statement with ID %d not found", id)

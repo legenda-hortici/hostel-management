@@ -89,16 +89,16 @@
             {{ template "resident" . }}
         {{ else if eq .Page "room" }}
             {{ template "room" . }}
-        {{ else if eq .Page "service" }}
-            {{ template "service" . }}
+        {{ else if eq .Page "service_info" }}
+            {{ template "service_info" . }}
         {{ else if eq .Page "support" }}
             {{ template "support" . }}
         {{ else if eq .Page "news" }}
             {{ template "news" . }}
         {{ else if eq .Page "notices" }}
             {{ template "notices" . }}
-        {{ else if eq .Page "statement" }}
-            {{ template "statement" . }}
+        {{ else if eq .Page "request_info" }}
+            {{ template "request_info" . }}
         {{ else if eq .Page "create_news" }}
             {{ template "create_news" . }}
         {{ else if eq .Page "create_notices" }}
