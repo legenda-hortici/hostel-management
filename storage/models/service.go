@@ -1,6 +1,7 @@
 package models
 
 type Service struct {
+	Point       int
 	ID          int    `json:"id"`
 	Name        string `json:"name"`
 	Type        string `json:"type"`

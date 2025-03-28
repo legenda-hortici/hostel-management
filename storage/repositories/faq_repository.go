@@ -1,11 +1,30 @@
 package repositories
 
 import (
+	"database/sql"
 	"hostel-management/storage/db"
 	"hostel-management/storage/models"
 )
 
-func CreateFaq(faq models.Faq) error {
+type FaqRepository interface {
+	CreateFaq(faq models.Faq) error
+	GetAllFaq() ([]models.Faq, error)
+	GetFaqByID(id int) (models.Faq, error)
+	DeleteFaqItem(id int) error
+	UpdateFaqItem(id int, faq models.Faq) error
+}
+
+type faqRepository struct {
+	db *sql.DB
+}
+
+func NewFaqRepository() FaqRepository {
+	return &faqRepository{
+		db: db.DB,
+	}
+}
+
+func (r *faqRepository) CreateFaq(faq models.Faq) error {
 	query := "INSERT INTO Faq (question, answer) VALUES (?, ?)"
 	_, err := db.DB.Exec(query, faq.Question, faq.Answer)
 	if err != nil {
@@ -14,7 +33,7 @@ func CreateFaq(faq models.Faq) error {
 	return nil
 }
 
-func GetAllFaq() ([]models.Faq, error) {
+func (r *faqRepository) GetAllFaq() ([]models.Faq, error) {
 	query := "SELECT * FROM Faq"
 	rows, err := db.DB.Query(query)
 	if err != nil {
@@ -35,7 +54,7 @@ func GetAllFaq() ([]models.Faq, error) {
 	return faqs, nil
 }
 
-func GetFaqByID(id int) (models.Faq, error) {
+func (r *faqRepository) GetFaqByID(id int) (models.Faq, error) {
 	query := "SELECT * FROM Faq WHERE id = ?"
 	row := db.DB.QueryRow(query, id)
 	faq := models.Faq{}
@@ -44,4 +63,16 @@ func GetFaqByID(id int) (models.Faq, error) {
 		return models.Faq{}, err
 	}
 	return faq, nil
+}
+
+func (r *faqRepository) DeleteFaqItem(id int) error {
+	query := "DELETE FROM Faq WHERE id = ?"
+	_, err := db.DB.Exec(query, id)
+	return err
+}
+
+func (r *faqRepository) UpdateFaqItem(id int, faq models.Faq) error {
+	query := "UPDATE Faq SET question = ?, answer = ? WHERE id = ?"
+	_, err := db.DB.Exec(query, faq.Question, faq.Answer, id)
+	return err
 }

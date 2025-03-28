@@ -8,7 +8,7 @@ import (
 
 type InventoryRepository interface {
 	GetAllInventory() ([]models.Inventory, error)
-	InsertIntoInventory(name string, count, invNumber, roomsID int) error
+	InsertIntoInventory(inventory models.Inventory) error
 	DeleteInventory(id int) error
 	GetInventoryByRoomID(roomID int) ([]models.Inventory, error)
 }
@@ -24,7 +24,7 @@ func NewInventoryRepository() InventoryRepository {
 }
 
 func (r *inventoryRepository) GetAllInventory() ([]models.Inventory, error) {
-	query := `SELECT i.id, i.name, i.count, i.inv_number, r.number 
+	query := `SELECT i.id, i.name, i.count, i.inv_number, r.number, i.icon 
 				FROM Inventory i
 				JOIN Rooms r ON i.Rooms_id = r.id;`
 	var inventory []models.Inventory
@@ -37,7 +37,7 @@ func (r *inventoryRepository) GetAllInventory() ([]models.Inventory, error) {
 
 	for rows.Next() {
 		var inv models.Inventory
-		err := rows.Scan(&inv.ID, &inv.Name, &inv.Count, &inv.InvNumber, &inv.RoomNumber)
+		err := rows.Scan(&inv.ID, &inv.Name, &inv.Count, &inv.InvNumber, &inv.RoomNumber, &inv.Icon)
 		if err != nil {
 			return nil, err
 		}
@@ -47,9 +47,10 @@ func (r *inventoryRepository) GetAllInventory() ([]models.Inventory, error) {
 	return inventory, nil
 }
 
-func (r *inventoryRepository) InsertIntoInventory(name string, count, invNumber, roomsID int) error {
-	query := "INSERT INTO Inventory (name, count, inv_number, Rooms_id) VALUES (?, ?, ?, ?)"
-	_, err := db.DB.Exec(query, name, count, invNumber, roomsID)
+func (r *inventoryRepository) InsertIntoInventory(inventory models.Inventory) error {
+	_ = db.DB.QueryRow("SELECT id FROM Rooms WHERE number = ?", inventory.RoomNumber).Scan(&inventory.Rooms_id)
+	query := "INSERT INTO Inventory (name, count, inv_number, Rooms_id, icon) VALUES (?, ?, ?, ?, ?)"
+	_, err := db.DB.Exec(query, inventory.Name, inventory.Count, inventory.InvNumber, inventory.Rooms_id, inventory.Icon)
 	return err
 }
 
@@ -70,7 +71,7 @@ func (r *inventoryRepository) GetInventoryByRoomID(roomID int) ([]models.Invento
 	inventory := []models.Inventory{}
 	for rows.Next() {
 		inv := models.Inventory{}
-		err := rows.Scan(&inv.ID, &inv.Name, &inv.Count, &inv.InvNumber, &inv.Rooms_id)
+		err := rows.Scan(&inv.ID, &inv.Name, &inv.Count, &inv.InvNumber, &inv.Rooms_id, &inv.Icon)
 		if err != nil {
 			return nil, err
 		}

@@ -39,6 +39,10 @@ func (h *ServiceHandler) ServicesHandler(c *gin.Context) {
 		return
 	}
 
+	for i := range services {
+		services[i].Point = i + 1
+	}
+
 	statements, err := h.statementService.GetAllStatements()
 	if err != nil {
 		c.String(500, "Ошибка получения заявок: "+err.Error())
@@ -55,13 +59,12 @@ func (h *ServiceHandler) ServicesHandler(c *gin.Context) {
 		statements[statement].Username = user.Username
 	}
 
-	data := map[string]interface{}{
+	c.HTML(200, "layout.html", map[string]interface{}{
 		"Page":       "services",
 		"Role":       role,
 		"Services":   services,
 		"Statements": statements,
-	}
-	c.HTML(200, "layout.html", data)
+	})
 }
 
 func (h *ServiceHandler) AddServiceHandler(c *gin.Context) {

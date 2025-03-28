@@ -1,36 +1,12 @@
 {{ define "support" }}
 <div class="container mt-4">
-    <style>
-        #chat {
-            height: 300px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            padding: 10px;
-            background: #f8f9fa;
-        }
-        .message {
-            padding: 8px 12px;
-            margin-bottom: 5px;
-            border-radius: 10px;
-        }
-        .message.user {
-            background-color: #0d6efd;
-            color: white;
-            align-self: flex-end;
-        }
-        .message.other {
-            background-color: #e9ecef;
-            color: black;
-            align-self: flex-start;
-        }
-    </style>
     <h2 class="mb-4">Поддержка</h2>
 
     {{ if eq .Role "admin" }}
     <!-- Интерфейс администратора -->
     <div class="admin-interface">
         <div class="row">
-            <div class="col-md-8">
+            <div class="col-md-12">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4>FAQ</h4>
                     <!-- Кнопка для открытия модального окна -->
@@ -39,37 +15,64 @@
                     </button>
                 </div>
 
-                <!-- Список вопросов -->
                 <div class="faq-section">
                     {{ range .FAQ }}
-                        <div class="faq-item card mb-3">
+                        <div class="faq-item card mb-3 position-relative">
                             <div class="card-body">
+                                <!-- Форма удаления -->
+                                <form action="/admin/support/faq/{{ .ID }}/delete" method="post" class="position-absolute top-0 end-0 m-2">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+
+                                <!-- Кнопка редактирования -->
+                                <form action="#" class="position-absolute top-0 end-0 m-2 me-5">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center"
+                                            data-bs-toggle="modal" data-bs-target="#editModal-{{ .ID }}">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </form>
+
+
                                 <h4 class="card-title">{{ .Question }}</h4>
                                 <p class="card-text">{{ .Answer }}</p>
                             </div>
                         </div>
+
+                        <!-- Модальное окно редактирования -->
+                        <div class="modal modal-lg fade" id="editModal-{{ .ID }}" tabindex="-1" aria-labelledby="editModalLabel-{{ .ID }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editModalLabel-{{ .ID }}">Редактировать вопрос</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <!-- Форма редактирования -->
+                                        <form action="/admin/support/faq/{{ .ID }}/update" method="post">
+                                            <div class="mb-3">
+                                                <label for="question-{{ .ID }}" class="form-label">Вопрос</label>
+                                                <input type="text" class="form-control" id="question-{{ .ID }}" name="question" value="{{ .Question }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="answer-{{ .ID }}" class="form-label">Ответ</label>
+                                                <textarea class="form-control" id="answer-{{ .ID }}" name="answer" rows="10" required>{{ .Answer }}</textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     {{ end }}
                 </div>
-            </div>
-            <!-- Список чатов и поле чата (7 колонок) -->
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header text-center">
-                        <h4>Чат</h4>
-                    </div>
-                    <div class="card-body d-flex flex-column" id="chat"></div>
-                    <div class="card-footer">
-                        <div class="input-group">
-                            <input type="text" id="message" class="form-control" placeholder="Введите сообщение...">
-                            <button class="btn btn-primary" onclick="sendMessage()">Отправить</button>
-                        </div>
-                    </div>
-                </div>
+
             </div>         
         </div>
 
         <!-- Модальное окно для добавления вопроса и ответа -->
-        <div class="modal fade" id="addFaqModal" tabindex="-1" aria-labelledby="addFaqModalLabel" aria-hidden="true">
+        <div class="modal modal-lg fade" id="addFaqModal" tabindex="-1" aria-labelledby="addFaqModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -77,14 +80,14 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
                     </div>
                     <div class="modal-body">
-                        <form id="add-faq-form" action="/support/add_faq" method="POST">
+                        <form id="add-faq-form" action="/admin/support/add_faq" method="POST">
                             <div class="mb-3">
                                 <label for="question" class="form-label">Вопрос</label>
                                 <input type="text" class="form-control" id="question" name="question" placeholder="Введите вопрос" required>
                             </div>
                             <div class="mb-3">
                                 <label for="answer" class="form-label">Ответ</label>
-                                <textarea class="form-control" id="answer" name="answer" placeholder="Введите ответ" required></textarea>
+                                <textarea class="form-control" id="answer" name="answer" placeholder="Введите ответ" rows="10" required></textarea>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
@@ -114,54 +117,9 @@
                     {{ end }}
                 </div>
             </div>
-
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header text-center">
-                        <h5>Если вы не нашли ответ, задайте вопрос в чат</h5>
-                    </div>
-                    <div class="card-body d-flex flex-column" id="chat"></div>
-                    <div class="card-footer">
-                        <div class="input-group">
-                            <input type="text" id="message" class="form-control" placeholder="Введите сообщение...">
-                            <button class="btn btn-primary" onclick="sendMessage()">Отправить</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
     {{ end }}
 </div>
-
-<script>
-    const socket = new WebSocket("ws://localhost:8080/ws");
-
-    socket.onmessage = function(event) {
-        let chat = document.getElementById("chat");
-        let messageDiv = document.createElement("div");
-        messageDiv.classList.add("message", "other");
-        messageDiv.textContent = event.data;
-        chat.appendChild(messageDiv);
-        chat.scrollTop = chat.scrollHeight; // Автопрокрутка вниз
-    };
-
-    function sendMessage() {
-        let input = document.getElementById("message");
-        if (input.value.trim() === "") return;
-
-        // Добавляем сообщение пользователя в чат
-        let chat = document.getElementById("chat");
-        let userMessage = document.createElement("div");
-        userMessage.classList.add("message", "user");
-        userMessage.textContent = input.value;
-        chat.appendChild(userMessage);
-        chat.scrollTop = chat.scrollHeight;
-
-        socket.send(input.value);
-        input.value = "";
-    }
-</script>
-
 
 {{ end }}

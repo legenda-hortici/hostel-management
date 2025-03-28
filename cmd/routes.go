@@ -19,12 +19,16 @@ func RegisterRoutes(r *gin.Engine) error {
 	roomRepo := repositories.NewRoomRepository()
 	serviceRepo := repositories.NewServiceRepository()
 	statementRepo := repositories.NewStatementRepository()
+	inventoryRepo := repositories.NewInventoryRepository()
+	faqRepo := repositories.NewFaqRepository()
 
 	authService := auth.NewAuthService(userRepo)
 	userService := services.NewUserService(userRepo)
 	roomService := services.NewRoomService(roomRepo)
 	serviceService := services.NewServiceService(serviceRepo)
 	statementService := services.NewStatementService(statementRepo)
+	inventoryService := services.NewInventoryService(inventoryRepo)
+	faqService := services.NewFaqService(faqRepo)
 
 	userHelper := helpers.NewUserHelper()
 	roomHelper := helpers.NewRoomHelper()
@@ -33,6 +37,8 @@ func RegisterRoutes(r *gin.Engine) error {
 	userHandler := handlers.NewUserHandler(userService, roomService, userHelper)
 	roomHandler := handlers.NewRoomHandler(roomService, roomHelper)
 	serviceHandler := handlers.NewServiceHandler(serviceService, userService, statementService, roomService)
+	inventoryHandler := handlers.NewInventoryHandler(inventoryService)
+	faqhandler := handlers.NewFaqHandler(faqService)
 
 	// Публичные маршруты
 	public := r.Group("/")
@@ -81,12 +87,17 @@ func RegisterRoutes(r *gin.Engine) error {
 		admin.GET("/documents", handlers.DocumentsHandler)
 		admin.POST("/documents/create_contract", handlers.CreateContractHandler)
 
+		admin.GET("/inventory", inventoryHandler.InventoryHandler)
+		admin.POST("/inventory/:id/delete", inventoryHandler.DeleteInventoryItemHandler)
+		admin.POST("/inventory/add_item", inventoryHandler.AddInventoryItemHandler)
 
-		// admin.GET("/inventory", handlers.AdminInventoryHandler)
+		admin.GET("/support", faqhandler.SupportHandler)
+		admin.POST("/support/add_faq", faqhandler.AddFaqHandler)
+		admin.POST("/support/faq/:id/delete", faqhandler.DeleteFaqHandler)
+		admin.POST("/support/faq/:id/update", faqhandler.UpdateFaqHandler)
+
 		// admin.GET("/news", handlers.AdminNewsHandler)
 		// admin.GET("/notices", handlers.AdminNoticesHandler)
-
-		// admin.GET("/support", handlers.AdminSupportHandler)
 	}
 
 	return nil

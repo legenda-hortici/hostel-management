@@ -13,7 +13,7 @@
             <ul class="list-group mb-4" id="serviceList">
                 {{ range .Services }}
                     <li class="list-group-item d-flex justify-content-between align-items-center service-item mb-2">
-                        <strong>{{ .Name }}</strong>
+                        {{ .Point }} <strong>{{ .Name }}</strong>
                         <button class="btn btn-success btn-sm" title="Подробнее об услуге" onclick="location.href='/admin/services/service/{{ .ID }}'">
                             <i class="bi bi-info-square-fill"></i>
                         </button>                        

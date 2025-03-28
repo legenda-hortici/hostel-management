@@ -1,6 +1,7 @@
 package models
 
 type Inventory struct {
+	Point      int
 	ID         int
 	Name       string
 	Count      int

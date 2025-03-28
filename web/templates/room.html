@@ -20,7 +20,7 @@
             <h5>Мебель в комнате:</h5>
             <ul class="list-unstyled">
                 {{ range .Inventory }}
-                    <p>- <strong>{{ .Name }}</strong></p>
+                    <p><img src="/static/{{ .Icon }}" width="20" height="20"> <strong>{{ .Name }}</strong> ({{ .Count }} шт)</p>
                 {{ else }}
                     <p class="text-muted">В комнате нет мебели</p>
                 {{ end }}
