@@ -26,7 +26,7 @@ func (h *NewsHandler) News(c *gin.Context) {
 	const op = "handlers.NewsHandler.NewsHandler"
 
 	role, exists := session.GetUserRole(c)
-	if !exists || role != "admin" {
+	if !exists || role != "admin" && role != "user" {
 		c.String(403, "Access denied")
 		log.Printf("Access denied: %v", op)
 		return

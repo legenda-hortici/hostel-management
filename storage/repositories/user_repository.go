@@ -71,11 +71,17 @@ func (r *userRepository) GetByID(id int) (*models.User, error) {
 
 // GetByEmail получает пользователя по email
 func (r *userRepository) GetByEmail(email string) (*models.User, error) {
-	query := "SELECT id, name, email, role, institute, Rooms_id FROM Users WHERE email = ?"
+	query := `
+		SELECT u.id, u.name, u.email, u.password, u.role, u.institute, r.number, h.number
+		FROM Users u
+		JOIN Rooms r ON u.Rooms_id = r.id 
+		JOIN Hostels h ON r.Hostels_id = h.id
+		WHERE u.email = ?;
+	`
 	row := r.db.QueryRow(query, email)
 
 	user := &models.User{}
-	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Role, &user.Institute, &user.Room_id)
+	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Role, &user.Institute, &user.RoomNumber, &user.HostelNumber)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("пользователь не найден")

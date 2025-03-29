@@ -5,9 +5,16 @@
         <main class="col-12">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <div>
+                    {{ if eq .Role "admin" }}
                     <a href="/admin/services" class="text-decoration-none text-dark me-3">
                         <i class="bi bi-arrow-left fs-4"></i>
                     </a>
+                    {{ else if eq .Role "user" }}
+                    <a href="/services" class="text-decoration-none text-dark me-3">
+                        <i class="bi bi-arrow-left fs-4"></i>
+                    </a>
+                    {{ end }}
+
                     <h1 class="h2 d-inline">Заявка: {{ .Statement.Name }}</h1>
                 </div>
             </div>
@@ -73,7 +80,7 @@
                         </div>
                     </div>
                 </div>
-
+                {{ if eq .Role "admin" }}
                 <!-- Действия -->
                 <div class="col-md-4">
                     <div class="card shadow-sm">
@@ -97,6 +104,7 @@
                         </div>
                     </div>
                 </div>
+                {{ end }}
             </div>
         </main>
     </div>

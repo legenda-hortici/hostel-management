@@ -49,6 +49,7 @@ func RegisterRoutes(r *gin.Engine) error {
 	homeHandler := handlers.NewHomeHandler(newsService, noticeService)
 	newsHandler := handlers.NewNewsHandler(newsService)
 	noticeHandler := handlers.NewNoticeHandler(noticeService)
+	profileHandler := handlers.NewProfileHandler(userService)
 
 	// Публичные маршруты
 	public := r.Group("/")
@@ -62,14 +63,23 @@ func RegisterRoutes(r *gin.Engine) error {
 	protected := r.Group("/")
 	protected.Use(auth.AuthMiddleware())
 	{
-		protected.GET("/profile", handlers.ProfileHandler)
+		protected.GET("/profile", profileHandler.Profile)
+		protected.POST("/profile/update_profile", profileHandler.UpdateProfileHandler)
+		protected.GET("/services", serviceHandler.ServicesHandler)
+		protected.GET("/services/:id", serviceHandler.ServiceInfoHandler)
+		protected.POST("/services/send_request/:id", serviceHandler.RequestServiceHandler)
+		protected.GET("/services/request_info/:id", serviceHandler.RequestInfoHandler)
+		protected.GET("/support", faqhandler.SupportHandler)
+
 		protected.GET("/", homeHandler.HomeHandler)
 		protected.POST("/upload_banner", homeHandler.UploadBannerHandler)
 		protected.POST("/delete_banner", homeHandler.DeleteBannerHandler)
+
 		protected.GET("/news", newsHandler.News)
 		protected.GET("/news/:id", newsHandler.NewsInfoHandler)
 		protected.GET("/create_news", newsHandler.CreateNewsPageHandler)
 		protected.POST("/create_news/add", newsHandler.CreateNewsHandler)
+
 		protected.GET("/notices", noticeHandler.Notices)
 		protected.GET("/notices/:id", noticeHandler.NoticeInfoHandler)
 		protected.GET("/create_notice", noticeHandler.CreateNoticePageHandler)

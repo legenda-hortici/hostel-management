@@ -5,6 +5,7 @@ import (
 	"hostel-management/internal/services"
 	"hostel-management/pkg/session"
 	"hostel-management/storage/models"
+	"log"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -27,9 +28,19 @@ func NewServiceHandler(serviceService services.ServiceService, userService servi
 }
 
 func (h *ServiceHandler) ServicesHandler(c *gin.Context) {
+	const op = "handlers.ServiceHandler.ServicesHandler"
+
 	role, exists := session.GetUserRole(c)
-	if !exists || role != "admin" {
+	if !exists || role != "admin" && role != "user" {
+		log.Printf("Access denied: %v", op)
 		c.String(403, "Access denied")
+		return
+	}
+
+	email, exists := session.GetUserEmail(c)
+	if !exists || email == "" {
+		log.Printf("User not authenticated: %v", op)
+		c.String(401, "User not authenticated")
 		return
 	}
 
@@ -49,6 +60,13 @@ func (h *ServiceHandler) ServicesHandler(c *gin.Context) {
 		return
 	}
 
+	userStatements, err := h.statementService.GetAllUserStatements(email)
+	if err != nil {
+		log.Printf("Failed to get user statements: %v: %v", err, op)
+		c.String(500, "Ошибка получения заявок пользователя: "+err.Error())
+		return
+	}
+
 	for statement := range statements {
 		statements[statement].Status = helpers.TranslateStatus(statements[statement].Status)
 		user, err := h.userService.GetUserByID(statements[statement].Users_id)
@@ -60,10 +78,11 @@ func (h *ServiceHandler) ServicesHandler(c *gin.Context) {
 	}
 
 	c.HTML(200, "layout.html", map[string]interface{}{
-		"Page":       "services",
-		"Role":       role,
-		"Services":   services,
-		"Statements": statements,
+		"Page":           "services",
+		"Role":           role,
+		"Services":       services,
+		"Statements":     statements,
+		"userStatements": userStatements,
 	})
 }
 
@@ -205,14 +224,19 @@ func (h *ServiceHandler) RequestServiceHandler(c *gin.Context) {
 		return
 	}
 
+	amount, _ := strconv.Atoi(c.PostForm("amount"))
+	request_date := c.PostForm("request_date")
+	hostel, _ := strconv.Atoi(c.PostForm("hostel"))
+	phone := c.PostForm("phone")
+
 	statement := models.Statement{
 		Name:     c.PostForm("name"),
 		Type:     c.PostForm("type"),
-		Amount:   0,
-		Date:     "",
-		Phone:    "",
+		Amount:   amount,
+		Date:     request_date,
+		Phone:    phone,
 		Status:   "awaits",
-		Hostel:   0,
+		Hostel:   hostel,
 		Users_id: user.ID,
 	}
 
@@ -226,9 +250,20 @@ func (h *ServiceHandler) RequestServiceHandler(c *gin.Context) {
 }
 
 func (h *ServiceHandler) RequestInfoHandler(c *gin.Context) {
+
+	const op = "handlers.ServiceHandler.RequestInfoHandler"
+
+	role, exists := session.GetUserRole(c)
+	if !exists || role == "" {
+		log.Printf("Access denied: %v: %v", role, op)
+		c.String(403, "Access denied: %v: %v", role, op)
+		return
+	}
+
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
+		log.Printf("Invalid ID: %v: %v", err, op)
 		c.String(400, "Invalid ID")
 		return
 	}
@@ -241,12 +276,14 @@ func (h *ServiceHandler) RequestInfoHandler(c *gin.Context) {
 
 	user, err := h.userService.GetUserByID(request.Users_id)
 	if err != nil {
+		log.Printf("Failed to get user: %v: %v", err, op)
 		c.String(500, "Failed to get user")
 		return
 	}
 
 	roomNumber, err := h.roomService.GetRoomNumberByRoomID(user.Room_id)
 	if err != nil {
+		log.Printf("Failed to get room number: %v: %v", err, op)
 		c.String(500, "Failed to get room number")
 		return
 	}
@@ -254,6 +291,7 @@ func (h *ServiceHandler) RequestInfoHandler(c *gin.Context) {
 
 	data := map[string]interface{}{
 		"Page":      "request_info",
+		"Role":      role,
 		"Statement": request,
 		"User":      user,
 	}

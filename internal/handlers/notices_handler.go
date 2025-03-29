@@ -25,7 +25,7 @@ func (h *NoticesHandler) Notices(c *gin.Context) {
 	const op = "handlers.NoticesHandler.Notices"
 
 	role, exists := session.GetUserRole(c)
-	if !exists || role != "admin" {
+	if !exists || role != "admin" && role != "user" {
 		c.String(403, "Access denied")
 		log.Printf("Access denied: %v", op)
 		return
@@ -105,7 +105,7 @@ func (h *NoticesHandler) NoticeInfoHandler(c *gin.Context) {
 	const op = "handlers.NoticesHandler.NoticeInfoHandler"
 
 	role, exists := session.GetUserRole(c)
-	if !exists || role != "admin" {
+	if !exists || role != "admin" && role != "user" {
 		c.String(403, "access denied")
 		log.Printf("Access denied: %v", op)
 		return

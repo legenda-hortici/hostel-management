@@ -10,6 +10,7 @@ type StatementService interface {
 	CreateStatementRequest(statement models.Statement) error
 	GetStatementRequestByID(id int) (models.Statement, error)
 	UpdateStatementRequestStatus(id int, status string) error
+	GetAllUserStatements(email string) ([]models.Statement, error)
 }
 
 type statementService struct {
@@ -27,6 +28,20 @@ func (s *statementService) GetAllStatements() ([]models.Statement, error) {
 }
 
 func (s *statementService) CreateStatementRequest(statement models.Statement) error {
+	if statement.Date == "" {
+		statement.Date = "Не указана"
+	} else if statement.Phone == "" {
+		statement.Phone = "Не указан"
+	} else if statement.Hostel == 0 {
+		statement.Hostel = 0
+	}
+
+	if statement.Type == "Бесплатная" {
+		statement.Amount = 0
+		statement.Type = "free"
+	} else {
+		statement.Type = "payment"
+	}
 	return s.statementRepo.CreateStatementRequest(statement)
 }
 
@@ -36,4 +51,8 @@ func (s *statementService) GetStatementRequestByID(id int) (models.Statement, er
 
 func (s *statementService) UpdateStatementRequestStatus(id int, status string) error {
 	return s.statementRepo.UpdateStatementRequestStatus(id, status)
+}
+
+func (s *statementService) GetAllUserStatements(email string) ([]models.Statement, error) {
+	return s.statementRepo.GetAllUserStatements(email)
 }

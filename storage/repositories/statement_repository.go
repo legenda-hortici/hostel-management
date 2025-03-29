@@ -12,6 +12,7 @@ type StatementRepository interface {
 	CreateStatementRequest(statement models.Statement) error
 	GetStatementRequestByID(id int) (models.Statement, error)
 	UpdateStatementRequestStatus(id int, status string) error
+	GetAllUserStatements(email string) ([]models.Statement, error)
 }
 
 type statementRepository struct {
@@ -77,4 +78,31 @@ func (r *statementRepository) UpdateStatementRequestStatus(id int, status string
 		return err
 	}
 	return nil
+}
+
+func (r *statementRepository) GetAllUserStatements(email string) ([]models.Statement, error) {
+	query := `
+			SELECT s.id, s.name, s.type, s.amount, s.date, s.phone, s.status, s.hostel, s.users_id
+			FROM Statements s
+			JOIN Users u ON s.users_id = u.id
+			WHERE u.email = ?;
+		`
+	rows, err := db.DB.Query(query, email)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	statements := []models.Statement{}
+
+	for rows.Next() {
+		statement := models.Statement{}
+		err := rows.Scan(&statement.ID, &statement.Name, &statement.Type, &statement.Amount, &statement.Date, &statement.Phone, &statement.Status, &statement.Hostel, &statement.Users_id)
+		if err != nil {
+			return nil, err
+		}
+		statements = append(statements, statement)
+	}
+
+	return statements, nil
 }

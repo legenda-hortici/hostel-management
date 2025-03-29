@@ -50,7 +50,7 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 	case "admin":
 		c.Redirect(http.StatusFound, "/admin")
 	case "user":
-		c.Redirect(http.StatusFound, "/")
+		c.Redirect(http.StatusFound, "/profile")
 	default:
 		c.Redirect(http.StatusFound, "/")
 	}

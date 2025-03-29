@@ -5,9 +5,15 @@
         <main class="col-12">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">
+                    {{ if eq .Role "admin" }}
                     <a href="/admin/services" class="text-decoration-none text-dark me-3">
                         <i class="bi bi-arrow-left"></i>
                     </a>
+                    {{ else if eq .Role "user" }}
+                    <a href="/services" class="text-decoration-none text-dark me-3">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    {{ end }}
                     {{ if eq .Role "admin" }}Информация об услуге: {{ .Service.Name }}{{ else }}{{ .Service.Name }}{{ end }}
                 </h1>
             </div>
@@ -86,7 +92,7 @@
                                 <h5 class="card-title">Информация об услуге</h5>
                                 <ul class="list-group list-group-flush">
                                     <li class="list-group-item">
-                                        <i class="bi bi-tag"></i> Тип: {{ if eq .Service.Type "Платная" }}Платная{{ else }}Бесплатная{{ end }}
+                                        <i class="bi bi-tag"></i> Тип: {{ if eq .Service.Type "payment" }}Платная{{ else }}Бесплатная{{ end }}
                                     </li>
                                     {{ if eq .Service.Type "Платная" }}
                                     <li class="list-group-item">
@@ -126,13 +132,13 @@
 
                     <div class="mb-3">
                         <label for="serviceType" class="form-label">Тип</label>
-                        <input type="text" class="form-control" id="serviceType" name="type" value="{{ if eq .Service.Type "Платная" }}Платная{{ else }}Бесплатная{{ end }}" readonly>
+                        <input type="text" class="form-control" id="serviceType" name="type" value="{{ if eq .Service.Type "payment" }}Платная{{ else }}Бесплатная{{ end }}" readonly>
                     </div>
 
                     {{ if eq .Service.Type "Платная" }}
                     <div class="mb-3">
                         <label for="serviceAmount" class="form-label">Стоимость</label>
-                        <input type="text" class="form-control" id="serviceAmount" name="amount" value="{{ .Service.Amount }} руб." readonly>
+                        <input type="text" class="form-control" id="serviceAmount" name="amount" value="{{ .Service.Amount }}" readonly>
                     </div>
                     {{ end }}
 
