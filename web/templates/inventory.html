@@ -1,74 +1,88 @@
 {{ define "admin_inventory" }}
-<h2>Инвентарь</h2>
-<div class="container mt-4">
+<div class="container-fluid">
     <div class="row">
-        <!-- Таблица жильцов -->
-        <div class="col-md-9">
-            <!-- Поле поиска -->
-            <div class="mb-3">
-                <input type="text" class="form-control" id="searchInput" placeholder="Поиск по комнате или инвентарному номеру...">
-            </div>
-            
-            <table class="table mt-4" id="residentsTable">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Тип</th>
-                        <th>Количество</th>
-                        <th>Инв. номер</th>
-                        <th>Комната</th>
-                        <th>Действия</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{ range .Inventory }}
-                    <tr class="resident-row">
-                        <td>{{ .Point }}</td>
-                        <td class="inv-name">{{ .Name }}</td>
-                        <td>{{ .Count }}</td>
-                        <td>{{ .InvNumber }}</td>
-                        <td class="room-number">{{ .RoomNumber }}</td>
-                        <td>
-                            <form action="/admin/inventory/{{ .ID }}/delete" method="post">
-                                <button type="submit" class="btn btn-danger btn-sm">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    {{ end }}
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Блок фильтров -->
-        <div class="col-md-3" style="margin-top: 45px;">
-            <div class="card p-3 mb-4" style="flex: 1;">
-                <h3>Фильтры</h3>
-                <form action="inventory" method="get" class="row g-3">
-                    <div class="col-12">
-                        <label for="filterInstitute" class="form-label">Мебель</label>
-                        <select name="institute" class="form-select" id="filterInstitute">
-                            <option value="" selected>Вся мебель</option>
-                            <option value="Стул">Стул</option>
-                            <option value="Стол">Стол</option>
-                            <option value="Шкаф">Шкаф</option>
-                            <option value="Тумбочка">Тумбочка</option>
-                            <option value="Стеллаж">Стеллаж</option>
-                            <option value="Кровать">Кровать</option>
-                        </select>
-                    </div>
-                </form>
-                <label class="form-label mt-3">Добавление инвентаря</label>
-                <!-- Кнопка добавления -->
-                <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addInventoryModal">
-                    Добавить
+        <!-- Основной контент -->
+        <main class="col-12">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Инвентарь</h1>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addInventoryModal">
+                    <i class="bi bi-plus-circle"></i> Добавить инвентарь
                 </button>
             </div>
-        </div>
+
+            <div class="row">
+                <!-- Фильтры -->
+                <div class="col-md-3">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="bi bi-funnel"></i> Фильтры</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="filterInstitute" class="form-label">Мебель</label>
+                                <select name="institute" class="form-select" id="filterInstitute" onchange="applyFilters()">
+                                    <option value="" selected>Вся мебель</option>
+                                    <option value="Стул">Стул</option>
+                                    <option value="Стол">Стол</option>
+                                    <option value="Шкаф">Шкаф</option>
+                                    <option value="Тумбочка">Тумбочка</option>
+                                    <option value="Стеллаж">Стеллаж</option>
+                                    <option value="Кровать">Кровать</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="searchInput" class="form-label">Поиск</label>
+                                <input type="text" class="form-control" id="searchInput" placeholder="Поиск по комнате или инвентарному номеру...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Таблица инвентаря -->
+                <div class="col-md-9">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="residentsTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Тип</th>
+                                            <th>Количество</th>
+                                            <th>Инв. номер</th>
+                                            <th>Комната</th>
+                                            <th>Действия</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {{ range .Inventory }}
+                                        <tr class="resident-row">
+                                            <td>{{ .Point }}</td>
+                                            <td class="inv-name">{{ .Name }}</td>
+                                            <td>{{ .Count }}</td>
+                                            <td>{{ .InvNumber }}</td>
+                                            <td class="room-number">{{ .RoomNumber }}</td>
+                                            <td>
+                                                <form action="/admin/inventory/{{ .ID }}/delete" method="post" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        {{ end }}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 </div>
 
+<!-- Модальное окно для добавления инвентаря -->
 <div class="modal fade" id="addInventoryModal" tabindex="-1" aria-labelledby="addInventoryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -80,7 +94,7 @@
                 <form action="/admin/inventory/add_item" method="post">
                     <div class="mb-3">
                         <label for="furniture" class="form-label">Мебель</label>
-                        <select class="form-control" id="furniture" name="furniture" required>
+                        <select class="form-select" id="furniture" name="furniture" required>
                             <option value="" selected disabled>Выберите мебель</option>
                             <option value="Стул">Стул</option>
                             <option value="Стол">Стол</option>
@@ -98,7 +112,10 @@
                         <label for="room" class="form-label">Комната</label>
                         <input type="number" class="form-control" id="room" name="room">
                     </div>
-                    <button type="submit" class="btn btn-primary">Добавить</button>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Добавить</button>
+                    </div>
                 </form>
             </div>           
         </div>
@@ -106,46 +123,35 @@
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    function applyFilters() {
         const filterSelect = document.getElementById("filterInstitute");
         const rows = document.querySelectorAll("#residentsTable tbody tr");
-    
-        // Функция для фильтрации таблицы
-        function applyFilters() {
-            const selectedFurniture = filterSelect.value.toLowerCase();
-    
-            rows.forEach(row => {
-                const furnitureType = row.querySelector(".inv-name").textContent.toLowerCase();
-    
-                if (selectedFurniture === "" || furnitureType === selectedFurniture) {
-                    row.style.display = "";
-                } else {
-                    row.style.display = "none";
-                }
-            });
-        }
-    
-        // Слушатель изменения выбора в фильтре
-        filterSelect.addEventListener("change", applyFilters);
-    });
+        const selectedFurniture = filterSelect.value.toLowerCase();
 
-    document.addEventListener("DOMContentLoaded", function() {
-        const searchInput = document.getElementById("searchInput");
+        rows.forEach(row => {
+            const furnitureType = row.querySelector(".inv-name").textContent.toLowerCase();
+
+            if (selectedFurniture === "" || furnitureType === selectedFurniture) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    }
+
+    document.getElementById("searchInput").addEventListener("input", function() {
+        const searchTerm = this.value.toLowerCase();
         const rows = document.querySelectorAll("#residentsTable tbody tr");
-    
-        searchInput.addEventListener("input", function() {
-            const searchTerm = searchInput.value.toLowerCase();
-    
-            rows.forEach(row => {
-                const roomNumber = row.querySelector(".room-number").textContent.toLowerCase();
-                const invNumber = row.querySelector("td:nth-child(4)").textContent.toLowerCase();
-    
-                if (roomNumber.includes(searchTerm) || invNumber.includes(searchTerm)) {
-                    row.style.display = "";
-                } else {
-                    row.style.display = "none";
-                }
-            });
+
+        rows.forEach(row => {
+            const roomNumber = row.querySelector(".room-number").textContent.toLowerCase();
+            const invNumber = row.querySelector("td:nth-child(4)").textContent.toLowerCase();
+
+            if (roomNumber.includes(searchTerm) || invNumber.includes(searchTerm)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
         });
     });
 </script>

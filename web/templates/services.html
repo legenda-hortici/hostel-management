@@ -1,246 +1,294 @@
 {{ define "services" }}
-<h2 class="mb-4">Услуги</h2>
-
-{{ if eq .Role "admin" }}
-    <div class="row mb-4">
-        <div class="col-md-11">
-            <input type="text" id="serviceSearch" class="form-control" placeholder="Поиск услуги по названию" onkeyup="filterServices()">
-        </div>
-    </div>
+<div class="container-fluid">
     <div class="row">
-        <div class="col-md-4">
-            <h3>Список</h3>
-            <ul class="list-group mb-4" id="serviceList">
-                {{ range .Services }}
-                    <li class="list-group-item d-flex justify-content-between align-items-center service-item mb-2">
-                        {{ .Point }} <strong>{{ .Name }}</strong>
-                        <button class="btn btn-success btn-sm" title="Подробнее об услуге" onclick="location.href='/admin/services/service/{{ .ID }}'">
-                            <i class="bi bi-info-square-fill"></i>
-                        </button>                        
-                    </li>
-                {{ end }}
-            </ul>
-        </div>        
-        <div class="col-md-4">
-            <h3>Заявки</h3>
-            <ul class="list-group mb-4" id="statementList">
-                {{ range .Statements }}
-                    <li class="list-group-item d-flex justify-content-between align-items-center mb-2 statement-item" data-status="{{ .Status }}">
-                        <span>
-                            <strong>{{ .Name }}</strong> - {{ .Username }}
-                            <!-- Плашка статуса -->
-                            <span class="badge 
-                                {{ if eq .Status "Ожидает" }}bg-warning
-                                {{ else if eq .Status "Одобрено" }}bg-success
-                                {{ else if eq .Status "Отклонено" }}bg-danger
-                                {{ end }} text-white">
-                                {{ .Status }}
-                            </span>
-                        </span>
-                        <button class="btn btn-primary btn-sm" title="Подробнее о заявке" onclick="location.href='/admin/services/request_info/{{ .ID }}'">
-                            <i class="bi bi-info-square-fill"></i>
-                        </button>
-                    </li>
-                {{ end }}
-            </ul>
-        </div>
-        
-        <div class="col-md-3 d-flex flex-column">
-            <div class="card p-3 mb-4">
-                <h3>Фильтры</h3>
-                <select id="filterStatus" class="form-select" onchange="filterStatements()">
-                    <option value="">Все статусы</option>
-                    <option value="Ожидает">Ожидает</option>
-                    <option value="Одобрено">Одобрено</option>
-                    <option value="Отклонено">Отклонено</option>
-                </select>
-                <label class="form-label mt-3">Добавление услуги</label>
-                <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addServiceModal">Добавить</button>
+        <!-- Основной контент -->
+        <main class="col-12">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Управление услугами</h1>
             </div>
-        </div> 
-    </div>
-    
-    <!-- Модальное окно -->
-    <div class="modal fade" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addServiceModalLabel">Добавить услугу</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-                </div>
-                <div class="modal-body">
-                    <form method="POST" action="/admin/services/add_service">
-                        <div class="mb-3">
-                            <label for="serviceName" class="form-label">Название</label>
-                            <input type="text" class="form-control" id="serviceName" name="name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Тип</label>
-                            <select class="form-select" name="type" required>
-                                <option value="payment">Платная</option>
-                                <option value="free">Бесплатная</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="serviceCost" class="form-label">Стоимость</label>
-                            <input type="number" class="form-control" id="serviceCost" name="cost" min="0" value="0">
-                        </div>
-                        <div class="mb-3">
-                            <label for="serviceDescription" class="form-label">Описание</label>
-                            <textarea class="form-control" id="serviceDescription" name="description" rows="3"></textarea>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="toggleDate" name="require_date">
-                            <label class="form-check-label" for="toggleDate">Указывать дату</label>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="toggleHostel" name="require_hostel">
-                            <label class="form-check-label" for="toggleHostel">Указывать общежитие</label>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="togglePhone" name="require_phone">
-                            <label class="form-check-label" for="togglePhone">Указывать телефон</label>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                            <button type="submit" class="btn btn-primary">Сохранить</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <script>
-        function filterStatements() {
-            const filterStatus = document.getElementById("filterStatus").value.toLowerCase();
-            const statements = document.querySelectorAll(".statement-item");
-            
-            statements.forEach(function(statement) {
-                const status = statement.getAttribute("data-status").toLowerCase();
-                if (filterStatus === "" || status.includes(filterStatus)) {
-                    statement.style.display = "";
-                } else {
-                    statement.style.display = "none";
-                }
-            });
-        }
+            {{ if eq .Role "admin" }}
 
-        // Вызываем функцию для фильтрации, если уже есть фильтр
-        document.addEventListener("DOMContentLoaded", filterStatements);
-    </script>
-
-{{ else if eq .Role "user" }}
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <input type="text" id="serviceSearch" class="form-control" placeholder="Поиск услуги по названию" onkeyup="filterServices()">
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-4">
-            <h3>Список</h3>
-            <ul class="list-group mb-4" id="serviceList">
-                {{ range .Services }}
-                    <li class="list-group-item d-flex justify-content-between align-items-center service-item mb-2">
-                        <strong>{{ .Name }}</strong>
-                        <button class="btn btn-success btn-sm" title="Подробнее об услуге" onclick="location.href='/services/{{ .ID }}'">
-                            <i class="bi bi-info-square-fill"></i>
-                        </button>                        
-                    </li>
-                {{ end }}
-            </ul>
-        </div>
-        <div class="col-md-4">
-            <h3>Мои заявки</h3>
-            <ul class="list-group mb-4">
-                {{ if .userStatements }}
-                    {{ range .userStatements }}
-                        <li class="list-group-item d-flex justify-content-between align-items-center mb-2">
-                            <span>
-                                <strong>{{ .Name }}</strong>
-                                <span class="badge 
-                                    {{ if eq .Status "Ожидает" }}bg-warning
-                                    {{ else if eq .Status "Одобрено" }}bg-success
-                                    {{ else if eq .Status "Отклонено" }}bg-danger
-                                    {{ end }} text-white">
-                                    {{ .Status }}
-                                </span>
-                            </span>
-                            <button class="btn btn-primary btn-sm open-modal" data-id="{{ .ID }}" data-name="{{ .Name }}" data-status="{{ .Status }}">
-                                <i class="bi bi-info-square-fill"></i>
+            <div class="row">
+                <!-- Список услуг -->
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-list-check"></i> Список услуг</h5>
+                            <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                                <i class="bi bi-plus-circle"></i> Добавить
                             </button>
-                        </li>
-                    {{ end }}
-                {{ else }}
-                    <li class="list-group-item">
-                        Нет рассмотренных заявок.
-                    </li>
-                {{ end }}
-            </ul>
-        </div>
-        <div class="col-md-3 d-flex flex-column">
-            <div class="card p-3">
-                <h3>Фильтры</h3>
-                <form method="GET" action="/services" class="row g-3">
-                    <div class="col-12">
-                        <select name="status" class="form-select">
-                            <option value="">Все статусы</option>
-                            <option value="Ожидает">Ожидает</option>
-                            <option value="Одобрено">Одобрено</option>
-                            <option value="Отклонено">Отклонено</option>
-                        </select>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush" id="serviceList">
+                                {{ range .Services }}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">{{ .Name }}</h6>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-outline-primary btn-sm" onclick="location.href='/admin/services/service/{{ .ID }}'">
+                                            <i class="bi bi-info-circle"></i>
+                                        </button>
+                                    </div>
+                                </li>
+                                {{ end }}
+                            </ul>
+                        </div>
                     </div>
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary">Применить</button>
+                </div>
+
+                <!-- Список заявок -->
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-warning text-white">
+                            <h5 class="mb-0"><i class="bi bi-file-text"></i> Заявки</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="btn-group w-100 mb-3" role="group">
+                                <button type="button" class="btn btn-outline-warning active" data-status="" onclick="filterStatements(this)">
+                                    Все
+                                </button>
+                                <button type="button" class="btn btn-outline-warning" data-status="Ожидает" onclick="filterStatements(this)">
+                                    Ожидает
+                                </button>
+                                <button type="button" class="btn btn-outline-warning" data-status="Одобрено" onclick="filterStatements(this)">
+                                    Одобрено
+                                </button>
+                                <button type="button" class="btn btn-outline-warning" data-status="Отклонено" onclick="filterStatements(this)">
+                                    Отклонено
+                                </button>
+                            </div>
+                            <ul class="list-group list-group-flush" id="statementList">
+                                {{ range .Statements }}
+                                <li class="list-group-item statement-item" data-status="{{ .Status }}">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-0">{{ .Name }}</h6>
+                                            <small class="text-muted">{{ .Username }}</small>
+                                        </div>
+                                        <div>
+                                            <span class="badge 
+                                                {{ if eq .Status "Ожидает" }}bg-warning
+                                                {{ else if eq .Status "Одобрено" }}bg-success
+                                                {{ else if eq .Status "Отклонено" }}bg-danger
+                                                {{ end }}">
+                                                {{ .Status }}
+                                            </span>
+                                            <button class="btn btn-outline-info btn-sm ms-2" onclick="location.href='/admin/services/request_info/{{ .ID }}'">
+                                                <i class="bi bi-info-circle"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </li>
+                                {{ end }}
+                            </ul>
+                        </div>
                     </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно -->
-    <div class="modal fade" id="requestModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Детали заявки</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-                </div>
-                <div class="modal-body">
-                    <p><strong>Название:</strong> <span id="modalName"></span></p>
-                    <p><strong>Статус:</strong> <span id="modalStatus"></span></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
                 </div>
             </div>
-        </div>
+
+            <!-- Модальное окно для добавления услуги -->
+            <div class="modal fade" id="addServiceModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Добавить услугу</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form method="POST" action="/admin/services/add_service">
+                                <div class="mb-3">
+                                    <label class="form-label">Название</label>
+                                    <input type="text" class="form-control" name="name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Тип</label>
+                                    <select class="form-select" name="type" required>
+                                        <option value="payment">Платная</option>
+                                        <option value="free">Бесплатная</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Стоимость</label>
+                                    <input type="number" class="form-control" name="cost" min="0" value="0">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Описание</label>
+                                    <textarea class="form-control" name="description" rows="3"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="require_date">
+                                        <label class="form-check-label">Указывать дату</label>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="require_hostel">
+                                        <label class="form-check-label">Указывать общежитие</label>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="require_phone">
+                                        <label class="form-check-label">Указывать телефон</label>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{ else if eq .Role "user" }}
+            <!-- Контент для пользователя -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="input-group mb-4">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" id="serviceSearch" class="form-control" placeholder="Поиск услуги по названию" onkeyup="filterServices()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Список услуг -->
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="bi bi-list-check"></i> Доступные услуги</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush" id="serviceList">
+                                {{ range .Services }}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">{{ .Name }}</h6>
+                                        <small class="text-muted">{{ .Type }}</small>
+                                    </div>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="location.href='/services/{{ .ID }}'">
+                                        <i class="bi bi-info-circle"></i>
+                                    </button>
+                                </li>
+                                {{ end }}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Мои заявки -->
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="bi bi-file-text"></i> Мои заявки</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                {{ if .userStatements }}
+                                {{ range .userStatements }}
+                                <li class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-0">{{ .Name }}</h6>
+                                        </div>
+                                        <div>
+                                            <span class="badge 
+                                                {{ if eq .Status "Ожидает" }}bg-warning
+                                                {{ else if eq .Status "Одобрено" }}bg-success
+                                                {{ else if eq .Status "Отклонено" }}bg-danger
+                                                {{ end }}">
+                                                {{ .Status }}
+                                            </span>
+                                            <button class="btn btn-outline-info btn-sm ms-2 open-modal" data-id="{{ .ID }}" data-name="{{ .Name }}" data-status="{{ .Status }}">
+                                                <i class="bi bi-info-circle"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </li>
+                                {{ end }}
+                                {{ else }}
+                                <li class="list-group-item text-center text-muted">
+                                    Нет активных заявок
+                                </li>
+                                {{ end }}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Создание заявки -->
+                <div class="col-md-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Новая заявка</h5>
+                        </div>
+                        <div class="card-body">
+                            <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#userRequestModal">
+                                <i class="bi bi-plus-circle"></i> Создать заявку
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Модальное окно для заявки пользователя -->
+            <div class="modal fade" id="userRequestModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Создание заявки</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form method="POST" action="/services/create_request">
+                                <div class="mb-3">
+                                    <label class="form-label">Название</label>
+                                    <input type="text" class="form-control" name="name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Детали</label>
+                                    <textarea class="form-control" name="details" rows="3" required></textarea>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                                    <button type="submit" class="btn btn-primary">Отправить</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{ end }}
+        </main>
     </div>
+</div>
 
-    <!-- Подключение JavaScript -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            document.querySelectorAll(".open-modal").forEach(button => {
-                button.addEventListener("click", function () {
-                    // Получаем данные прямо из кнопки
-                    const name = this.getAttribute("data-name");
-                    const status = this.getAttribute("data-status");
-        
-                    // Вставляем данные в модальное окно
-                    document.getElementById("modalName").textContent = name;
-                    document.getElementById("modalStatus").textContent = status;
-        
-                    // Открываем модальное окно
-                    let modal = new bootstrap.Modal(document.getElementById("requestModal"));
-                    modal.show();
-                });
-            });
-        });        
-    </script>
-        
+<script>
+function filterStatements(button) {
+    // Убираем активный класс у всех кнопок
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Добавляем активный класс нажатой кнопке
+    button.classList.add('active');
+    
+    const filterStatus = button.getAttribute('data-status').toLowerCase();
+    const statements = document.querySelectorAll(".statement-item");
+    
+    statements.forEach(function(statement) {
+        const status = statement.getAttribute("data-status").toLowerCase();
+        if (filterStatus === "" || status.includes(filterStatus)) {
+            statement.style.display = "";
+        } else {
+            statement.style.display = "none";
+        }
+    });
+}
 
-{{ else }}
-    <p class="text-danger">У вас нет доступа к этой странице.</p>
-{{ end }}
-
+document.addEventListener("DOMContentLoaded", function() {
+    // Активируем фильтр "Все" при загрузке страницы
+    filterStatements(document.querySelector('.btn-group .btn[data-status=""]'));
+});
+</script>
 {{ end }}

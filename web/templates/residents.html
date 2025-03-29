@@ -1,71 +1,84 @@
 {{ define "admin_residents" }}
-<div class="container mt-4">
+<div class="container-fluid">
     <div class="row">
-        <!-- Таблица жильцов -->
-        <div class="col-md-9">
-            <h2>Жильцы</h2>
-            <!-- Поле поиска -->
-            <div class="mb-3">
-                <input type="text" class="form-control" id="searchInput" placeholder="Поиск по имени или комнате...">
-            </div>
-            
-            <table class="table mt-4" id="residentsTable">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Имя</th>
-                        <th>Email</th>
-                        <th>Комната</th>
-                        <th>Институт</th>
-                        <th>Действия</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{ range .Residents }}
-                    <tr class="resident-row">
-                        <td>{{ .Number }}</td>
-                        <td class="resident-name">{{ .Username }}</td>
-                        <td>{{ .Email }}</td>
-                        <td class="room-number">{{ .RoomNumber }}</td>
-                        <td class="institute-row">{{ if .Institute.Valid }}{{ .Institute.String }}{{ else }}Нет данных{{ end }}</td>
-                        <td>
-                            <a href="/admin/residents/resident/{{ .ID }}" class="btn btn-success btn-sm">
-                                <i class="bi bi-info-circle"></i> <!-- Иконка информации -->
-                            </a>
-                        </td>    
-                    </tr>
-                    {{ end }}
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Блок фильтров -->
-        <div class="col-md-3" style="margin-top: 45px;">
-            <div class="card p-3 mb-4" style="flex: 1;">
-                <h3>Фильтры</h3>
-                <form action="/residents" method="get" class="row g-3">
-                    <div class="col-12">
-                        <label for="filterInstitute" class="form-label">Институт</label>
-                        <select name="institute" class="form-select" id="filterInstitute" onchange="applyFilters()">
-                            <option value="" selected>Все институты</option>
-                            <option value="ИИК">ИИК</option>
-                            <option value="ИДЭУ">ИДЭУ</option>
-                            <option value="ИАТ">ИАТ</option>
-                            <option value="ИАРКТ">ИАРКТ</option>
-                            <option value="СГУ">СГУ</option>
-                            <option value="ИЭУ">ИЭУ</option>
-                            <option value="ЮИ">ЮИ</option>
-                            <option value="САТ">САТ</option>
-                        </select>
-                    </div>
-                </form>
-                <label class="form-label mt-3">Добавление жильца</label>
-                <!-- Кнопка добавления -->
-                <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addResidentModal">
-                    Добавить
+        <!-- Основной контент -->
+        <main class="col-12">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Жильцы</h1>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addResidentModal">
+                    <i class="bi bi-plus-circle"></i> Добавить жильца
                 </button>
             </div>
-        </div>
+
+            <div class="row">
+                <!-- Фильтры -->
+                <div class="col-md-3">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="bi bi-funnel"></i> Фильтры</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="filterInstitute" class="form-label">Институт</label>
+                                <select name="institute" class="form-select" id="filterInstitute" onchange="applyFilters()">
+                                    <option value="" selected>Все институты</option>
+                                    <option value="ИИК">ИИК</option>
+                                    <option value="ИДЭУ">ИДЭУ</option>
+                                    <option value="ИАТ">ИАТ</option>
+                                    <option value="ИАРКТ">ИАРКТ</option>
+                                    <option value="СГУ">СГУ</option>
+                                    <option value="ИЭУ">ИЭУ</option>
+                                    <option value="ЮИ">ЮИ</option>
+                                    <option value="САТ">САТ</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="searchInput" class="form-label">Поиск</label>
+                                <input type="text" class="form-control" id="searchInput" placeholder="Поиск по имени или комнате...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Таблица жильцов -->
+                <div class="col-md-9">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="residentsTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Имя</th>
+                                            <th>Email</th>
+                                            <th>Комната</th>
+                                            <th>Институт</th>
+                                            <th>Действия</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {{ range .Residents }}
+                                        <tr class="resident-row">
+                                            <td>{{ .Number }}</td>
+                                            <td class="resident-name">{{ .Username }}</td>
+                                            <td>{{ .Email }}</td>
+                                            <td class="room-number">{{ .RoomNumber }}</td>
+                                            <td class="institute-row">{{ if .Institute.Valid }}{{ .Institute.String }}{{ else }}Нет данных{{ end }}</td>
+                                            <td>
+                                                <a href="/admin/residents/resident/{{ .ID }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-info-circle"></i>
+                                                </a>
+                                            </td>    
+                                        </tr>
+                                        {{ end }}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 </div>
 
@@ -91,12 +104,14 @@
                         <label for="password" class="form-label">Пароль</label>
                         <div class="input-group">
                             <input type="text" class="form-control" id="password" name="password" required readonly>
-                            <button type="button" class="btn btn-secondary" onclick="generatePassword()">🔄</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="generatePassword()">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
                         </div>
                     </div>
                     <div class="mb-3">
                         <label for="institute" class="form-label">Институт</label>
-                        <select class="form-control" id="institute" name="institute" required>
+                        <select class="form-select" id="institute" name="institute" required>
                             <option value="" selected disabled>Выберите институт</option>
                             <option value="ИИК">ИИК</option>
                             <option value="ИДЭУ">ИДЭУ</option>
@@ -112,7 +127,10 @@
                         <label for="room" class="form-label">Комната</label>
                         <input type="number" class="form-control" id="room" name="room">
                     </div>
-                    <button type="submit" class="btn btn-primary">Добавить</button>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Добавить</button>
+                    </div>
                 </form>
             </div>           
         </div>
@@ -127,7 +145,6 @@
         rows.forEach(row => {
             let institute = row.querySelector(".institute-row").textContent.toLowerCase();
 
-            // Фильтруем по институту
             if (instituteFilter === "" || institute.includes(instituteFilter)) {
                 row.style.display = "";
             } else {
@@ -136,7 +153,6 @@
         });
     }
 
-    // Функция генерации пароля
     function generatePassword() {
         const length = 10;
         const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
@@ -147,7 +163,6 @@
         document.getElementById("password").value = password;
     }
 
-    // Поиск по имени и комнате
     document.getElementById("searchInput").addEventListener("input", function() {
         let filter = this.value.toLowerCase();
         let rows = document.querySelectorAll("#residentsTable tbody tr");
@@ -156,7 +171,6 @@
             let name = row.querySelector(".resident-name").textContent.toLowerCase();
             let room = row.querySelector(".room-number").textContent.toLowerCase();
 
-            // Показываем строку, если фильтр содержится в имени или номере комнаты
             if (name.includes(filter) || room.includes(filter)) {
                 row.style.display = "";
             } else {

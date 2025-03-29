@@ -1,58 +1,94 @@
 {{ define "resident" }}
-<!-- Кнопка "Назад" -->
-<a href="/admin/residents" class="btn btn-outline-secondary btn-sm mb-3">
-    <i class="bi bi-arrow-left"></i> Назад
-</a>
-
-<h2>Информация о жильце: {{ .Resident.Username }}</h2>
-
-<!-- Контейнер для вывода данных -->
-<div class="container">
-    <div class="row mb-3">
-        <input type="hidden" id="residentId" value="{{ .Resident.ID }}">
-        <div class="col-12 col-md-6">
-            <label for="username" class="form-label">Имя</label>
-            <input type="text" class="form-control" id="username" name="username" value="{{ .Resident.Username }}" disabled>
-        </div>
-        <div class="col-12 col-md-6">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" class="form-control" id="email" name="email" value="{{ .Resident.Email }}">
-        </div>
-    </div>
-    
-    <div class="row mb-3">
-        <div class="col-12 col-md-6">
-            <label for="institute" class="form-label">Институт</label>
-            <input type="text" class="form-control" id="institute" name="institute" value="{{ if .Resident.Institute.Valid }}{{ .Resident.Institute.String }}{{ else }}Нет данных{{ end }}">
-        </div>
-        <div class="col-12 col-md-6">
-            <label for="role" class="form-label">Роль</label>
-            <input type="text" class="form-control" id="role" name="role" value="{{ .Resident.Role }}">
-        </div>
-    </div>
-
-    <div class="row mb-3">
-        <div class="col-12 col-md-6">
-            <label for="room" class="form-label">Комната</label>
-            <input type="text" class="form-control" id="room" name="room" value="{{ .Resident.RoomNumber }}">
-        </div>
-        <div class="col-12 col-md-6">
-            <label for="password" class="form-label">Пароль</label>
-            <div class="input-group">
-                <input type="password" class="form-control" id="password" name="password" value="{{ .Resident.Password }}">
-                <button type="button" class="btn btn-outline-secondary" id="togglePassword">Показать</button>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Основной контент -->
+        <main class="col-12">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <div>
+                    <a href="/admin/residents" class="text-decoration-none text-dark me-3">
+                        <i class="bi bi-arrow-left fs-4"></i>
+                    </a>
+                    <h1 class="h2 d-inline">Информация о жильце: {{ .Resident.Username }}</h1>
+                </div>
+                {{ if eq .Role "admin" }}
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i class="bi bi-trash"></i> Удалить пользователя
+                </button>
+                {{ end }}
             </div>
-        </div>
-    </div>
 
-    <!-- Кнопки для редактирования и удаления -->
-    <div class="d-flex justify-content-between">
-        <button type="button" class="btn btn-primary" id="saveButton">Сохранить изменения</button>
+            <div class="row">
+                <!-- Информация о жильце -->
+                <div class="col-md-8">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="bi bi-person-circle"></i> Информация о жильце</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="username" class="form-label">Имя</label>
+                                        <input type="text" class="form-control" id="username" name="username" value="{{ .Resident.Username }}" disabled>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="email" name="email" value="{{ .Resident.Email }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="institute" class="form-label">Институт</label>
+                                        <input type="text" class="form-control" id="institute" name="institute" value="{{ if .Resident.Institute.Valid }}{{ .Resident.Institute.String }}{{ else }}Нет данных{{ end }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="role" class="form-label">Роль</label>
+                                        <input type="text" class="form-control" id="role" name="role" value="{{ .Resident.Role }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="room" class="form-label">Комната</label>
+                                        <input type="text" class="form-control" id="room" name="room" value="{{ .Resident.RoomNumber }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="password" class="form-label">Пароль</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="password" name="password" value="{{ .Resident.Password }}">
+                                            <button type="button" class="btn btn-outline-secondary" id="togglePassword">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end mt-3">
+                                <button type="button" class="btn btn-primary" id="saveButton">
+                                    <i class="bi bi-save"></i> Сохранить изменения
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        {{ if eq .Role "admin" }}
-        <!-- Кнопка для вызова модального окна -->
-        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">Удалить пользователя</button>
-        {{ end }}
+                <!-- Дополнительная информация -->
+                <div class="col-md-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="bi bi-info-circle"></i> Дополнительная информация</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <i class="bi bi-calendar"></i> Дата заселения
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="bi bi-chat"></i> Заявки и обращения
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 </div>
 
@@ -65,13 +101,15 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Вы уверены, что хотите удалить этого пользователя? Это действие необратимо.
+                <p>Вы уверены, что хотите удалить этого пользователя? Это действие необратимо.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
                 <form action="/admin/residents/resident/{{ .Resident.ID }}/delete_resident" method="POST" id="deleteForm">
                     <input type="hidden" name="_method" value="DELETE">
-                    <button type="submit" class="btn btn-danger">Удалить</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Удалить
+                    </button>
                 </form>                
             </div>
         </div>
@@ -82,7 +120,6 @@
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
     <div id="toastContainer"></div>
 </div>
-
 
 <script>
     // Логика для обработки кнопки "Сохранить изменения"
@@ -95,7 +132,7 @@
         let password = document.getElementById("password").value;
     
         fetch(`/update_resident/${residentId}`, {
-            method: 'PUT',
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: residentId, username, email, institute, role, password })
         })
@@ -140,13 +177,12 @@
         const passwordField = document.getElementById("password");
         const passwordButton = document.getElementById("togglePassword");
 
-        // Переключаем тип поля и текст кнопки
         if (passwordField.type === "password") {
             passwordField.type = "text";
-            passwordButton.textContent = "Скрыть";
+            passwordButton.innerHTML = '<i class="bi bi-eye-slash"></i>';
         } else {
             passwordField.type = "password";
-            passwordButton.textContent = "Показать";
+            passwordButton.innerHTML = '<i class="bi bi-eye"></i>';
         }
     });
 </script>

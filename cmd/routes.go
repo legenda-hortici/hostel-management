@@ -64,6 +64,8 @@ func RegisterRoutes(r *gin.Engine) error {
 	{
 		protected.GET("/profile", handlers.ProfileHandler)
 		protected.GET("/", homeHandler.HomeHandler)
+		protected.POST("/upload_banner", homeHandler.UploadBannerHandler)
+		protected.POST("/delete_banner", homeHandler.DeleteBannerHandler)
 		protected.GET("/news", newsHandler.News)
 		protected.GET("/news/:id", newsHandler.NewsInfoHandler)
 		protected.GET("/create_news", newsHandler.CreateNewsPageHandler)

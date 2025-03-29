@@ -1,161 +1,210 @@
 {{ define "home" }}
-<div class="container mt-4">
-    <!-- Карусель -->
-    <div id="carouselExample" class="carousel slide mb-4" data-bs-ride="carousel">
-        <div class="carousel-inner">
-            {{ range $index, $banner := .Banners }}
-            <div class="carousel-item {{ if eq $index 0 }}active{{ end }}">
-                <img src="/{{ $banner }}" class="d-block w-100 banner-image" alt="Баннер">
+<div class="container-fluid">
+    <div class="row">
+        <!-- Основной контент -->
+        <main class="col-12">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Главная страница</h1>
+                {{ if eq .Role "admin" }}
+                <div class="btn-group">
+                    <button class="btn btn-secondary" type="button" id="toggleBannerSettings">
+                        <i class="bi bi-gear"></i> Управление баннерами
+                    </button>
+                </div>
+                {{ end }}
+            </div>
+
+            <!-- Карусель -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-0">
+                    <div id="carouselExample" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            {{ range $index, $banner := .Banners }}
+                            <div class="carousel-item {{ if eq $index 0 }}active{{ end }}">
+                                <img src="/{{ $banner }}" class="d-block w-100 banner-image" alt="Баннер">
+                            </div>
+                            {{ end }}
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Панель управления баннерами -->
+            {{ if eq .Role "admin" }}
+            <div id="bannerSettings" class="mb-4" style="display: none;">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-images"></i> Управление баннерами</h5>
+                    </div>
+                    <div class="card-body">
+                        <form action="/upload_banner" method="POST" enctype="multipart/form-data" class="mb-3">
+                            <div class="mb-2">
+                                <label class="form-label">Загрузить новый баннер</label>
+                                <small class="text-muted d-block">Рекомендуемый размер: 1280x300 пикселей</small>
+                            </div>
+                            <div class="input-group">
+                                <input type="file" name="banner" accept="image/*" class="form-control" required>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-upload"></i> Загрузить
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Существующие баннеры</h6>
+                            </div>
+                            <div class="list-group list-group-flush">
+                                {{ range .Banners }}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <img src="/{{ . }}" alt="Баннер" class="me-3" style="height: 50px; object-fit: cover;">
+                                        <span>{{ . }}</span>
+                                    </div>
+                                    <form action="/delete_banner" method="POST" class="d-inline">
+                                        <input type="hidden" name="banner" value="{{ . }}">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                                {{ end }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             {{ end }}
-        </div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        </button>
-    </div>
 
-    <style>
-        /* Устанавливаем фиксированную высоту для баннера */
-        .banner-image {
-            height: 300px; /* или любой другой размер, который вам нужен */
-            object-fit: cover; /* Это сохранит пропорции, обрезая изображение, если оно не помещается в контейнер */
-        }
-    </style>        
-
-    <!-- Иконка настроек -->
-    {{ if eq .Role "admin" }}
-    <div class="text-end">
-        <button class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#bannerSettings">
-            ⚙ Баннеры
-        </button>
-    </div>
-    
-    <!-- Панель управления баннерами -->
-    <div id="bannerSettings" class="collapse mt-3">
-        <form action="/home/upload_banner" method="POST" enctype="multipart/form-data" class="mb-3">
-            <small>Примечание: рекомендумый размер 1280x300</small>
-            <input type="file" name="banner" accept="image/*" class="form-control mb-2" required>
-            <button type="submit" class="btn btn-success">📤 Загрузить</button>
-        </form>
-        
-        <ul class="list-group">
-            {{ range .Banners }}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>{{ . }}</span>
-                <form action="/home/delete_banner" method="POST" class="d-inline">
-                    <input type="hidden" name="banner" value="{{ . }}">
-                    <button type="submit" class="btn btn-danger btn-sm">🗑 Удалить</button>
-                </form>
-            </li>
-            {{ end }}
-        </ul>
-    </div>        
-    {{ end }}
-
-    <!-- Новости -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Новости</h2>
-        <div class="d-flex align-items-center">
-            <a href="/news" class="btn btn-link me-2">Смотреть все</a>
-            {{ if eq .Role "admin" }}
-            <a href="/create_news" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg"></i>
-            </a>
-            {{ end }}
-        </div>
-    </div>
-
-    <div class="d-flex justify-content-between align-items-center mb-3" style="display: flex; justify-content: space-between; align-items: center;">
-        <!-- Кнопка влево -->
-        <button class="btn btn-light" 
-                id="newsPrev" 
-                style="width: 30px; height: 30px; 
-                    display: flex; 
-                    justify-content: center; 
-                    align-items: center; 
-                    padding: 0;">
-            <i class="bi bi-chevron-left" style="font-size: 1.5rem;"></i>
-        </button>
-
-        <!-- Прокручиваемая лента новостей -->
-        <div class="news-carousel d-flex gap-3 overflow-hidden p-2" id="newsCarousel">
-            {{ range .News }}
-            <a href="/news/{{ .ID }}" class="card news-card flex-shrink-0 position-relative" style="width: 300px; height: 120px; text-decoration: none; color: inherit;">
-                <div class="card-body text-center">
-                    <h6 class="card-title text-truncate">{{ .Title }}</h6>
-                    <p class="card-text text-truncate small">{{ .Annotation }}</p>
+            <!-- Новости -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-newspaper"></i> Новости</h5>
+                    <div>
+                        <a href="/news" class="btn btn-outline-primary btn-sm me-2">Смотреть все</a>
+                        {{ if eq .Role "admin" }}
+                        <a href="/create_news" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-lg"></i> Добавить
+                        </a>
+                        {{ end }}
+                    </div>
                 </div>
-            </a>
-            {{ end }}
-        </div>
-    
-        <!-- Кнопка вправо -->
-        <button class="btn btn-light" 
-                id="newsNext" 
-                style="width: 30px; height: 30px; 
-                    display: flex; 
-                    justify-content: center; 
-                    align-items: center; 
-                    padding: 0;">
-            <i class="bi bi-chevron-right" style="font-size: 1.5rem;"></i>
-        </button>
-    </div>
-
-    <!-- Объявления -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Объявления</h2>
-        <div class="d-flex align-items-center">
-            <a href="/notices" class="btn btn-link me-2">Смотреть все</a>
-            {{ if eq .Role "admin" }}
-            <a href="/create_notice" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg"></i>
-            </a>
-            {{ end }}
-        </div>
-    </div>    
-
-    <div class="d-flex justify-content-between align-items-center mb-3" style="display: flex; justify-content: space-between; align-items: center;">
-        <!-- Кнопка влево -->
-        <button class="btn btn-light" 
-                id="noticesPrev" 
-                style="width: 30px; height: 30px; 
-                    display: flex; 
-                    justify-content: center; 
-                    align-items: center; 
-                    padding: 0;">
-            <i class="bi bi-chevron-left" style="font-size: 1.5rem;"></i>
-        </button>
-
-        <!-- Прокручиваемая лента объявлений -->
-        <div class="news-carousel d-flex gap-3 overflow-hidden p-2" id="noticesCarousel">
-            {{ range .Notices }}
-            <a href="/notices/{{ .ID }}" class="card news-card flex-shrink-0 position-relative" style="width: 300px; height: 120px; text-decoration: none; color: inherit;">
-                <div class="card-body text-center">
-                    <h6 class="card-title text-truncate">{{ .Title }}</h6>
-                    <p class="card-text text-truncate small">{{ .Annotation }}</p>
+                <div class="card-body">
+                    <div class="position-relative">
+                        <button class="btn btn-light position-absolute start-0 top-50 translate-middle-y" 
+                                id="newsPrev" 
+                                style="z-index: 1;">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <div class="news-carousel d-flex gap-3 overflow-hidden px-4" id="newsCarousel">
+                            {{ range .News }}
+                            <a href="/news/{{ .ID }}" class="card news-card flex-shrink-0" style="width: 300px; text-decoration: none; color: inherit;">
+                                <div class="card-body">
+                                    <h6 class="card-title text-truncate">{{ .Title }}</h6>
+                                    <p class="card-text text-truncate small text-muted">{{ .Annotation }}</p>
+                                </div>
+                            </a>
+                            {{ end }}
+                        </div>
+                        <button class="btn btn-light position-absolute end-0 top-50 translate-middle-y" 
+                                id="newsNext" 
+                                style="z-index: 1;">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
                 </div>
-            </a>
-            {{ end }}
-        </div>
-    
-        <!-- Кнопка вправо -->
-        <button class="btn btn-light" 
-                id="noticesNext" 
-                style="width: 30px; height: 30px; 
-                    display: flex; 
-                    justify-content: center; 
-                    align-items: center; 
-                    padding: 0;">
-            <i class="bi bi-chevron-right" style="font-size: 1.5rem;"></i>
-        </button>
+            </div>
+
+            <!-- Объявления -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-megaphone"></i> Объявления</h5>
+                    <div>
+                        <a href="/notices" class="btn btn-outline-primary btn-sm me-2">Смотреть все</a>
+                        {{ if eq .Role "admin" }}
+                        <a href="/create_notice" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-lg"></i> Добавить
+                        </a>
+                        {{ end }}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="position-relative">
+                        <button class="btn btn-light position-absolute start-0 top-50 translate-middle-y" 
+                                id="noticesPrev" 
+                                style="z-index: 1;">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <div class="news-carousel d-flex gap-3 overflow-hidden px-4" id="noticesCarousel">
+                            {{ range .Notices }}
+                            <a href="/notices/{{ .ID }}" class="card news-card flex-shrink-0" style="width: 300px; text-decoration: none; color: inherit;">
+                                <div class="card-body">
+                                    <h6 class="card-title text-truncate">{{ .Title }}</h6>
+                                    <p class="card-text text-truncate small text-muted">{{ .Annotation }}</p>
+                                </div>
+                            </a>
+                            {{ end }}
+                        </div>
+                        <button class="btn btn-light position-absolute end-0 top-50 translate-middle-y" 
+                                id="noticesNext" 
+                                style="z-index: 1;">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 </div>
 
+<style>
+    .banner-image {
+        height: 300px;
+        object-fit: cover;
+    }
+
+    .news-card {
+        transition: transform 0.3s, box-shadow 0.3s;
+        border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .news-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .btn-light {
+        background-color: white;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .btn-light:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        // Обработчик для панели управления баннерами
+        const toggleBannerSettingsBtn = document.getElementById('toggleBannerSettings');
+        const bannerSettings = document.getElementById('bannerSettings');
+        
+        if (toggleBannerSettingsBtn && bannerSettings) {
+            toggleBannerSettingsBtn.addEventListener('click', function() {
+                const isVisible = bannerSettings.style.display === 'block';
+                bannerSettings.style.display = isVisible ? 'none' : 'block';
+            });
+        }
+
+        // Существующий код для каруселей
         const newsCarousel = document.getElementById("newsCarousel");
         const noticesCarousel = document.getElementById("noticesCarousel");
         const newsPrevBtn = document.getElementById("newsPrev");
@@ -163,7 +212,7 @@
         const noticesPrevBtn = document.getElementById("noticesPrev");
         const noticesNextBtn = document.getElementById("noticesNext");
 
-        const scrollAmount = 320; // Шаг прокрутки
+        const scrollAmount = 320;
 
         newsPrevBtn.addEventListener("click", function () {
             newsCarousel.scrollBy({ left: -scrollAmount, behavior: "smooth" });
@@ -182,5 +231,4 @@
         });
     });
 </script>
-
 {{ end }}

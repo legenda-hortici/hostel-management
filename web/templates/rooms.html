@@ -1,92 +1,112 @@
 {{ define "admin_rooms" }}
-<h2>Комнаты</h2>
-
-<div class="row">
-    <!-- Основной контент с карточками -->
-    <div class="col-md-9">
-        <!-- Строка поиска по номеру комнаты -->
-        <div class="mb-3">
-            <input type="text" class="form-control" id="searchRoomNumber" placeholder="Поиск по комнатам..." oninput="applyFilters()">
-        </div>
-        
-        <div class="row">
-            {{ range .Rooms }}
-            {{ if ne .Number 0 }} <!-- Проверка на номер комнаты, если 0, то не показывать -->
-            <div class="col-md-4 mb-4 room-card">
-                <div class="card position-relative">
-                    <a href="/admin/rooms/room_info/{{ .ID }}" class="position-absolute top-0 end-0 m-2 text-success">
-                        <i class="bi bi-info-circle fs-4"></i>
-                    </a>
-                    <div class="card-body">
-                        <h5 class="card-title">Комната №{{ .Number }}</h5>
-                        <p class="card-text room-type"><strong>Тип:</strong> {{ .Type }}</p>
-                        <p class="card-text room-status"><strong>Статус:</strong> 
-                            <span class="badge
-                                {{ if eq .Status "Занята"}} bg-warning
-                                {{ else if eq .Status "Доступна" }} bg-success
-                                {{ else if eq .Status "На ремонте" }} bg-danger
-                                {{ end }} text-white">
-                                {{ .Status }}
-                            </span>    
-                        </p>
-                        <p class="card-text room-user-count"><strong>Жильцов:</strong> {{ .UserCount }}</p>
-                        <p class="card-text room-hostel"><strong>Общежитие:</strong> {{ .HostelNumber }}</p>
-                    </div>
-                </div>                
+<div class="container-fluid">
+    <div class="row">
+        <!-- Основной контент -->
+        <main class="col-12">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Комнаты</h1>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addRoomModal">
+                    <i class="bi bi-plus-circle"></i> Добавить комнату
+                </button>
             </div>
-            {{ end }}
-            {{ end }}
-        </div>        
-    </div>
 
-    <!-- Фильтры (справа 3 колонки) -->
-    <div class="col-md-3 d-flex flex-column">
-        <div class="card p-3 mb-4">
-            <h3>Фильтры</h3>
-            <form method="GET" action="/rooms" class="row g-3">
-                <div class="col-12">
-                    <label for="filterStatus" class="form-label">Статус</label>
-                    <select name="status" class="form-select" id="filterStatus" onchange="applyFilters()">
-                        <option value="">Все</option>
-                        <option value="Доступна">Доступна</option>
-                        <option value="Занята">Занята</option>
-                        <option value="На ремонте">На ремонте</option>
-                    </select>
+            <div class="row">
+                <!-- Фильтры -->
+                <div class="col-md-3">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="bi bi-funnel"></i> Фильтры</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="filterStatus" class="form-label">Статус</label>
+                                <select name="status" class="form-select" id="filterStatus" onchange="applyFilters()">
+                                    <option value="">Все</option>
+                                    <option value="Доступна">Доступна</option>
+                                    <option value="Занята">Занята</option>
+                                    <option value="На ремонте">На ремонте</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="filterType" class="form-label">Тип комнаты</label>
+                                <select name="type" class="form-select" id="filterType" onchange="applyFilters()">
+                                    <option value="">Все</option>
+                                    <option value="Одноместная">Одноместная</option>
+                                    <option value="Двухместная">Двухместная</option>
+                                    <option value="Трёхместная">Трёхместная</option>
+                                    <option value="Двухместная (комфорт)">Двухместная (комфорт)</option>
+                                    <option value="Трёхместная (комфорт)">Трёхместная (комфорт)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="filterHostel" class="form-label">Общежитие</label>
+                                <select name="hostel" class="form-select" id="filterHostel" onchange="applyFilters()">
+                                    <option value="">Все</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                    <option value="9">9</option>
+                                    <option value="11">11</option>
+                                    <option value="12">12</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="searchRoomNumber" class="form-label">Поиск по номеру</label>
+                                <input type="text" class="form-control" id="searchRoomNumber" placeholder="Введите номер..." oninput="applyFilters()">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-12">
-                    <label for="filterType" class="form-label">Тип комнаты</label>
-                    <select name="type" class="form-select" id="filterType" onchange="applyFilters()">
-                        <option value="">Все</option>
-                        <option value="Одноместная">Одноместная</option>
-                        <option value="Двухместная">Двухместная</option>
-                        <option value="Трёхместная">Трёхместная</option>
-                        <option value="Двухместная (комфорт)">Двухместная (комфорт)</option>
-                        <option value="Трёхместная (комфорт)">Трёхместная (комфорт)</option>
-                    </select>
+
+                <!-- Карточки комнат -->
+                <div class="col-md-9">
+                    <div class="row">
+                        {{ range .Rooms }}
+                        {{ if ne .Number 0 }}
+                        <div class="col-md-4 mb-4 room-card">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h5 class="card-title mb-0">Комната №{{ .Number }}</h5>
+                                        <a href="/admin/rooms/room_info/{{ .ID }}" class="text-primary">
+                                            <i class="bi bi-info-circle"></i>
+                                        </a>
+                                    </div>
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item">
+                                            <i class="bi bi-house"></i> Тип: {{ .Type }}
+                                        </li>
+                                        <li class="list-group-item">
+                                            <i class="bi bi-circle-fill"></i> Статус: 
+                                            <span class="badge
+                                                {{ if eq .Status "Занята"}} bg-warning
+                                                {{ else if eq .Status "Доступна" }} bg-success
+                                                {{ else if eq .Status "На ремонте" }} bg-danger
+                                                {{ end }} text-white">
+                                                {{ .Status }}
+                                            </span>
+                                        </li>
+                                        <li class="list-group-item">
+                                            <i class="bi bi-people"></i> Жильцов: {{ .UserCount }}
+                                        </li>
+                                        <li class="list-group-item">
+                                            <i class="bi bi-building"></i> Общежитие: {{ .HostelNumber }}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        {{ end }}
+                        {{ end }}
+                    </div>
                 </div>
-                <div class="col-12">
-                    <label for="filterHostel" class="form-label">Общежитие</label>
-                    <select name="hostel" class="form-select" id="filterHostel" onchange="applyFilters()">
-                        <option value="">Все</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                        <option value="6">6</option>
-                        <option value="7">7</option>
-                        <option value="9">9</option>
-                        <option value="11">11</option>
-                        <option value="12">12</option>
-                    </select>
-                </div>
-            </form>
-            <label class="form-label mt-3">Добавление комнаты</label>
-            <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addRoomModal">
-                Добавить комнату
-            </button>
-        </div>
-    </div>    
+            </div>
+        </main>
+    </div>
 </div>
 
 <!-- Модальное окно для добавления комнаты -->
@@ -105,7 +125,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="roomType" class="form-label">Тип комнаты</label>
-                        <select class="form-control" id="roomType" name="roomType" required>
+                        <select class="form-select" id="roomType" name="roomType" required>
                             <option value="once">Одноместная</option>
                             <option value="double">Двухместная</option>
                             <option value="triple">Трёхместная</option>
@@ -115,7 +135,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="roomStatus" class="form-label">Статус</label>
-                        <select class="form-control" id="roomStatus" name="roomStatus" required>
+                        <select class="form-select" id="roomStatus" name="roomStatus" required>
                             <option value="unoccupied">Свободна</option>
                             <option value="occupied">Занята</option>
                             <option value="renovation">На ремонте</option>
@@ -123,7 +143,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="roomHostel" class="form-label">Общежитие</label>
-                        <select class="form-control" id="roomHostel" name="roomHostel" required>
+                        <select class="form-select" id="roomHostel" name="roomHostel" required>
                             <option value="1">1</option>
                             <option value="2">2</option>
                             <option value="3">3</option>
@@ -136,7 +156,10 @@
                             <option value="12">12</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary">Добавить</button>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Добавить</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -153,9 +176,9 @@ function applyFilters() {
     let cards = document.querySelectorAll(".room-card");
 
     cards.forEach(card => {
-        let status = card.querySelector(".room-status").textContent.toLowerCase();
-        let type = card.querySelector(".room-type").textContent.toLowerCase();
-        let hostel = card.querySelector(".room-hostel").textContent.toLowerCase();
+        let status = card.querySelector(".badge").textContent.toLowerCase();
+        let type = card.querySelector(".list-group-item:nth-child(1)").textContent.toLowerCase();
+        let hostel = card.querySelector(".list-group-item:nth-child(4)").textContent.toLowerCase();
         let roomNumber = card.querySelector(".card-title").textContent.toLowerCase();
 
         if ((statusFilter === "" || status.includes(statusFilter)) &&

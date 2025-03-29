@@ -1,57 +1,122 @@
 {{ define "news" }}
-<div class="container mt-4">
-    <!-- Кнопка "Назад" -->
-    <a href="/" class="btn btn-outline-secondary btn-sm mb-3">
-        <i class="bi bi-arrow-left"></i> Назад
-    </a>
-
-    <!-- Заголовок страницы -->
-    <h2>Новости</h2>
-
-    <!-- Поисковая строка -->
-    <div class="mb-3">
-        <input type="text" class="form-control" id="searchNews" placeholder="Поиск по новостям..." oninput="applyFilters()">
-    </div>
-
-    <!-- Основной контент -->
+<div class="container-fluid">
     <div class="row">
-        <!-- Блок карточек новостей (8 колонок) -->
-        <div class="col-md-8">
-            <div class="news-cards-container">
-                {{ range .News }}
-                <div class="card mb-3 news-card">
-                    <div class="card-body">
-                        <h5 class="card-title news-title">{{ .Title }}</h5>
-                        <p class="card-text news-annotation">{{ .Annotation }}</p>
-                        <a href="/news/{{ .ID }}" class="btn btn-primary btn-sm">Читать далее</a>
+        <!-- Основной контент -->
+        <main class="col-12">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <div>
+                    <a href="/" class="text-decoration-none text-dark me-3">
+                        <i class="bi bi-arrow-left fs-4"></i>
+                    </a>
+                    <h1 class="h2 d-inline">Новости</h1>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Основной список новостей -->
+                <div class="col-md-7">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input type="text" class="form-control" id="searchNews" placeholder="Поиск по новостям..." oninput="applyFilters()">
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="news-cards-container">
+                                {{ range .News }}
+                                <div class="card mb-3 news-card border-0 shadow-sm">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <h5 class="card-title news-title mb-2">{{ .Title }}</h5>
+                                            <small class="text-muted">{{ .Date }}</small>
+                                        </div>
+                                        <p class="card-text news-annotation text-muted">{{ .Annotation }}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <a href="/news/{{ .ID }}" class="btn btn-outline-primary btn-sm">
+                                                <i class="bi bi-arrow-right"></i> Читать далее
+                                            </a>
+                                            {{ if eq $.Role "admin" }}
+                                            <div class="btn-group">
+                                                <a href="/admin/news/{{ .ID }}/edit" class="btn btn-outline-secondary btn-sm">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteNewsModal{{ .ID }}">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                            {{ end }}
+                                        </div>
+                                    </div>
+                                </div>
+                                {{ else }}
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> Новостей не найдено.
+                                </div>
+                                {{ end }}
+                            </div>
+                        </div>
                     </div>
                 </div>
-                {{ else }}
-                <div class="alert alert-info">
-                    Новостей не найдено.
-                </div>
-                {{ end }}
-            </div>
-        </div>
 
-        <!-- Блок фильтров (4 колонки) -->
-        <div class="col-md-4">
-            <h4>Свежие новости</h4>
-            {{ range .LatestNews }}
-            <a href="/news/{{ .ID }}" class="card mt-3" style="text-decoration: none; color: inherit;">
-                <div class="card-body text-center">
-                    <h6 class="card-title text-truncate">{{ .Title }}</h6>
-                    <p class="card-text text-truncate small">{{ .Annotation }}</p>
+                <!-- Боковая панель -->
+                <div class="col-md-5">
+                    <!-- Свежие новости -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="bi bi-clock-history"></i> Свежие новости</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                {{ range .LatestNews }}
+                                <a href="/news/{{ .ID }}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1 text-truncate">{{ .Title }}</h6>
+                                        <small class="text-muted">{{ .Date }}</small>
+                                    </div>
+                                    <p class="mb-1 small text-truncate">{{ .Annotation }}</p>
+                                </a>
+                                {{ else }}
+                                <div class="list-group-item">
+                                    <p class="mb-0 text-muted">Нет свежих новостей</p>
+                                </div>
+                                {{ end }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </a>
-            {{ else }}
-            <div class="alert alert-info">
-                Новостей не найдено.
             </div>
-            {{ end }}
+        </main>
+    </div>
+</div>
+
+<!-- Модальные окна для подтверждения удаления -->
+{{ range .News }}
+<div class="modal fade" id="deleteNewsModal{{ .ID }}" tabindex="-1" aria-labelledby="deleteNewsModalLabel{{ .ID }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteNewsModalLabel{{ .ID }}">Подтверждение удаления</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить новость "{{ .Title }}"?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <form action="/admin/news/{{ .ID }}/delete" method="POST" class="d-inline">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Удалить
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
+{{ end }}
 
 <script>
     function applyFilters() {
@@ -72,11 +137,16 @@
             }
         });
 
-        // Если нет видимых карточек, показываем сообщение
         const noResultsAlert = document.querySelector(".news-cards-container .alert-info");
         if (noResultsAlert) {
             noResultsAlert.style.display = hasVisibleCards ? "none" : "block";
         }
+    }
+
+    function saveNews() {
+        // Логика сохранения новости
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addNewsModal'));
+        modal.hide();
     }
 </script>
 {{ end }}
