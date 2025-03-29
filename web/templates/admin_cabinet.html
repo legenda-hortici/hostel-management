@@ -30,13 +30,14 @@
         <div class="col mb-4">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">Общежитие #{{ .Number }}</h5>
+                    <h5 class="card-title">Общежитие №{{ .Number }}</h5>
                     <div class="row">
                         <div class="col-6">
                             <p><strong>Адрес:</strong> {{ .Location }}</p>
                             <p><strong>Жильцы:</strong> {{ .ResidentsCount }}</p>
                         </div>
                         <div class="col-6">
+                            <p><strong>Комнаты:</strong> {{ .RoomsCount }}</p>
                             <p><strong>Занятых комнат:</strong> <span class="text-danger">{{ .OccupiedRooms }}</span></p>
                             <p><strong>Доступных комнат:</strong> <span class="text-success">{{ .AvailableRooms }}</span></p>
                         </div>
@@ -49,25 +50,6 @@
     {{ else }}
     <div class="alert alert-warning">Нет данных по общежитиям.</div>
     {{ end }}
-
-    <!-- Почтовый ящик -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Почтовый ящик</h5>
-            {{ if .Messages }}
-            <ul class="list-group">
-                {{ range .Messages }}
-                <li class="list-group-item">
-                    <i class="bi bi-envelope"></i> <strong>{{ .Sender }}</strong>: {{ .Subject }}
-                    <p class="mt-2">{{ .Body }}</p>
-                </li>
-                {{ end }}
-            </ul>
-            {{ else }}
-            <p>Сообщений нет</p>
-            {{ end }}
-        </div>
-    </div>
 </div>
 
 <!-- Модальное окно подтверждения выхода -->
@@ -98,7 +80,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form action="/update-profile" method="POST">
+                <form action="/admin/update_profile" method="POST">
                     <div class="mb-3">
                         <label for="username" class="form-label">Логин</label>
                         <input type="text" class="form-control" id="username" name="username" value="{{ .Admin.Username }}">

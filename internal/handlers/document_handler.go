@@ -3,15 +3,18 @@ package handlers
 import (
 	"fmt"
 	"hostel-management/internal/helpers"
-	"hostel-management/internal/session"
+	"hostel-management/pkg/session"
 
 	"github.com/gin-gonic/gin"
 )
 
 func DocumentsHandler(c *gin.Context) {
+
+	const op = "handlers.DocumentsHandler.DocumentsHandler"
+
 	role, exists := session.GetUserRole(c)
 	if !exists || role != "admin" {
-		c.String(403, "Access denied")
+		c.String(403, "Access denied: %v: %v", role, op)
 		return
 	}
 
@@ -24,8 +27,11 @@ func DocumentsHandler(c *gin.Context) {
 }
 
 func CreateContractHandler(c *gin.Context) {
+
+	const op = "handlers.DocumentsHandler.CreateContractHandler"
+
 	if c.Request.Method != "POST" {
-		c.String(405, "Method not allowed")
+		c.String(405, "Method not allowed: %v: %v", c.Request.Method, op)
 		return
 	}
 

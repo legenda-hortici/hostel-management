@@ -5,29 +5,23 @@
     </a>
     <h2>Объявления</h2>
 
-    <div class="row mb-4">
-        <div class="col-12">
-            <form action="/notices" method="GET" class="d-flex">
-                <input type="text" name="search" class="form-control me-2" placeholder="Поиск новостей..." value="">
-                <button type="submit" class="btn btn-primary">Найти</button>
-            </form>
-        </div>
+    <div class="mb-3">
+        <input type="text" id="search" class="form-control me-2" placeholder="Поиск объявлений..." oninput="applyFilters()">
     </div>
 
     <div class="row">
         <!-- Блок карточек новостей (8 колонок) -->
-        <div class="col-md-8">
+        <div class="col-md-8 notice-cards-container">
+            <div id="no-results" class="alert alert-info" style="display: none;">
+                Объявлений не найдено.
+            </div>
             {{ range .Notices }}
-            <div class="card mb-3">
+            <div class="card mb-3 notice-card">
                 <div class="card-body">
-                    <h5 class="card-title">{{ .Title }}</h5>
-                    <p class="card-text">{{ .Annotation }}</p>
+                    <h5 class="notice-title">{{ .Title }}</h5>
+                    <p class="notice-text">{{ .Annotation }}</p>
                     <a href="/notices/{{ .ID }}" class="btn btn-primary btn-sm">Читать далее</a>
                 </div>
-            </div>
-            {{ else }}
-            <div class="alert alert-info">
-                Объявлений не найдено.
             </div>
             {{ end }}
         </div>
@@ -50,4 +44,27 @@
         </div>
     </div>
 </div>
+
+<script>
+    function applyFilters() {
+        const searchTerm = document.getElementById("search").value.toLowerCase();
+        const cards = document.querySelectorAll(".notice-card");
+        let hasVisibleCards = false;
+
+        cards.forEach(card => {
+            const title = card.querySelector(".notice-title").textContent.toLowerCase();
+            const annotation = card.querySelector(".notice-text").textContent.toLowerCase();
+
+            if (searchTerm === "" || title.includes(searchTerm) || annotation.includes(searchTerm)) {
+                card.style.display = "block";
+                hasVisibleCards = true;
+            } else {
+                card.style.display = "none";
+            }
+        });
+
+        // Отображение или скрытие блока "Объявлений не найдено"
+        document.getElementById("no-results").style.display = hasVisibleCards ? "none" : "block";
+    }
+</script>
 {{ end }}

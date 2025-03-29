@@ -7,26 +7,26 @@ import (
 	"hostel-management/storage/models"
 )
 
-type NewsRepository interface {
-	CreateNews(news models.News) error
-	GetAllNews() ([]models.News, error)
-	GetLatestNews() ([]models.News, error)
-	GetNewsByID(id int) (models.News, error)
+type NoticeRepository interface {
+	CreateNotice(notice models.Notice) error
+	GetAllNotices() ([]models.Notice, error)
+	GetLatestNotices() ([]models.Notice, error)
+	GetNoticeByID(id int) (models.Notice, error)
 }
 
-type newsRepository struct {
+type noticeRepository struct {
 	db *sql.DB
 }
 
-func NewNewsRepository() NewsRepository {
-	return &newsRepository{
+func NewNoticeRepository() NoticeRepository {
+	return &noticeRepository{
 		db: db.DB,
 	}
 }
 
-func (r *newsRepository) CreateNews(news models.News) error {
+func (r *noticeRepository) CreateNotice(notice models.Notice) error {
 	query := "INSERT INTO News (title, annotation, text, date, type) VALUES (?, ?, ?, ?, ?)"
-	_, err := db.DB.Exec(query, news.Title, news.Annotation, news.Text, news.Date, "regular")
+	_, err := db.DB.Exec(query, notice.Title, notice.Annotation, notice.Text, notice.Date, "breaking")
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -34,17 +34,17 @@ func (r *newsRepository) CreateNews(news models.News) error {
 	return nil
 }
 
-func (r *newsRepository) GetAllNews() ([]models.News, error) {
-	query := "SELECT * FROM News WHERE type = 'regular'"
+func (r *noticeRepository) GetAllNotices() ([]models.Notice, error) {
+	query := "SELECT * FROM News WHERE type = 'breaking'"
 	rows, err := db.DB.Query(query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	news := []models.News{}
+	news := []models.Notice{}
 	for rows.Next() {
-		new := models.News{}
+		new := models.Notice{}
 		err := rows.Scan(&new.ID, &new.Title, &new.Annotation, &new.Text, &new.Date, &new.NewsType)
 		if err != nil {
 			return nil, err
@@ -55,34 +55,34 @@ func (r *newsRepository) GetAllNews() ([]models.News, error) {
 	return news, nil
 }
 
-func (r *newsRepository) GetLatestNews() ([]models.News, error) {
-	query := "SELECT * FROM News WHERE type = 'regular' ORDER BY date DESC LIMIT 3"
+func (r *noticeRepository) GetLatestNotices() ([]models.Notice, error) {
+	query := "SELECT * FROM News WHERE type = 'breaking' ORDER BY date DESC LIMIT 3"
 	rows, err := db.DB.Query(query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	news := []models.News{}
+	notices := []models.Notice{}
 	for rows.Next() {
-		new := models.News{}
+		new := models.Notice{}
 		err := rows.Scan(&new.ID, &new.Title, &new.Annotation, &new.Text, &new.Date, &new.NewsType)
 		if err != nil {
 			return nil, err
 		}
-		news = append(news, new)
+		notices = append(notices, new)
 	}
 
-	return news, nil
+	return notices, nil
 }
 
-func (r *newsRepository) GetNewsByID(id int) (models.News, error) {
+func (r *noticeRepository) GetNoticeByID(id int) (models.Notice, error) {
 	query := "SELECT * FROM News WHERE id = ?"
 	row := db.DB.QueryRow(query, id)
-	news := models.News{}
+	news := models.Notice{}
 	err := row.Scan(&news.ID, &news.Title, &news.Annotation, &news.Text, &news.Date, &news.NewsType)
 	if err != nil {
-		return models.News{}, err
+		return models.Notice{}, err
 	}
 	return news, nil
 }

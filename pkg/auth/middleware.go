@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"hostel-management/internal/session"
+	"hostel-management/pkg/session"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

@@ -1,6 +1,6 @@
 package models
 
-type HostelInfo struct {
+type Hostel struct {
 	HostelID       int
 	HostelNumber   int
 	ResidentsCount int

@@ -25,6 +25,7 @@ type UserRepository interface {
 	GetUsernameByID(id int) (string, error)
 	GetUserPasswordByEmail(email string) (string, error)
 	GetAdmin(role string) (*models.User, error)
+	UpdateAdminData(username, password string) error
 }
 
 // userRepository реализует интерфейс UserRepository
@@ -199,6 +200,7 @@ func (r *userRepository) GetUserPasswordByEmail(email string) (string, error) {
 	return password, err
 }
 
+// GetAdmin получает информацию об администраторе
 func (r *userRepository) GetAdmin(role string) (*models.User, error) {
 	query := "SELECT id, name, email, role FROM Users WHERE role = ?"
 	row := r.db.QueryRow(query, role)
@@ -206,4 +208,9 @@ func (r *userRepository) GetAdmin(role string) (*models.User, error) {
 	admin := &models.User{}
 	err := row.Scan(&admin.ID, &admin.Username, &admin.Email, &admin.Role)
 	return admin, err
+}
+
+func (r *userRepository) UpdateAdminData(username, password string) error {
+	_, err := r.db.Exec("UPDATE Users SET name = ?, password = ? WHERE role = ?", username, password, "admin")
+	return err
 }

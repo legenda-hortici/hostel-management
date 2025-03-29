@@ -1,10 +1,10 @@
 package main
 
 import (
-	"hostel-management/internal/auth"
 	"hostel-management/internal/handlers"
 	"hostel-management/internal/helpers"
 	"hostel-management/internal/services"
+	"hostel-management/pkg/auth"
 	"hostel-management/storage/repositories"
 
 	"github.com/gin-gonic/gin"
@@ -21,6 +21,9 @@ func RegisterRoutes(r *gin.Engine) error {
 	statementRepo := repositories.NewStatementRepository()
 	inventoryRepo := repositories.NewInventoryRepository()
 	faqRepo := repositories.NewFaqRepository()
+	hostelRepo := repositories.NewHostelRepository()
+	newsRepo := repositories.NewNewsRepository()
+	noticeRepo := repositories.NewNoticeRepository()
 
 	authService := auth.NewAuthService(userRepo)
 	userService := services.NewUserService(userRepo)
@@ -29,16 +32,23 @@ func RegisterRoutes(r *gin.Engine) error {
 	statementService := services.NewStatementService(statementRepo)
 	inventoryService := services.NewInventoryService(inventoryRepo)
 	faqService := services.NewFaqService(faqRepo)
+	hostelService := services.NewHostelService(hostelRepo)
+	newsService := services.NewNewsService(newsRepo)
+	noticeService := services.NewNoticeService(noticeRepo)
 
 	userHelper := helpers.NewUserHelper()
 	roomHelper := helpers.NewRoomHelper()
 
 	authHandler := auth.NewAuthHandler(authService)
 	userHandler := handlers.NewUserHandler(userService, roomService, userHelper)
+	adminHandler := handlers.NewAdminHandler(userService, hostelService)
 	roomHandler := handlers.NewRoomHandler(roomService, roomHelper)
 	serviceHandler := handlers.NewServiceHandler(serviceService, userService, statementService, roomService)
 	inventoryHandler := handlers.NewInventoryHandler(inventoryService)
 	faqhandler := handlers.NewFaqHandler(faqService)
+	homeHandler := handlers.NewHomeHandler(newsService, noticeService)
+	newsHandler := handlers.NewNewsHandler(newsService)
+	noticeHandler := handlers.NewNoticeHandler(noticeService)
 
 	// Публичные маршруты
 	public := r.Group("/")
@@ -53,14 +63,23 @@ func RegisterRoutes(r *gin.Engine) error {
 	protected.Use(auth.AuthMiddleware())
 	{
 		protected.GET("/profile", handlers.ProfileHandler)
-		protected.GET("/", handlers.HomeHandler)
+		protected.GET("/", homeHandler.HomeHandler)
+		protected.GET("/news", newsHandler.News)
+		protected.GET("/news/:id", newsHandler.NewsInfoHandler)
+		protected.GET("/create_news", newsHandler.CreateNewsPageHandler)
+		protected.POST("/create_news/add", newsHandler.CreateNewsHandler)
+		protected.GET("/notices", noticeHandler.Notices)
+		protected.GET("/notices/:id", noticeHandler.NoticeInfoHandler)
+		protected.GET("/create_notice", noticeHandler.CreateNoticePageHandler)
+		protected.POST("/create_notice/add", noticeHandler.CreateNoticeHandler)
 	}
 
 	// Административные маршруты
 	admin := r.Group("/admin")
 	admin.Use(auth.AdminMiddleware())
 	{
-		admin.GET("/", userHandler.AdminCabinetHandler)
+		admin.GET("/", adminHandler.AdminCabinetHandler)
+		admin.POST("/update_profile", adminHandler.UpdateCabinetHandler)
 
 		admin.GET("/rooms", roomHandler.RoomsHandler)
 		admin.POST("/rooms/add_room", roomHandler.AddRoomHandler)
@@ -96,7 +115,6 @@ func RegisterRoutes(r *gin.Engine) error {
 		admin.POST("/support/faq/:id/delete", faqhandler.DeleteFaqHandler)
 		admin.POST("/support/faq/:id/update", faqhandler.UpdateFaqHandler)
 
-		// admin.GET("/news", handlers.AdminNewsHandler)
 		// admin.GET("/notices", handlers.AdminNoticesHandler)
 	}
 

@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"hostel-management/internal/session"
+	"hostel-management/pkg/session"
 
 	"github.com/gin-gonic/gin"
 )

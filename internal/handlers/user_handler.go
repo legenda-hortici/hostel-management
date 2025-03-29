@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"hostel-management/internal/helpers"
 	"hostel-management/internal/services"
-	"hostel-management/internal/session"
 	"hostel-management/storage/models"
-	"log"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -25,29 +23,6 @@ func NewUserHandler(userService services.UserService, roomService services.RoomS
 		roomService: roomService,
 		userHelper:  userHelper,
 	}
-}
-
-func (h *UserHandler) AdminCabinetHandler(c *gin.Context) {
-	role, exists := session.GetUserRole(c)
-	if !exists || role != "admin" {
-		c.String(403, "Access denied")
-		return
-	}
-
-	adminData, err := h.userService.GetAdminData(role)
-	if err != nil {
-		c.String(500, err.Error())
-		return
-	}
-
-	log.Println(adminData)
-	data := map[string]interface{}{
-		"Page":  "admin_cabinet",
-		"Role":  role,
-		"Admin": adminData,
-	}
-
-	c.HTML(200, "layout.html", data)
 }
 
 func (h *UserHandler) ResidentsHandler(c *gin.Context) {

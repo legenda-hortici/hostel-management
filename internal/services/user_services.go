@@ -21,6 +21,7 @@ type UserService interface {
 	GetUsernameByID(id int) (string, error)
 	GetUserPasswordByEmail(email string) (string, error)
 	GetAdminData(role string) (*models.User, error)
+	UpdateAdminData(username, password string) error
 }
 
 type userServiceImpl struct {
@@ -89,4 +90,8 @@ func (s *userServiceImpl) GetUserPasswordByEmail(email string) (string, error) {
 
 func (s *userServiceImpl) GetAdminData(role string) (*models.User, error) {
 	return s.userRepo.GetAdmin(role)
+}
+
+func (s *userServiceImpl) UpdateAdminData(username, password string) error {
+	return s.userRepo.UpdateAdminData(username, password)
 }

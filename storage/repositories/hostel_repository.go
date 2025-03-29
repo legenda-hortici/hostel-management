@@ -7,7 +7,9 @@ import (
 )
 
 type HostelRepository interface {
-
+	GetAllHostelNumbers() ([]int, error)
+	GetHostelsInfo(db *sql.DB) ([]models.Hostel, error)
+	GetHostelLocationByNumber(hostelNumber int) (string, error)
 }
 
 type hostelRepository struct {
@@ -39,7 +41,7 @@ func (r *hostelRepository) GetAllHostelNumbers() ([]int, error) {
 	return hostelNumbers, nil
 }
 
-func (r *hostelRepository) GetHostelsInfo(db *sql.DB) ([]models.HostelInfo, error) {
+func (r *hostelRepository) GetHostelsInfo(db *sql.DB) ([]models.Hostel, error) {
 	query := `
         SELECT 
             h.id AS hostel_id,
@@ -64,10 +66,17 @@ func (r *hostelRepository) GetHostelsInfo(db *sql.DB) ([]models.HostelInfo, erro
 	}
 	defer rows.Close()
 
-	var hostels []models.HostelInfo
+	var hostels []models.Hostel
 	for rows.Next() {
-		var hostel models.HostelInfo
-		if err := rows.Scan(&hostel.HostelID, &hostel.HostelNumber, &hostel.HostelLocation, &hostel.ResidentsCount, &hostel.OccupiedRooms, &hostel.AvailableRooms); err != nil {
+		var hostel models.Hostel
+		if err := rows.Scan(
+			&hostel.HostelID,
+			&hostel.HostelNumber,
+			&hostel.HostelLocation,
+			&hostel.ResidentsCount,
+			&hostel.OccupiedRooms,
+			&hostel.AvailableRooms,
+		); err != nil {
 			return nil, err
 		}
 		hostels = append(hostels, hostel)

@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"hostel-management/internal/services"
-	"hostel-management/internal/session"
+	"hostel-management/pkg/session"
 	"hostel-management/storage/models"
 	"strconv"
 
