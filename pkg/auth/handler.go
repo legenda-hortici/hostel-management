@@ -2,7 +2,6 @@ package auth
 
 import (
 	"hostel-management/pkg/session"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -40,7 +39,6 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 		})
 		return
 	}
-	log.Println(user)
 
 	// Создаем сессию
 	session.CreateSession(c, user.ID, user.Email, user.Role)
