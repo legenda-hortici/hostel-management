@@ -28,7 +28,7 @@ func (h *NewsHandler) News(c *gin.Context) {
 		return
 	}
 
-	news, err := h.newsService.GetAllNews()
+	news, err := h.newsService.GetAllNews(c)
 	if err != nil {
 		c.String(500, "Ошибка получения новостей: "+err.Error())
 		return
@@ -74,7 +74,7 @@ func (h *NewsHandler) CreateNewsHandler(c *gin.Context) {
 	text := c.PostForm("text")
 	date := c.PostForm("date")
 
-	err := h.newsService.CreateNews(title, annotation, text, date)
+	err := h.newsService.CreateNews(c, title, annotation, text, date)
 	if err != nil {
 		c.String(400, err.Error())
 		return
@@ -131,7 +131,7 @@ func (h *NewsHandler) DeleteNewsHandler(c *gin.Context) {
 		return
 	}
 
-	err = h.newsService.DeleteNews(id)
+	err = h.newsService.DeleteNews(c, id)
 	if err != nil {
 		c.String(500, "Failed to delete news")
 		log.Printf("Failed to delete news: %v: %v", err, op)

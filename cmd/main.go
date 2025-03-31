@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"hostel-management/cmd/routes"
 	"hostel-management/cmd/server"
+	"hostel-management/internal/config"
 	"hostel-management/storage/db"
+	"hostel-management/storage/redis"
 	"log"
 	"os"
 	"os/signal"
@@ -37,6 +40,24 @@ func main() {
 		log.Println("All resources have been cleaned up")
 	}()
 
+	// Загружаем конфигурацию
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+	log.Println("Config loaded successfully")
+
+	// Инициализируем Redis
+	redisCache, err := redis.NewRedisCache(
+		cfg.Redis.Addr,
+		cfg.Redis.Password,
+		cfg.Redis.DB,
+	)
+	if err != nil {
+		log.Fatalf("Failed to initialize Redis: %v", err)
+	}
+	defer redisCache.Close()
+
 	// Инициализируем Gin
 	router := gin.Default()
 
@@ -45,7 +66,7 @@ func main() {
 	router.Use(sessions.Sessions("hostel_session", store))
 
 	// Регистрируем маршруты
-	if err := RegisterRoutes(router); err != nil {
+	if err := routes.RegisterRoutes(router, redisCache); err != nil {
 		log.Fatalf("Failed to register routes: %v", err)
 	}
 

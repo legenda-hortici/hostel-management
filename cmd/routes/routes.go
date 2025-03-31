@@ -1,15 +1,16 @@
-package main
+package routes
 
 import (
 	"hostel-management/internal/handlers"
 	"hostel-management/internal/services"
 	"hostel-management/pkg/auth"
+	"hostel-management/storage/redis"
 	"hostel-management/storage/repositories"
 
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRoutes(r *gin.Engine) error {
+func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 	// Настраиваем шаблоны
 	r.LoadHTMLGlob("web/templates/*.html")
 	r.Static("/static", "./web/static")
@@ -32,7 +33,7 @@ func RegisterRoutes(r *gin.Engine) error {
 	inventoryService := services.NewInventoryService(inventoryRepo)
 	faqService := services.NewFaqService(faqRepo)
 	hostelService := services.NewHostelService(hostelRepo)
-	newsService := services.NewNewsService(newsRepo)
+	newsService := services.NewNewsService(newsRepo, redisCache)
 	noticeService := services.NewNoticeService(noticeRepo)
 
 	authHandler := auth.NewAuthHandler(authService)

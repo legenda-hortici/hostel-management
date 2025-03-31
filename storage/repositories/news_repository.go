@@ -36,6 +36,7 @@ func (r *newsRepository) CreateNews(news models.News) error {
 }
 
 func (r *newsRepository) GetAllNews() ([]models.News, error) {
+
 	query := "SELECT * FROM News WHERE type = 'regular'"
 	rows, err := db.DB.Query(query)
 	if err != nil {

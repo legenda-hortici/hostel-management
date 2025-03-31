@@ -42,7 +42,7 @@ func (h *HomeHandler) HomeHandler(c *gin.Context) {
 		return
 	}
 
-	news, err := h.newsService.GetAllNews()
+	news, err := h.newsService.GetAllNews(c)
 	if err != nil {
 		log.Printf("Error getting news: %v: %v", err, op)
 		c.String(500, "Error getting news: "+err.Error())
