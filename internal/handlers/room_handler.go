@@ -2,9 +2,8 @@ package handlers
 
 import (
 	"fmt"
-	"hostel-management/internal/helpers"
 	"hostel-management/internal/services"
-	"hostel-management/storage/models"
+	"log"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -12,131 +11,104 @@ import (
 
 type RoomHandler struct {
 	roomService services.RoomService
-	roomHelper  helpers.RoomHelper
 }
 
-func NewRoomHandler(roomService services.RoomService, roomHelper helpers.RoomHelper) *RoomHandler {
+func NewRoomHandler(roomService services.RoomService) *RoomHandler {
 	return &RoomHandler{
 		roomService: roomService,
-		roomHelper:  roomHelper,
 	}
 }
 
 func (h *RoomHandler) RoomsHandler(c *gin.Context) {
-	rooms, err := h.roomService.GetAllRooms()
+	const op = "handlers.RoomHandler.RoomsHandler"
+
+	_, err := ValidateUserByRole(c, op)
 	if err != nil {
-		c.String(500, "RoomsHandler: Unable to fetch rooms")
+		log.Printf("Access denied: %v", err)
+		c.String(403, err.Error())
 		return
 	}
 
-	for room := range rooms {
-		if rooms[room].Status != "renovation" {
-			h.roomHelper.DefineRoomStatus(rooms[room].Type, rooms[room].UserCount, rooms[room].Number)
-		}
-		rooms[room] = h.roomHelper.TranslateRoom(rooms[room])
+	rooms, err := h.roomService.GetAllRooms()
+	if err != nil {
+		log.Printf("Unable to fetch rooms: %v: %v", err, op)
+		c.String(500, "Unable to fetch rooms")
+		return
 	}
 
-	data := map[string]interface{}{
+	c.HTML(200, "layout.html", map[string]interface{}{
 		"Page":  "admin_rooms",
 		"Role":  "admin",
 		"Rooms": rooms,
-	}
-
-	c.HTML(200, "layout.html", data)
+	})
 }
 
 func (h *RoomHandler) RoomInfoHandler(c *gin.Context) {
+
+	const op = "handlers.RoomHandler.RoomInfoHandler"
+
 	idStr := c.Param("id")
 	idInt, err := strconv.Atoi(idStr)
 	if err != nil {
+		log.Printf("Failed to get ID for room: %v: %v", err, op)
 		c.String(400, "ID не найден в URL")
 		return
 	}
 
 	room, err := h.roomService.GetRoomByID(idInt)
 	if err != nil {
-		c.String(500, "RoomHandler: Failed to get room")
+		log.Printf("Failed to get room: %v: %v", err, op)
+		c.String(500, "Failed to get room")
 		return
 	}
 
 	residents, err := h.roomService.GetResidentsByRoomID(idInt)
 	if err != nil {
-		c.String(500, "RoomHandler: Failed to get residents")
+		log.Printf("Failed to get residents: %v: %v", err, op)
+		c.String(500, "Failed to get residents")
 		return
 	}
-	room.UserCount = len(residents)
-
-	room = h.roomHelper.TranslateRoom(room)
 
 	inventory, err := h.roomService.GetInventoryByRoomID(idInt)
 	if err != nil {
-		c.String(500, "RoomHandler: Failed to get furniture")
+		log.Printf("Failed to get furniture: %v: %v", err, op)
+		c.String(500, "Failed to get furniture")
 		return
 	}
 
-	data := map[string]interface{}{
+	c.HTML(200, "layout.html", map[string]interface{}{
 		"Page":      "room",
 		"Role":      "admin",
 		"Room":      room,
 		"Residents": residents,
 		"Inventory": inventory,
-	}
-	c.HTML(200, "layout.html", data)
+	})
 }
 
 func (h *RoomHandler) AddRoomHandler(c *gin.Context) {
+	const op = "handlers.RoomHandler.AddRoomHandler"
 	if c.Request.Method != "POST" {
+		log.Printf("Method not allowed: %v", op)
 		c.String(405, "Method not allowed")
 		return
 	}
 
 	number, err := strconv.Atoi(c.PostForm("roomNumber"))
 	if err != nil {
+		log.Printf("Invalid room number: %v: %v", err, op)
 		c.String(400, "Invalid room number")
 		return
 	}
-
 	hostelNumber, err := strconv.Atoi(c.PostForm("roomHostel"))
 	if err != nil {
+		log.Printf("Invalid hostel number: %v: %v", err, op)
 		c.String(400, "Invalid hostel number")
 		return
 	}
-
-	validTypes := map[string]bool{
-		"once":           true,
-		"double":         true,
-		"triple":         true,
-		"premium double": true,
-		"premium triple": true,
-	}
-
-	validStatuses := map[string]bool{
-		"unoccupied": true,
-		"occupied":   true,
-		"renovation": true,
-	}
-
 	roomType := c.PostForm("roomType")
-	if !validTypes[roomType] {
-		c.String(400, "Invalid room type")
-		return
-	}
-
 	roomStatus := c.PostForm("roomStatus")
-	if !validStatuses[roomStatus] {
-		c.String(400, "Invalid room status")
-		return
-	}
 
-	room := models.Room{
-		Number:       number,
-		Type:         roomType,
-		Status:       roomStatus,
-		HostelNumber: hostelNumber,
-		UserCount:    0,
-	}
-
-	err = h.roomHelper.ValidateRoomData(room)
+	err = h.roomService.CreateRoom(roomType, roomStatus, number, 0, hostelNumber)
 	if err != nil {
 		c.String(400, err.Error())
 		return
@@ -146,22 +118,26 @@ func (h *RoomHandler) AddRoomHandler(c *gin.Context) {
 }
 
 func (h *RoomHandler) AddResidentIntoRoomHandler(c *gin.Context) {
+	const op = "handlers.RoomHandler.AddResidentIntoRoomHandler"
 	roomID := c.Param("id")
 	roomIDInt, err := strconv.Atoi(roomID)
 	if err != nil {
+		log.Printf("Invalid room ID: %v: %v", err, op)
 		c.String(400, "Invalid room ID")
 		return
 	}
 
 	if c.Request.Method != "POST" {
+		log.Printf("Method not allowed: %v", op)
 		c.String(405, "Method not allowed")
 		return
 	}
 
 	email := c.PostForm("email")
 
-	err = h.roomHelper.ValidateAddResidentData(email, roomIDInt)
+	err = h.roomService.InsertResidentIntoRoom(roomIDInt, email)
 	if err != nil {
+		log.Printf("Failed to add resident into room: %v: %v", err, op)
 		c.String(400, err.Error())
 		return
 	}
@@ -170,19 +146,24 @@ func (h *RoomHandler) AddResidentIntoRoomHandler(c *gin.Context) {
 }
 
 func (h *RoomHandler) DeleteResidentFromRoomHandler(c *gin.Context) {
+	const op = "handlers.RoomHandler.DeleteResidentFromRoomHandler"
+
 	if c.Request.Method != "POST" {
+		log.Printf("Method not allowed: %v", op)
 		c.String(405, "Method not allowed")
 		return
 	}
 
 	email := c.PostForm("email")
 	if email == "" {
+		log.Printf("Email is empty: %v", op)
 		c.String(400, "Email is empty")
 		return
 	}
 
-	roomID, err := h.roomHelper.ValidateDeleteResidentData(email)
+	roomID, err := h.roomService.DeleteResidentFromRoom(email)
 	if err != nil {
+		log.Printf("Failed to delete resident from room: %v: %v", err, op)
 		c.String(500, err.Error())
 		return
 	}
@@ -191,28 +172,32 @@ func (h *RoomHandler) DeleteResidentFromRoomHandler(c *gin.Context) {
 }
 
 func (h *RoomHandler) FreezeRoomHandler(c *gin.Context) {
+	const op = "handlers.RoomHandler.FreezeRoomHandler"
+
 	if c.Request.Method != "POST" {
+		log.Printf("Method not allowed: %v", op)
 		c.String(405, "Method not allowed")
 		return
 	}
 
 	roomID := c.Param("id")
 	if roomID == "" {
-		c.String(400, "FreezeRoomHandler: ID не найден в URL")
+		log.Printf("Invalid room ID: %v", op)
+		c.String(400, "Invalid room ID")
 		return
 	}
-
 	roomIDInt, err := strconv.Atoi(roomID)
 	if err != nil {
-		c.String(400, "FreezeRoomHandler: Некорректный ID")
+		log.Printf("Invalid room ID: %v: %v", err, op)
+		c.String(400, "Invalid room ID")
 		return
 	}
-
 	err = h.roomService.FreezeRoom(roomIDInt)
 	if err != nil {
-		c.String(500, "FreezeRoomHandler: Невозможно заморозить комнату, так как в ней есть жильцы")
+		log.Printf("Failed to freeze room: %v: %v", err, op)
+		c.String(500, "Failed to freeze room")
 		return
 	}
 
-	c.Redirect(303, fmt.Sprintf("/room_info/%d", roomIDInt))
+	c.Redirect(303, fmt.Sprintf("/room_info/%s", roomID))
 }

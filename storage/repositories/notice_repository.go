@@ -12,6 +12,7 @@ type NoticeRepository interface {
 	GetAllNotices() ([]models.Notice, error)
 	GetLatestNotices() ([]models.Notice, error)
 	GetNoticeByID(id int) (models.Notice, error)
+	DeleteNotice(id int) error
 }
 
 type noticeRepository struct {
@@ -85,4 +86,13 @@ func (r *noticeRepository) GetNoticeByID(id int) (models.Notice, error) {
 		return models.Notice{}, err
 	}
 	return news, nil
+}
+
+func (r *noticeRepository) DeleteNotice(id int) error {
+	query := "DELETE FROM News WHERE id = ?"
+	_, err := db.DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"hostel-management/internal/services"
-	"hostel-management/pkg/session"
 	"hostel-management/storage/db"
 	"log"
 
@@ -16,7 +15,7 @@ type AdminHandler struct {
 
 func NewAdminHandler(userService services.UserService, hostelService services.HostelService) *AdminHandler {
 	return &AdminHandler{
-		userService: userService,
+		userService:   userService,
 		hostelService: hostelService,
 	}
 }
@@ -25,9 +24,9 @@ func (h *AdminHandler) AdminCabinetHandler(c *gin.Context) {
 
 	const op = "handlers.AdminHandler.AdminCabinetHandler"
 
-	role, exists := session.GetUserRole(c)
-	if !exists || role != "admin" {
-		c.String(403, "Access denied: %v: %v", role, op)
+	role, err := ValidateUserByRole(c, op)
+	if err != nil {
+		c.String(403, err.Error())
 		return
 	}
 
@@ -37,23 +36,11 @@ func (h *AdminHandler) AdminCabinetHandler(c *gin.Context) {
 		return
 	}
 
-	hostels, err := h.hostelService.GetHostelsInfo(db.DB)
+	hostelData, err := h.hostelService.GetHostelsInfo(db.DB)
 	if err != nil {
 		log.Printf("Failed to get hostels info: %v: %v", err, op)
 		c.String(500, err.Error()+": "+op)
 		return
-	}
-
-	hostelData := []map[string]interface{}{}
-	for _, hostel := range hostels {
-		hostelData = append(hostelData, map[string]interface{}{
-			"Number":         hostel.HostelNumber,
-			"RoomsCount":     hostel.OccupiedRooms + hostel.AvailableRooms,
-			"OccupiedRooms":  hostel.OccupiedRooms,
-			"AvailableRooms": hostel.AvailableRooms,
-			"ResidentsCount": hostel.ResidentsCount,
-			"Location":       hostel.HostelLocation,
-		})
 	}
 
 	c.HTML(200, "layout.html", map[string]interface{}{
@@ -64,8 +51,7 @@ func (h *AdminHandler) AdminCabinetHandler(c *gin.Context) {
 			"Email":    adminData.Email,
 			"Role":     adminData.Role,
 		},
-		"Hostels":  hostelData,
-		"Messages": []map[string]interface{}{},
+		"Hostels": hostelData,
 	})
 }
 
@@ -73,16 +59,16 @@ func (h *AdminHandler) UpdateCabinetHandler(c *gin.Context) {
 
 	const op = "handlers.AdminHandler.UpdateCabinetHandler"
 
-	role, exists := session.GetUserRole(c)
-	if !exists || role != "admin" {
-		c.String(403, "Access denied: %v: %v", role, op)
+	_, err := ValidateUserByRole(c, op)
+	if err != nil {
+		c.String(403, err.Error())
 		return
 	}
 
 	username := c.PostForm("username")
 	password := c.PostForm("password")
 
-	err := h.userService.UpdateAdminData(username, password)
+	err = h.userService.UpdateAdminData(username, password)
 	if err != nil {
 		c.String(500, err.Error()+": "+op)
 		return

@@ -80,10 +80,9 @@ func (h *HomeHandler) UploadBannerHandler(c *gin.Context) {
 	}
 
 	// Получаем роль
-	_, exists := session.GetUserRole(c)
-	if !exists {
-		log.Printf("User role not found in session: %v", op)
-		c.Redirect(302, "/login")
+	_, err := ValidateUserByRole(c, op)
+	if err != nil {
+		c.String(403, err.Error())
 		return
 	}
 
@@ -117,10 +116,9 @@ func (h *HomeHandler) DeleteBannerHandler(c *gin.Context) {
 	}
 
 	// Получаем роль
-	_, exists := session.GetUserRole(c)
-	if !exists {
-		log.Printf("User role not found in session: %v", op)
-		c.Redirect(302, "/login")
+	_, err := ValidateUserByRole(c, op)
+	if err != nil {
+		c.String(403, err.Error())
 		return
 	}
 

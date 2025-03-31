@@ -2,8 +2,6 @@ package handlers
 
 import (
 	"hostel-management/internal/services"
-	"hostel-management/pkg/session"
-	"hostel-management/storage/models"
 	"strconv"
 
 	"log"
@@ -25,10 +23,9 @@ func (h *InventoryHandler) InventoryHandler(c *gin.Context) {
 
 	const op = "handlers.InventoryHandler.InventoryHandler"
 
-	role, exists := session.GetUserRole(c)
-	if !exists || role != "admin" {
-		c.String(403, "Access denied")
-		log.Printf("Access denied: %v", op)
+	role, err := ValidateUserByRole(c, op)
+	if err != nil {
+		c.String(403, err.Error())
 		return
 	}
 
@@ -37,10 +34,6 @@ func (h *InventoryHandler) InventoryHandler(c *gin.Context) {
 		c.String(500, err.Error())
 		log.Printf("Failed to get inventory: %v: %v", err, op)
 		return
-	}
-
-	for i := range inventory {
-		inventory[i].Point = i + 1
 	}
 
 	c.HTML(200, "layout.html", map[string]interface{}{
@@ -102,14 +95,7 @@ func (h *InventoryHandler) AddInventoryItemHandler(c *gin.Context) {
 		return
 	}
 
-	inventory := models.Inventory{
-		Name:       furniture,
-		Count:      1,
-		InvNumber:  invNumber,
-		RoomNumber: room,
-	}
-
-	err = h.inventoryService.InsertIntoInventory(inventory)
+	err = h.inventoryService.InsertIntoInventory(furniture, invNumber, room)
 	if err != nil {
 		c.String(500, "Failed to create inventory item")
 		log.Printf("Failed to create inventory item: %v: %v", err, op)

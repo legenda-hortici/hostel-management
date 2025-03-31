@@ -6,11 +6,11 @@ import (
 )
 
 type FaqService interface {
-	CreateFaq(faq models.Faq) error
+	CreateFaq(question, answer string) error
 	GetFaqByID(id int) (models.Faq, error)
 	GetAllFaq() ([]models.Faq, error)
 	DeleteFaqItem(id int) error
-	UpdateFaqItem(id int, faq models.Faq) error
+	UpdateFaqItem(id int, question, answer string) error
 }
 
 type faqService struct {
@@ -23,7 +23,11 @@ func NewFaqService(repo repositories.FaqRepository) FaqService {
 	}
 }
 
-func (s *faqService) CreateFaq(faq models.Faq) error {
+func (s *faqService) CreateFaq(question, answer string) error {
+	faq := models.Faq{
+		Question: question,
+		Answer:   answer,
+	}
 	return s.repo.CreateFaq(faq)
 }
 
@@ -39,6 +43,10 @@ func (s *faqService) DeleteFaqItem(id int) error {
 	return s.repo.DeleteFaqItem(id)
 }
 
-func (s *faqService) UpdateFaqItem(id int, faq models.Faq) error {
+func (s *faqService) UpdateFaqItem(id int, question, answer string) error {
+	faq := models.Faq{
+		Question: question,
+		Answer:   answer,
+	}
 	return s.repo.UpdateFaqItem(id, faq)
 }

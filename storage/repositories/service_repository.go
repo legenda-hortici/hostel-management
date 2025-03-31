@@ -8,7 +8,7 @@ import (
 )
 
 type ServiceRepository interface {
-	CreateService(name, typeService, description string, is_date, is_hostel, is_phone bool, amount int) error
+	CreateService(service models.Service) error
 	GetAllServices() ([]models.Service, error)
 	GetServiceByID(idInt int) (models.Service, error)
 	UpdateServiceByID(idInt int, service models.Service) error
@@ -25,9 +25,9 @@ func NewServiceRepository() ServiceRepository {
 	}
 }
 
-func (r *serviceRepository) CreateService(name, typeService, description string, is_date, is_hostel, is_phone bool, amount int) error {
+func (r *serviceRepository) CreateService(service models.Service) error {
 	query := "INSERT INTO Services (name, type, amount, description, is_date, is_hostel, is_phone) VALUES (?, ?, ?, ?, ?, ?, ?)"
-	_, err := db.DB.Exec(query, name, typeService, amount, description, is_date, is_hostel, is_phone)
+	_, err := db.DB.Exec(query, service.Name, service.Type, service.Amount, service.Description, service.Is_date, service.Is_hostel, service.Is_phone)
 	if err != nil {
 		return err
 	}

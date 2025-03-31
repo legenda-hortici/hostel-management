@@ -1,10 +1,7 @@
 package handlers
 
 import (
-	"hostel-management/internal/helpers"
 	"hostel-management/internal/services"
-	"hostel-management/pkg/session"
-	"hostel-management/storage/models"
 	"log"
 	"strconv"
 
@@ -18,7 +15,11 @@ type ServiceHandler struct {
 	roomService      services.RoomService
 }
 
-func NewServiceHandler(serviceService services.ServiceService, userService services.UserService, statementService services.StatementService, roomService services.RoomService) *ServiceHandler {
+func NewServiceHandler(
+	serviceService services.ServiceService,
+	userService services.UserService,
+	statementService services.StatementService,
+	roomService services.RoomService) *ServiceHandler {
 	return &ServiceHandler{
 		serviceService:   serviceService,
 		userService:      userService,
@@ -30,51 +31,39 @@ func NewServiceHandler(serviceService services.ServiceService, userService servi
 func (h *ServiceHandler) ServicesHandler(c *gin.Context) {
 	const op = "handlers.ServiceHandler.ServicesHandler"
 
-	role, exists := session.GetUserRole(c)
-	if !exists || role != "admin" && role != "user" {
-		log.Printf("Access denied: %v", op)
-		c.String(403, "Access denied")
+	role, err := ValidateUserByRole(c, op)
+	if err != nil {
+		log.Printf("Access denied: %v", err)
+		c.String(403, err.Error())
 		return
 	}
 
-	email, exists := session.GetUserEmail(c)
-	if !exists || email == "" {
-		log.Printf("User not authenticated: %v", op)
-		c.String(401, "User not authenticated")
+	email, err := ValidateUserByEmail(c, op)
+	if err != nil {
+		log.Printf("Access denied: %v", err)
+		c.String(403, err.Error())
 		return
 	}
 
 	services, err := h.serviceService.GetAllServices()
 	if err != nil {
-		c.String(500, "Ошибка получения сервисов: "+err.Error())
+		log.Printf("Error getting services: %v: %v", err, op)
+		c.String(500, "Error getting services: "+err.Error())
 		return
-	}
-
-	for i := range services {
-		services[i].Point = i + 1
 	}
 
 	statements, err := h.statementService.GetAllStatements()
 	if err != nil {
-		c.String(500, "Ошибка получения заявок: "+err.Error())
+		log.Printf("Error getting statements: %v: %v", err, op)
+		c.String(500, "Error getting statements: "+err.Error())
 		return
 	}
 
 	userStatements, err := h.statementService.GetAllUserStatements(email)
 	if err != nil {
 		log.Printf("Failed to get user statements: %v: %v", err, op)
-		c.String(500, "Ошибка получения заявок пользователя: "+err.Error())
+		c.String(500, "Failed to get user statements: "+err.Error())
 		return
-	}
-
-	for statement := range statements {
-		statements[statement].Status = helpers.TranslateStatus(statements[statement].Status)
-		user, err := h.userService.GetUserByID(statements[statement].Users_id)
-		if err != nil {
-			c.String(500, "Ошибка получения пользователя: "+err.Error())
-			return
-		}
-		statements[statement].Username = user.Username
 	}
 
 	c.HTML(200, "layout.html", map[string]interface{}{
@@ -87,7 +76,10 @@ func (h *ServiceHandler) ServicesHandler(c *gin.Context) {
 }
 
 func (h *ServiceHandler) AddServiceHandler(c *gin.Context) {
+	const op = "handlers.ServiceHandler.AddServiceHandler"
+
 	if c.Request.Method != "POST" {
+		log.Printf("Method not allowed: %v", op)
 		c.String(405, "Method not allowed")
 		return
 	}
@@ -102,6 +94,7 @@ func (h *ServiceHandler) AddServiceHandler(c *gin.Context) {
 
 	err := h.serviceService.CreateService(name, typeService, description, isDate, isHostel, isPhone, amount)
 	if err != nil {
+		log.Printf("Failed to create service: %v: %v", err, op)
 		c.String(500, "Failed to create service")
 		return
 	}
@@ -110,35 +103,44 @@ func (h *ServiceHandler) AddServiceHandler(c *gin.Context) {
 }
 
 func (h *ServiceHandler) ServiceInfoHandler(c *gin.Context) {
-	role, exists := session.GetUserRole(c)
-	if !exists {
-		c.String(403, "Access denied")
+
+	const op = "handlers.ServiceHandler.ServiceInfoHandler"
+
+	role, err := ValidateUserByRole(c, op)
+	if err != nil {
+		log.Printf("Access denied: %v", err)
+		c.String(403, err.Error())
 		return
 	}
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
+		log.Printf("Failed to get ID for service: %v: %v", err, op)
 		c.String(400, "Invalid ID")
 		return
 	}
 
 	service, err := h.serviceService.GetServiceByID(id)
 	if err != nil {
+		log.Printf("Failed to get service: %v: %v", err, op)
 		c.String(500, "Failed to get service")
 		return
 	}
 
-	data := map[string]interface{}{
+	c.HTML(200, "layout.html", map[string]interface{}{
 		"Page":    "service_info",
 		"Role":    role,
 		"Service": service,
-	}
-	c.HTML(200, "layout.html", data)
+	})
 }
 
 func (h *ServiceHandler) UpdateServiceHandler(c *gin.Context) {
+
+	const op = "handlers.ServiceHandler.UpdateServiceHandler"
+
 	// Проверяем скрытое поле _method
 	if c.Request.Method != "POST" || c.Request.FormValue("_method") != "PUT" {
+		log.Printf("Method not allowed: %v", op)
 		c.String(405, "Method not allowed")
 		return
 	}
@@ -146,31 +148,14 @@ func (h *ServiceHandler) UpdateServiceHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
+		log.Printf("Failed to get ID for service: %v: %v", err, op)
 		c.String(400, "Invalid ID")
 		return
 	}
 
-	service := models.Service{
-		ID:          id,
-		Name:        c.PostForm("name"),
-		Type:        c.PostForm("type"),
-		Description: c.PostForm("description"),
-		Amount:      0,
-		Is_date:     c.PostForm("is_date") == "on",
-		Is_hostel:   c.PostForm("is_hostel") == "on",
-		Is_phone:    c.PostForm("is_phone") == "on",
-	}
-
-	if amountStr := c.PostForm("amount"); amountStr != "" {
-		service.Amount, err = strconv.Atoi(amountStr)
-		if err != nil {
-			c.String(400, "Invalid amount")
-			return
-		}
-	}
-
-	err = h.serviceService.UpdateServiceByID(id, service)
+	err = h.serviceService.UpdateServiceByID(id, c)
 	if err != nil {
+		log.Printf("Failed to update service: %v: %v", err, op)
 		c.String(500, "Failed to update service")
 		return
 	}
@@ -179,7 +164,10 @@ func (h *ServiceHandler) UpdateServiceHandler(c *gin.Context) {
 }
 
 func (h *ServiceHandler) DeleteServiceHandler(c *gin.Context) {
+	const op = "handlers.ServiceHandler.DeleteServiceHandler"
+
 	if c.Request.Method != "POST" {
+		log.Printf("Method not allowed: %v", op)
 		c.String(405, "Method not allowed")
 		return
 	}
@@ -187,12 +175,14 @@ func (h *ServiceHandler) DeleteServiceHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
+		log.Printf("Failed to get ID for service: %v: %v", err, op)
 		c.String(400, "Invalid ID")
 		return
 	}
 
 	err = h.serviceService.DeleteService(id)
 	if err != nil {
+		log.Printf("Failed to delete service: %v: %v", err, op)
 		c.String(500, "Failed to delete service")
 		return
 	}
@@ -201,47 +191,44 @@ func (h *ServiceHandler) DeleteServiceHandler(c *gin.Context) {
 }
 
 func (h *ServiceHandler) RequestServiceHandler(c *gin.Context) {
+
+	const op = "handlers.ServiceHandler.RequestServiceHandler"
+
 	if c.Request.Method != "POST" {
 		c.String(405, "Method not allowed")
 		return
 	}
 
-	email, exists := session.GetUserEmail(c)
-	if !exists || email == "" {
-		c.String(401, "User not authenticated")
+	email, err := ValidateUserByEmail(c, op)
+	if err != nil {
+		log.Printf("Access denied: %v", err)
+		c.String(403, err.Error())
 		return
 	}
 
-	_, err := strconv.Atoi(c.Param("id"))
+	_, err = strconv.Atoi(c.Param("id"))
 	if err != nil {
+		log.Printf("Invalid service ID: %v: %v", err, op)
 		c.String(400, "Invalid service ID")
 		return
 	}
 
 	user, err := h.userService.GetUserByEmail(email)
 	if err != nil {
+		log.Printf("Failed to get user: %v: %v", err, op)
 		c.String(500, "Failed to get user")
 		return
 	}
-
+	name := c.PostForm("name")
+	typeService := c.PostForm("type")
 	amount, _ := strconv.Atoi(c.PostForm("amount"))
 	request_date := c.PostForm("request_date")
 	hostel, _ := strconv.Atoi(c.PostForm("hostel"))
 	phone := c.PostForm("phone")
 
-	statement := models.Statement{
-		Name:     c.PostForm("name"),
-		Type:     c.PostForm("type"),
-		Amount:   amount,
-		Date:     request_date,
-		Phone:    phone,
-		Status:   "awaits",
-		Hostel:   hostel,
-		Users_id: user.ID,
-	}
-
-	err = h.statementService.CreateStatementRequest(statement)
+	err = h.statementService.CreateStatementRequest(user.ID, name, typeService, amount, request_date, phone, hostel)
 	if err != nil {
+		log.Printf("Failed to create service request: %v: %v", err, op)
 		c.String(500, "Failed to create service request")
 		return
 	}
@@ -253,10 +240,10 @@ func (h *ServiceHandler) RequestInfoHandler(c *gin.Context) {
 
 	const op = "handlers.ServiceHandler.RequestInfoHandler"
 
-	role, exists := session.GetUserRole(c)
-	if !exists || role == "" {
-		log.Printf("Access denied: %v: %v", role, op)
-		c.String(403, "Access denied: %v: %v", role, op)
+	role, err := ValidateUserByRole(c, op)
+	if err != nil {
+		log.Printf("Access denied: %v", err)
+		c.String(403, err.Error())
 		return
 	}
 
@@ -270,6 +257,7 @@ func (h *ServiceHandler) RequestInfoHandler(c *gin.Context) {
 
 	request, err := h.statementService.GetStatementRequestByID(id)
 	if err != nil {
+		log.Printf("Failed to get service request: %v: %v", err, op)
 		c.String(500, "Failed to get service request")
 		return
 	}
@@ -280,7 +268,7 @@ func (h *ServiceHandler) RequestInfoHandler(c *gin.Context) {
 		c.String(500, "Failed to get user")
 		return
 	}
-
+	// TODO: fix
 	roomNumber, err := h.roomService.GetRoomNumberByRoomID(user.Room_id)
 	if err != nil {
 		log.Printf("Failed to get room number: %v: %v", err, op)
@@ -289,17 +277,20 @@ func (h *ServiceHandler) RequestInfoHandler(c *gin.Context) {
 	}
 	user.RoomNumber = roomNumber
 
-	data := map[string]interface{}{
+	c.HTML(200, "layout.html", map[string]interface{}{
 		"Page":      "request_info",
 		"Role":      role,
 		"Statement": request,
 		"User":      user,
-	}
-	c.HTML(200, "layout.html", data)
+	})
 }
 
 func (h *ServiceHandler) AcceptRequestHandler(c *gin.Context) {
+
+	const op = "handlers.ServiceHandler.AcceptRequestHandler"
+
 	if c.Request.Method != "POST" {
+		log.Printf("Method not allowed: %v", op)
 		c.String(405, "Method not allowed")
 		return
 	}
@@ -307,12 +298,14 @@ func (h *ServiceHandler) AcceptRequestHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
+		log.Printf("Invalid ID: %v: %v", err, op)
 		c.String(400, "Invalid ID")
 		return
 	}
 
 	err = h.statementService.UpdateStatementRequestStatus(id, "approved")
 	if err != nil {
+		log.Printf("Failed to accept request: %v: %v", err, op)
 		c.String(500, "Failed to accept request")
 		return
 	}
@@ -321,7 +314,11 @@ func (h *ServiceHandler) AcceptRequestHandler(c *gin.Context) {
 }
 
 func (h *ServiceHandler) RejectRequestHandler(c *gin.Context) {
+
+	const op = "handlers.ServiceHandler.RejectRequestHandler"
+
 	if c.Request.Method != "POST" {
+		log.Printf("Method not allowed: %v", op)
 		c.String(405, "Method not allowed")
 		return
 	}
@@ -329,12 +326,14 @@ func (h *ServiceHandler) RejectRequestHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
+		log.Printf("Invalid ID: %v: %v", err, op)
 		c.String(400, "Invalid ID")
 		return
 	}
 
 	err = h.statementService.UpdateStatementRequestStatus(id, "denied")
 	if err != nil {
+		log.Printf("Failed to reject request: %v: %v", err, op)
 		c.String(500, "Failed to reject request")
 		return
 	}

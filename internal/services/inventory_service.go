@@ -3,12 +3,11 @@ package services
 import (
 	"hostel-management/storage/models"
 	"hostel-management/storage/repositories"
-	"log"
 )
 
 type InventoryService interface {
 	GetAllInventory() ([]models.Inventory, error)
-	InsertIntoInventory(inventory models.Inventory) error
+	InsertIntoInventory(furniture string, invNumber, room int) error
 	DeleteInventoryItem(id int) error
 	GetInventoryByRoomID(roomID int) ([]models.Inventory, error)
 }
@@ -24,11 +23,25 @@ func NewInventoryService(inventoryRepo repositories.InventoryRepository) Invento
 }
 
 func (s *inventoryService) GetAllInventory() ([]models.Inventory, error) {
-	return s.inventoryRepo.GetAllInventory()
+	inventory, err := s.inventoryRepo.GetAllInventory()
+	if err != nil {
+		return []models.Inventory{}, err
+	}
+
+	for i := range inventory {
+		inventory[i].Point = i + 1
+	}
+	return inventory, nil
 }
 
-func (s *inventoryService) InsertIntoInventory(inventory models.Inventory) error {
-	log.Println(inventory.Icon)
+func (s *inventoryService) InsertIntoInventory(furniture string, invNumber, room int) error {
+	inventory := models.Inventory{
+		Name:       furniture,
+		Count:      1,
+		InvNumber:  invNumber,
+		RoomNumber: room,
+	}
+
 	switch inventory.Name {
 	case "Стул":
 		inventory.Icon = "img/svg/chair-svgrepo-com.svg"
@@ -43,6 +56,7 @@ func (s *inventoryService) InsertIntoInventory(inventory models.Inventory) error
 	case "Стеллаж":
 		inventory.Icon = "img/svg/bookshelf-svgrepo-com.svg"
 	}
+
 	return s.inventoryRepo.InsertIntoInventory(inventory)
 }
 

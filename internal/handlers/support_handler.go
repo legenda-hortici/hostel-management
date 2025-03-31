@@ -2,8 +2,6 @@ package handlers
 
 import (
 	"hostel-management/internal/services"
-	"hostel-management/pkg/session"
-	"hostel-management/storage/models"
 	"log"
 	"strconv"
 
@@ -24,10 +22,11 @@ func (h *FaqHandler) SupportHandler(c *gin.Context) {
 
 	const op = "handlers.SupportHandler.SupportHandler"
 
-	role, exists := session.GetUserRole(c)
-	if !exists {
-		c.String(403, "Access denied")
-		log.Printf("Access denied: %v: %v", role, op)
+	role, err := ValidateUserByRole(c, op)
+	if err != nil {
+		log.Printf("Access denied: %v", err)
+		c.String(403, err.Error())
+		return
 	}
 
 	faq, err := h.faqService.GetAllFaq()
@@ -47,25 +46,20 @@ func (h *FaqHandler) AddFaqHandler(c *gin.Context) {
 
 	const op = "handlers.SupportHandler.AddFaqHandler"
 
-	role, exists := session.GetUserRole(c)
-	if !exists || role != "admin" {
-		c.String(403, "Access denied")
-		log.Printf("Access denied: %v: %v", role, op)
+	_, err := ValidateUserByRole(c, op)
+	if err != nil {
+		log.Printf("Access denied: %v", err)
+		c.String(403, err.Error())
 		return
 	}
 
 	question := c.PostForm("question")
 	answer := c.PostForm("answer")
 
-	faq := models.Faq{
-		Question: question,
-		Answer:   answer,
-	}
-
-	err := h.faqService.CreateFaq(faq)
+	err = h.faqService.CreateFaq(question, answer)
 	if err != nil {
-		c.String(500, err.Error())
 		log.Printf("Failed to create faq: %v: %v", err, op)
+		c.String(500, err.Error())
 		return
 	}
 
@@ -85,8 +79,8 @@ func (h *FaqHandler) DeleteFaqHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		c.String(400, "Invalid ID")
 		log.Printf("Failed to get ID for faq: %v: %v", err, op)
+		c.String(400, "Invalid ID")
 		return
 	}
 
@@ -121,12 +115,7 @@ func (h *FaqHandler) UpdateFaqHandler(c *gin.Context) {
 	question := c.PostForm("question")
 	answer := c.PostForm("answer")
 
-	faq := models.Faq{
-		Question: question,
-		Answer:   answer,
-	}
-
-	err = h.faqService.UpdateFaqItem(id, faq)
+	err = h.faqService.UpdateFaqItem(id, question, answer)
 	if err != nil {
 		c.String(500, "Failed to update faq")
 		log.Printf("Failed to update faq: %v: %v", err, op)

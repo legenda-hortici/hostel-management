@@ -2,13 +2,12 @@ package services
 
 import (
 	"database/sql"
-	"hostel-management/storage/models"
 	"hostel-management/storage/repositories"
 )
 
 type HostelService interface {
 	GetAllHostelNumbers() ([]int, error)
-	GetHostelsInfo(db *sql.DB) ([]models.Hostel, error)
+	GetHostelsInfo(db *sql.DB) ([]map[string]interface{}, error)
 	GetHostelLocationByNumber(hostelNumber int) (string, error)
 }
 
@@ -22,8 +21,25 @@ func NewHostelService(hostelRepo repositories.HostelRepository) HostelService {
 	}
 }
 
-func (s *hostelService) GetHostelsInfo(db *sql.DB) ([]models.Hostel, error) {
-	return s.hostelRepo.GetHostelsInfo(db)
+func (s *hostelService) GetHostelsInfo(db *sql.DB) ([]map[string]interface{}, error) {
+	hostels, err := s.hostelRepo.GetHostelsInfo(db)
+	if err != nil {
+		return nil, err
+	}
+
+	hostelData := []map[string]interface{}{}
+	for _, hostel := range hostels {
+		hostelData = append(hostelData, map[string]interface{}{
+			"Number":         hostel.HostelNumber,
+			"RoomsCount":     hostel.OccupiedRooms + hostel.AvailableRooms,
+			"OccupiedRooms":  hostel.OccupiedRooms,
+			"AvailableRooms": hostel.AvailableRooms,
+			"ResidentsCount": hostel.ResidentsCount,
+			"Location":       hostel.HostelLocation,
+		})
+	}
+
+	return hostelData, nil
 }
 
 func (s *hostelService) GetHostelLocationByNumber(hostelNumber int) (string, error) {

@@ -17,7 +17,7 @@ type User struct {
 	HostelNumber int
 }
 
-type ResidentUpdateRequest struct {
+type UserRequest struct {
 	Username  string `json:"username"`
 	Email     string `json:"email"`
 	Institute string `json:"institute"`

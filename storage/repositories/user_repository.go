@@ -49,7 +49,10 @@ func (r *userRepository) Create(user *models.User) error {
 
 // GetByID получает пользователя по ID
 func (r *userRepository) GetByID(id int) (*models.User, error) {
-	query := "SELECT id, name, email, password, institute, role, Rooms_id FROM users WHERE id = ?"
+	query := `SELECT u.id, u.name, u.email, u.password, u.institute, u.role, r.number 
+			FROM Users u 
+			JOIN Rooms r ON u.Rooms_id = r.id 
+			WHERE u.id = ?`
 
 	row := r.db.QueryRow(query, id)
 	if err := row.Err(); err != nil {
@@ -57,7 +60,7 @@ func (r *userRepository) GetByID(id int) (*models.User, error) {
 	}
 
 	user := &models.User{}
-	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Institute, &user.Role, &user.Room_id)
+	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Institute, &user.Role, &user.RoomNumber)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -101,7 +104,7 @@ func (r *userRepository) GetRole(email string) (string, error) {
 
 // GetAll получает всех пользователей
 func (r *userRepository) GetAll() ([]models.User, error) {
-	query := "SELECT * FROM Users"
+	query := "SELECT u.id, u.name, u.email, u.password, u.institute, u.role, r.number FROM Users u JOIN Rooms r ON u.Rooms_id = r.id"
 	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, err
@@ -111,7 +114,7 @@ func (r *userRepository) GetAll() ([]models.User, error) {
 	users := []models.User{}
 	for rows.Next() {
 		user := models.User{}
-		err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Institute, &user.Role, &user.Room_id)
+		err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Institute, &user.Role, &user.RoomNumber)
 		if err != nil {
 			return nil, err
 		}

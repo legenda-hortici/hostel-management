@@ -55,5 +55,5 @@ func CreateContractHandler(c *gin.Context) {
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 	c.Header("Content-Disposition", "attachment; filename=Договор.docx")
 	c.Header("Content-Length", fmt.Sprintf("%d", len(fileBytes)))
-	c.Data(200, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", fileBytes)
+	c.Data(201, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", fileBytes)
 }

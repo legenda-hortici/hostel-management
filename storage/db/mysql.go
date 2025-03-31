@@ -15,7 +15,7 @@ var DB *sql.DB
 func InitDB() error {
 	// Загружаем .env файл
 	if err := godotenv.Load(); err != nil {
-		log.Printf("Ошибка загрузки .env файла: %v", err)
+		log.Printf("Error loading .env file: %v", err)
 	}
 
 	// Получаем параметры подключения из переменных окружения
@@ -32,16 +32,16 @@ func InitDB() error {
 	var err error
 	DB, err = sql.Open("mysql", dsn)
 	if err != nil {
-		log.Fatalf("Ошибка при подключении к базе данных: %v", err)
+		log.Fatalf("Failed to connect to the database: %v", err)
 	}
 
 	// Проверяем подключение
 	err = DB.Ping()
 	if err != nil {
-		log.Fatalf("База данных недоступна: %v", err)
+		log.Fatalf("Database connection failed: %v", err)
 	}
 
-	fmt.Println("Успешное подключение к базе данных")
+	fmt.Println("Successfully connected to the database")
 
 	return nil
 }

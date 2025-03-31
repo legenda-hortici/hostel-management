@@ -9,7 +9,7 @@ import (
 )
 
 type RoomRepository interface {
-	CreateRoom(roomType, status string, number, userCount, hostelNumber int) (int64, error)
+	CreateRoom(room models.Room) error
 	GetAllRooms() ([]models.Room, error)
 	GetHostelIDByName(hostelNumber int) (int, error)
 	GetRoomByID(roomID int) (models.Room, error)
@@ -41,24 +41,19 @@ func NewRoomRepository() RoomRepository {
 	}
 }
 
-func (r *roomRepository) CreateRoom(roomType, status string, number, userCount, hostelNumber int) (int64, error) {
-	hostelID, err := r.GetHostelIDByName(hostelNumber)
+func (r *roomRepository) CreateRoom(room models.Room) error {
+	hostelID, err := r.GetHostelIDByName(room.HostelNumber)
 	if err != nil {
-		return 0, fmt.Errorf("ошибка при получении ID общежития: %w", err)
+		return fmt.Errorf("ошибка при получении ID общежития: %w", err)
 	}
 
 	query := "INSERT INTO Rooms (type, status, number, user_count, Hostels_id) VALUES (?, ?, ?, ?, ?)"
-	result, err := r.db.Exec(query, roomType, status, number, userCount, hostelID)
+	_, err = r.db.Exec(query, room.Type, room.Status, room.Number, room.UserCount, hostelID)
 	if err != nil {
-		return 0, fmt.Errorf("ошибка при добавлении комнаты: %w", err)
+		return fmt.Errorf("ошибка при добавлении комнаты: %w", err)
 	}
 
-	roomID, err := result.LastInsertId()
-	if err != nil {
-		return 0, fmt.Errorf("ошибка при получении ID новой комнаты: %w", err)
-	}
-
-	return roomID, nil
+	return nil
 }
 
 func (r *roomRepository) GetAllRooms() ([]models.Room, error) {

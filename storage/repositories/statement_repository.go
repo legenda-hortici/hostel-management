@@ -26,7 +26,9 @@ func NewStatementRepository() StatementRepository {
 }
 
 func (r *statementRepository) GetAllStatements() ([]models.Statement, error) {
-	query := "SELECT id, name, type, amount, date, phone, status, hostel, users_id FROM Statements"
+	query := `SELECT s.id, s.name, s.type, s.amount, s.date, s.phone, s.status, s.hostel, u.name 
+			FROM Statements s
+			JOIN Users u ON s.users_id = u.id;`
 	rows, err := db.DB.Query(query)
 	if err != nil {
 		return nil, err
@@ -36,7 +38,7 @@ func (r *statementRepository) GetAllStatements() ([]models.Statement, error) {
 	statements := []models.Statement{}
 	for rows.Next() {
 		statement := models.Statement{}
-		err := rows.Scan(&statement.ID, &statement.Name, &statement.Type, &statement.Amount, &statement.Date, &statement.Phone, &statement.Status, &statement.Hostel, &statement.Users_id)
+		err := rows.Scan(&statement.ID, &statement.Name, &statement.Type, &statement.Amount, &statement.Date, &statement.Phone, &statement.Status, &statement.Hostel, &statement.Username)
 		if err != nil {
 			return nil, err
 		}

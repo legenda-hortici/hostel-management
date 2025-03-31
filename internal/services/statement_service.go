@@ -7,7 +7,7 @@ import (
 
 type StatementService interface {
 	GetAllStatements() ([]models.Statement, error)
-	CreateStatementRequest(statement models.Statement) error
+	CreateStatementRequest(user_id int, name string, typeStatement string, amount int, request_date string, phone string, hostel int) error
 	GetStatementRequestByID(id int) (models.Statement, error)
 	UpdateStatementRequestStatus(id int, status string) error
 	GetAllUserStatements(email string) ([]models.Statement, error)
@@ -23,11 +23,44 @@ func NewStatementService(repo repositories.StatementRepository) StatementService
 	}
 }
 
-func (s *statementService) GetAllStatements() ([]models.Statement, error) {
-	return s.statementRepo.GetAllStatements()
+func (s *statementService) TranslateStatus(status string) string {
+	switch status {
+	case "awaits":
+		return "Ожидает"
+	case "approved":
+		return "Одобрено"
+	case "denied":
+		return "Отклонено"
+	default:
+		return "Не указан"
+	}
 }
 
-func (s *statementService) CreateStatementRequest(statement models.Statement) error {
+func (s *statementService) GetAllStatements() ([]models.Statement, error) {
+	statements, err := s.statementRepo.GetAllStatements()
+	if err != nil {
+		return nil, err
+	}
+
+	for statement := range statements {
+		statements[statement].Status = s.TranslateStatus(statements[statement].Status)
+	}
+	return statements, nil
+}
+
+func (s *statementService) CreateStatementRequest(user_id int, name string, typeStatement string, amount int, request_date string, phone string, hostel int) error {
+
+	statement := models.Statement{
+		Name:     name,
+		Type:     typeStatement,
+		Amount:   amount,
+		Date:     request_date,
+		Phone:    phone,
+		Status:   "awaits",
+		Hostel:   hostel,
+		Users_id: user_id,
+	}
+
 	if statement.Date == "" {
 		statement.Date = "Не указана"
 	} else if statement.Phone == "" {
@@ -42,6 +75,7 @@ func (s *statementService) CreateStatementRequest(statement models.Statement) er
 	} else {
 		statement.Type = "payment"
 	}
+
 	return s.statementRepo.CreateStatementRequest(statement)
 }
 

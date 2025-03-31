@@ -12,6 +12,7 @@ type NewsRepository interface {
 	GetAllNews() ([]models.News, error)
 	GetLatestNews() ([]models.News, error)
 	GetNewsByID(id int) (models.News, error)
+	DeleteNews(id int) error
 }
 
 type newsRepository struct {
@@ -85,4 +86,13 @@ func (r *newsRepository) GetNewsByID(id int) (models.News, error) {
 		return models.News{}, err
 	}
 	return news, nil
+}
+
+func (r *newsRepository) DeleteNews(id int) error {
+	query := "DELETE FROM News WHERE id = ?"
+	_, err := db.DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+	return nil
 }

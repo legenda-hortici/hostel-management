@@ -1,9 +1,9 @@
 package handlers
 
 import (
+	"errors"
 	"hostel-management/internal/services"
 	"hostel-management/pkg/session"
-	"hostel-management/storage/models"
 	"log"
 	"strconv"
 
@@ -20,14 +20,22 @@ func NewNoticeHandler(noticeService services.NoticeService) NoticesHandler {
 	}
 }
 
+func ValidateUserByRole(c *gin.Context, op string) (string, error) {
+	role, exists := session.GetUserRole(c)
+	if !exists || role != "admin" && role != "user" {
+		log.Printf("Access denied: %v", op)
+		return "", errors.New("access denied")
+	}
+	return role, nil
+}
+
 func (h *NoticesHandler) Notices(c *gin.Context) {
 
 	const op = "handlers.NoticesHandler.Notices"
 
-	role, exists := session.GetUserRole(c)
-	if !exists || role != "admin" && role != "user" {
-		c.String(403, "Access denied")
-		log.Printf("Access denied: %v", op)
+	role, err := ValidateUserByRole(c, op)
+	if err != nil {
+		c.String(403, err.Error())
 		return
 	}
 
@@ -45,13 +53,12 @@ func (h *NoticesHandler) Notices(c *gin.Context) {
 		return
 	}
 
-	data := map[string]interface{}{
+	c.HTML(200, "layout.html", map[string]interface{}{
 		"Page":        "notices",
 		"Role":        role,
 		"Notices":     notices,
 		"LatestNotes": latestNotes,
-	}
-	c.HTML(200, "layout.html", data)
+	})
 }
 
 func (h *NoticesHandler) CreateNoticePageHandler(c *gin.Context) {
@@ -65,10 +72,9 @@ func (h *NoticesHandler) CreateNoticeHandler(c *gin.Context) {
 
 	const op = "handlers.NoticesHandler.CreateNoticeHandler"
 
-	role, exists := session.GetUserRole(c)
-	if !exists || role != "admin" {
-		c.String(403, "access denied")
-		log.Printf("Access denied: %v", op)
+	_, err := ValidateUserByRole(c, op)
+	if err != nil {
+		c.String(403, "Access denied")
 		return
 	}
 
@@ -83,14 +89,7 @@ func (h *NoticesHandler) CreateNoticeHandler(c *gin.Context) {
 	text := c.PostForm("text")
 	date := c.PostForm("date")
 
-	notice := models.Notice{
-		Title:      title,
-		Annotation: annotation,
-		Text:       text,
-		Date:       date,
-	}
-
-	err := h.noticeService.CreateNotice(notice)
+	err = h.noticeService.CreateNotice(title, annotation, text, date)
 	if err != nil {
 		log.Printf("Failed to create notice: %v: %v", err, op)
 		c.String(400, err.Error())
@@ -104,10 +103,9 @@ func (h *NoticesHandler) NoticeInfoHandler(c *gin.Context) {
 
 	const op = "handlers.NoticesHandler.NoticeInfoHandler"
 
-	role, exists := session.GetUserRole(c)
-	if !exists || role != "admin" && role != "user" {
-		c.String(403, "access denied")
-		log.Printf("Access denied: %v", op)
+	_, err := ValidateUserByRole(c, op)
+	if err != nil {
+		c.String(403, err.Error())
 		return
 	}
 
@@ -132,9 +130,36 @@ func (h *NoticesHandler) NoticeInfoHandler(c *gin.Context) {
 		return
 	}
 
-	data := map[string]interface{}{
+	c.HTML(200, "layout.html", map[string]interface{}{
 		"Page":    "notices_info",
 		"Notices": notice,
+	})
+}
+
+func (h *NoticesHandler) DeleteNoticeHandler(c *gin.Context) {
+
+	const op = "handlers.NoticesHandler.DeleteNoticeHandler"
+
+	if c.Request.Method != "POST" {
+		c.String(405, "Method not allowed")
+		log.Printf("Method not allowed: %v", op)
+		return
 	}
-	c.HTML(200, "layout.html", data)
+
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.String(400, "Invalid ID")
+		log.Printf("Failed to get ID for notice: %v: %v", err, op)
+		return
+	}
+
+	err = h.noticeService.DeleteNotice(id)
+	if err != nil {
+		c.String(500, "Failed to delete notice")
+		log.Printf("Failed to delete notice: %v: %v", err, op)
+		return
+	}
+
+	c.Redirect(303, "/notices")
 }

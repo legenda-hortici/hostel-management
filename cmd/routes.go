@@ -2,7 +2,6 @@ package main
 
 import (
 	"hostel-management/internal/handlers"
-	"hostel-management/internal/helpers"
 	"hostel-management/internal/services"
 	"hostel-management/pkg/auth"
 	"hostel-management/storage/repositories"
@@ -36,13 +35,10 @@ func RegisterRoutes(r *gin.Engine) error {
 	newsService := services.NewNewsService(newsRepo)
 	noticeService := services.NewNoticeService(noticeRepo)
 
-	userHelper := helpers.NewUserHelper()
-	roomHelper := helpers.NewRoomHelper()
-
 	authHandler := auth.NewAuthHandler(authService)
-	userHandler := handlers.NewUserHandler(userService, roomService, userHelper)
+	userHandler := handlers.NewUserHandler(userService, roomService)
 	adminHandler := handlers.NewAdminHandler(userService, hostelService)
-	roomHandler := handlers.NewRoomHandler(roomService, roomHelper)
+	roomHandler := handlers.NewRoomHandler(roomService)
 	serviceHandler := handlers.NewServiceHandler(serviceService, userService, statementService, roomService)
 	inventoryHandler := handlers.NewInventoryHandler(inventoryService)
 	faqhandler := handlers.NewFaqHandler(faqService)
@@ -79,11 +75,13 @@ func RegisterRoutes(r *gin.Engine) error {
 		protected.GET("/news/:id", newsHandler.NewsInfoHandler)
 		protected.GET("/create_news", newsHandler.CreateNewsPageHandler)
 		protected.POST("/create_news/add", newsHandler.CreateNewsHandler)
+		protected.POST("/news/:id/delete", newsHandler.DeleteNewsHandler)
 
 		protected.GET("/notices", noticeHandler.Notices)
 		protected.GET("/notices/:id", noticeHandler.NoticeInfoHandler)
 		protected.GET("/create_notice", noticeHandler.CreateNoticePageHandler)
 		protected.POST("/create_notice/add", noticeHandler.CreateNoticeHandler)
+		protected.POST("/notices/:id/delete", noticeHandler.DeleteNoticeHandler)
 	}
 
 	// Административные маршруты
@@ -105,6 +103,8 @@ func RegisterRoutes(r *gin.Engine) error {
 		admin.POST("/residents/add_resident", userHandler.AddResidentHandler)
 		admin.POST("/residents/:id", userHandler.UpdateResidentDataHandler)
 		admin.POST("/residents/resident/:id/delete_resident", userHandler.DeleteResidentHandler)
+		// TODO : update resident info
+		admin.POST("/residents/resident/:id/update_info", userHandler.UpdateResidentDataHandler)
 
 		admin.GET("/services", serviceHandler.ServicesHandler)
 		admin.GET("/services/service/:id", serviceHandler.ServiceInfoHandler)
