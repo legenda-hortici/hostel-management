@@ -25,11 +25,25 @@ func NewNoticeService(repo repositories.NoticeRepository) NoticeService {
 }
 
 func (s *noticeService) GetAllNotices() ([]models.Notice, error) {
-	return s.noticeRepo.GetAllNotices()
+	notices, err := s.noticeRepo.GetAllNotices()
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range notices {
+		notices[i].Date = notices[i].Date[:10]
+	}
+	return notices, nil
 }
 
 func (s *noticeService) GetNoticeByID(id int) (models.Notice, error) {
-	return s.noticeRepo.GetNoticeByID(id)
+	notice, err := s.noticeRepo.GetNoticeByID(id)
+	if err != nil {
+		return models.Notice{}, err
+	}
+	notice.Date = notice.Date[:10]
+
+	return notice, nil
 }
 
 func (s *noticeService) CreateNotice(title, annotation, text, date string) error {
@@ -48,7 +62,15 @@ func (s *noticeService) CreateNotice(title, annotation, text, date string) error
 }
 
 func (s *noticeService) GetLatestNotices() ([]models.Notice, error) {
-	return s.noticeRepo.GetLatestNotices()
+	notices, err := s.noticeRepo.GetAllNotices()
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range notices {
+		notices[i].Date = notices[i].Date[:10]
+	}
+	return notices, nil
 }
 
 func (s *noticeService) DeleteNotice(id int) error {

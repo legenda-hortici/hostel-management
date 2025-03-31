@@ -37,6 +37,9 @@ func (s *newsService) GetAllNews(ctx context.Context) ([]models.News, error) {
 	cacheKey := "news:all"
 	err := s.cache.Get(ctx, cacheKey, &news)
 	if err == nil {
+		for i := range news {
+			news[i].Date = news[i].Date[:10]
+		}
 		return news, nil
 	}
 
@@ -44,6 +47,10 @@ func (s *newsService) GetAllNews(ctx context.Context) ([]models.News, error) {
 	news, err = s.repo.GetAllNews()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get news from repository: %w", err)
+	}
+
+	for i := range news {
+		news[i].Date = news[i].Date[:10]
 	}
 
 	// Сохраняем в кеш на 5 минут
@@ -103,7 +110,16 @@ func (s *newsService) CreateNews(ctx context.Context, title, annotation, text, d
 }
 
 func (s *newsService) GetLatestNews() ([]models.News, error) {
-	return s.repo.GetLatestNews()
+
+	news, err := s.repo.GetLatestNews()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get latest news: %w", err)
+	}
+
+	for i := range news {
+		news[i].Date = news[i].Date[:10]
+	}
+	return news, nil
 }
 
 func (s *newsService) DeleteNews(ctx context.Context, id int) error {
