@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"hostel-management/internal/helpers"
 	"hostel-management/internal/services"
+	"hostel-management/pkg/helpers"
 	"hostel-management/pkg/session"
 	"log"
 	"os"

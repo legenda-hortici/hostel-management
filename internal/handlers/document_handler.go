@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"fmt"
-	"hostel-management/internal/helpers"
+	"hostel-management/pkg/helpers"
 	"hostel-management/pkg/session"
 
 	"github.com/gin-gonic/gin"
