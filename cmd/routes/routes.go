@@ -60,12 +60,20 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 	protected := r.Group("/")
 	protected.Use(auth.AuthMiddleware())
 	{
-		protected.GET("/profile", profileHandler.Profile)
-		protected.POST("/profile/update_profile", profileHandler.UpdateProfileHandler)
-		protected.GET("/services", serviceHandler.ServicesHandler)
-		protected.GET("/services/:id", serviceHandler.ServiceInfoHandler)
-		protected.POST("/services/send_request/:id", serviceHandler.RequestServiceHandler)
-		protected.GET("/services/request_info/:id", serviceHandler.RequestInfoHandler)
+		profile := protected.Group("/profile")
+		{
+			profile.GET("/", profileHandler.Profile)
+			profile.POST("/update_profile", profileHandler.UpdateProfileHandler)
+		}
+
+		services := protected.Group("/services")
+		{
+			services.GET("/", serviceHandler.ServicesHandler)
+			services.GET("/:id", serviceHandler.ServiceInfoHandler)
+			services.POST("/send_request/:id", serviceHandler.RequestServiceHandler)
+			services.GET("/request_info/:id", serviceHandler.RequestInfoHandler)
+		}
+
 		protected.GET("/support", faqhandler.SupportHandler)
 
 		protected.GET("/", homeHandler.HomeHandler)
@@ -92,43 +100,58 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 		admin.GET("/", adminHandler.AdminCabinetHandler)
 		admin.POST("/update_profile", adminHandler.UpdateCabinetHandler)
 
-		admin.GET("/rooms", roomHandler.RoomsHandler)
-		admin.POST("/rooms/add_room", roomHandler.AddRoomHandler)
-		admin.GET("/rooms/room_info/:id", roomHandler.RoomInfoHandler)
-		admin.POST("/rooms/room_info/:id/add_resident_into_room", roomHandler.AddResidentIntoRoomHandler)
-		admin.POST("/rooms/room_info/delete_from_room", roomHandler.DeleteResidentFromRoomHandler)
-		admin.POST("/rooms/room_info/:id/freeze", roomHandler.FreezeRoomHandler)
+		rooms := admin.Group("/rooms")
+		{
+			rooms.GET("/", roomHandler.RoomsHandler)
+			rooms.POST("/add_room", roomHandler.AddRoomHandler)
+			rooms.GET("/room_info/:id", roomHandler.RoomInfoHandler)
+			rooms.POST("/room_info/:id/add_resident_into_room", roomHandler.AddResidentIntoRoomHandler)
+			rooms.POST("/room_info/delete_from_room", roomHandler.DeleteResidentFromRoomHandler)
+			rooms.POST("/room_info/:id/freeze", roomHandler.FreezeRoomHandler)
+		}
 
-		admin.GET("/residents", userHandler.ResidentsHandler)
-		admin.GET("/residents/resident/:id", userHandler.ResidentInfoHandler)
-		admin.POST("/residents/add_resident", userHandler.AddResidentHandler)
-		admin.POST("/residents/:id", userHandler.UpdateResidentDataHandler)
-		admin.POST("/residents/resident/:id/delete_resident", userHandler.DeleteResidentHandler)
-		// TODO : update resident info
-		admin.POST("/residents/resident/:id/update_info", userHandler.UpdateResidentDataHandler)
+		residents := admin.Group("/residents")
+		{
+			residents.GET("/", userHandler.ResidentsHandler)
+			residents.GET("/resident/:id", userHandler.ResidentInfoHandler)
+			residents.POST("/add_resident", userHandler.AddResidentHandler)
+			residents.POST("/:id", userHandler.UpdateResidentDataHandler)
+			residents.POST("/resident/:id/delete_resident", userHandler.DeleteResidentHandler)
+			residents.POST("/resident/:id/update_info", userHandler.UpdateResidentDataHandler)
+		}
 
-		admin.GET("/services", serviceHandler.ServicesHandler)
-		admin.GET("/services/service/:id", serviceHandler.ServiceInfoHandler)
-		admin.POST("/services/add_service", serviceHandler.AddServiceHandler)
-		admin.POST("/services/service/:id/delete", serviceHandler.DeleteServiceHandler)
-		admin.POST("/services/service/:id/edit", serviceHandler.UpdateServiceHandler)
-		admin.GET("/services/request_info/:id", serviceHandler.RequestInfoHandler)
-		admin.POST("/services/request_info/:id/approve", serviceHandler.AcceptRequestHandler)
-		admin.POST("/services/request_info/:id/reject", serviceHandler.RejectRequestHandler)
+		services := admin.Group("/services")
+		{
+			services.GET("/", serviceHandler.ServicesHandler)
+			services.GET("/service/:id", serviceHandler.ServiceInfoHandler)
+			services.POST("/add_service", serviceHandler.AddServiceHandler)
+			services.POST("/service/:id/delete", serviceHandler.DeleteServiceHandler)
+			services.POST("/service/:id/edit", serviceHandler.UpdateServiceHandler)
+			services.GET("/request_info/:id", serviceHandler.RequestInfoHandler)
+			services.POST("/request_info/:id/approve", serviceHandler.AcceptRequestHandler)
+			services.POST("/request_info/:id/reject", serviceHandler.RejectRequestHandler)
+		}
 
-		admin.GET("/documents", handlers.DocumentsHandler)
-		admin.POST("/documents/create_contract", handlers.CreateContractHandler)
+		documents := admin.Group("/documents")
+		{
+			documents.GET("/", handlers.DocumentsHandler)
+			documents.POST("/create_contract", handlers.CreateContractHandler)
+		}
 
-		admin.GET("/inventory", inventoryHandler.InventoryHandler)
-		admin.POST("/inventory/:id/delete", inventoryHandler.DeleteInventoryItemHandler)
-		admin.POST("/inventory/add_item", inventoryHandler.AddInventoryItemHandler)
+		inventory := admin.Group("/inventory")
+		{
+			inventory.GET("/", inventoryHandler.InventoryHandler)
+			inventory.POST("/:id/delete", inventoryHandler.DeleteInventoryItemHandler)
+			inventory.POST("/add_item", inventoryHandler.AddInventoryItemHandler)
+		}
 
-		admin.GET("/support", faqhandler.SupportHandler)
-		admin.POST("/support/add_faq", faqhandler.AddFaqHandler)
-		admin.POST("/support/faq/:id/delete", faqhandler.DeleteFaqHandler)
-		admin.POST("/support/faq/:id/update", faqhandler.UpdateFaqHandler)
-
-		// admin.GET("/notices", handlers.AdminNoticesHandler)
+		support := admin.Group("/support")
+		{
+			support.GET("/", faqhandler.SupportHandler)
+			support.POST("/add_faq", faqhandler.AddFaqHandler)
+			support.POST("/faq/:id/delete", faqhandler.DeleteFaqHandler)
+			support.POST("/faq/:id/update", faqhandler.UpdateFaqHandler)
+		}
 	}
 
 	return nil

@@ -59,16 +59,18 @@ func (s *serviceService) GetServiceByID(idInt int) (models.Service, error) {
 
 func (s *serviceService) UpdateServiceByID(idInt int, c *gin.Context) error {
 
-	service := models.Service{
-		ID:          idInt,
-		Name:        c.PostForm("name"),
-		Type:        c.PostForm("type"),
-		Description: c.PostForm("description"),
-		Amount:      0,
-		Is_date:     c.PostForm("is_date") == "on",
-		Is_hostel:   c.PostForm("is_hostel") == "on",
-		Is_phone:    c.PostForm("is_phone") == "on",
-	}
+	service := func(models.Service) models.Service {
+		return models.Service{
+			ID:          idInt,
+			Name:        c.PostForm("name"),
+			Type:        c.PostForm("type"),
+			Description: c.PostForm("description"),
+			Amount:      0,
+			Is_date:     c.PostForm("is_date") == "on",
+			Is_hostel:   c.PostForm("is_hostel") == "on",
+			Is_phone:    c.PostForm("is_phone") == "on",
+		}
+	}(models.Service{})
 
 	if amountStr := c.PostForm("amount"); amountStr != "" {
 		amount, err := strconv.Atoi(amountStr)
