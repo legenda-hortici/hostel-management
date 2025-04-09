@@ -72,3 +72,12 @@ func IsAdmin(c *gin.Context) bool {
 	}
 	return role.(string) == "admin"
 }
+
+func IsHeadman(c *gin.Context) bool {
+	session := sessions.Default(c)
+	role := session.Get(UserRoleKey)
+	if role == nil {
+		return false
+	}
+	return role.(string) == "headman"
+}

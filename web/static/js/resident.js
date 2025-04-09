@@ -1,28 +1,57 @@
-// Логика для обработки кнопки "Сохранить изменения"
 document.getElementById("saveButton").addEventListener("click", function() {
-    let residentId = document.getElementById("residentId").value;
-    let username = document.getElementById("username").value;
-    let email = document.getElementById("email").value;
-    let institute = document.getElementById("institute").value;
-    let role = document.getElementById("role").value;
-    let password = document.getElementById("password").value;
+    const residentId = document.getElementById("residentId").value;
+    
+    const formData = {
+        username: document.getElementById("username").value,
+        surname: document.getElementById("surname").value,
+        email: document.getElementById("email").value,
+        institute: document.getElementById("institute").value,
+        role: document.getElementById("role").value,
+        password: document.getElementById("password").value
+    };
 
-    fetch(`/update_resident/${residentId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: residentId, username, email, institute, role, password })
+    fetch(`/admin/residents/resident/${residentId}/edit`, {
+        method: 'PUT',
+        headers: { 
+            'Content-Type': 'application/json',
+            'X-HTTP-Method-Override': 'PUT'
+        },
+        body: JSON.stringify(formData)
     })
-    .then(response => {
-        if (!response.ok) throw new Error("Ошибка при обновлении данных");
-        return response.json();
+    .then(async response => {
+        const text = await response.text();
+        
+        try {
+            const data = text ? JSON.parse(text) : {};
+            
+            if (!response.ok) {
+                const error = new Error(data.message || 'Ошибка сервера');
+                error.response = data;
+                throw error;
+            }
+            
+            return data;
+        } catch (e) {
+            if (e instanceof SyntaxError) {
+                throw new Error(`Невалидный JSON ответ: ${text.substring(0, 100)}...`);
+            }
+            throw e;
+        }
     })
     .then(data => {
-        console.log("Ответ сервера:", data);
+        console.log("Успешный ответ:", data);
         showToast("Данные успешно обновлены!", "success");
+        setTimeout(() => window.location.reload(), 1500);
     })
     .catch(error => {
-        console.error("Ошибка:", error);
-        showToast("Не удалось сохранить изменения", "danger");
+        console.error("Полная ошибка:", {
+            message: error.message,
+            stack: error.stack,
+            response: error.response
+        });
+        
+        const errorMsg = error.message || "Не удалось сохранить изменения";
+        showToast(errorMsg, "danger");
     });
 });
 

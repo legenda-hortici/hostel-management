@@ -5,7 +5,7 @@ import (
 	"hostel-management/cmd/routes"
 	"hostel-management/cmd/server"
 	"hostel-management/internal/config"
-	"hostel-management/storage/db"
+	"hostel-management/internal/config/db"
 	"hostel-management/storage/redis"
 	"log"
 	"os"

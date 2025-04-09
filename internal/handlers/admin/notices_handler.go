@@ -1,9 +1,8 @@
 package handlers
 
 import (
-	"errors"
+	"hostel-management/pkg/validation"
 	"hostel-management/internal/services"
-	"hostel-management/pkg/session"
 	"log"
 	"strconv"
 
@@ -20,20 +19,11 @@ func NewNoticeHandler(noticeService services.NoticeService) NoticesHandler {
 	}
 }
 
-func ValidateUserByRole(c *gin.Context, op string) (string, error) {
-	role, exists := session.GetUserRole(c)
-	if !exists || role != "admin" && role != "user" {
-		log.Printf("Access denied: %v", op)
-		return "", errors.New("access denied")
-	}
-	return role, nil
-}
-
 func (h *NoticesHandler) Notices(c *gin.Context) {
 
 	const op = "handlers.NoticesHandler.Notices"
 
-	role, err := ValidateUserByRole(c, op)
+	role, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		c.String(403, err.Error())
 		return
@@ -72,7 +62,7 @@ func (h *NoticesHandler) CreateNoticeHandler(c *gin.Context) {
 
 	const op = "handlers.NoticesHandler.CreateNoticeHandler"
 
-	_, err := ValidateUserByRole(c, op)
+	_, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		c.String(403, "Access denied")
 		return
@@ -103,7 +93,7 @@ func (h *NoticesHandler) NoticeInfoHandler(c *gin.Context) {
 
 	const op = "handlers.NoticesHandler.NoticeInfoHandler"
 
-	_, err := ValidateUserByRole(c, op)
+	_, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		c.String(403, err.Error())
 		return

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"hostel-management/pkg/validation"
 	"hostel-management/internal/services"
 	"log"
 	"strconv"
@@ -22,7 +23,7 @@ func (h *FaqHandler) SupportHandler(c *gin.Context) {
 
 	const op = "handlers.SupportHandler.SupportHandler"
 
-	role, err := ValidateUserByRole(c, op)
+	role, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		log.Printf("Access denied: %v", err)
 		c.String(403, err.Error())
@@ -46,7 +47,7 @@ func (h *FaqHandler) AddFaqHandler(c *gin.Context) {
 
 	const op = "handlers.SupportHandler.AddFaqHandler"
 
-	_, err := ValidateUserByRole(c, op)
+	_, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		log.Printf("Access denied: %v", err)
 		c.String(403, err.Error())

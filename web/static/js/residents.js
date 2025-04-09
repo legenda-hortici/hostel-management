@@ -29,9 +29,10 @@ document.getElementById("searchInput").addEventListener("input", function() {
 
     rows.forEach(row => {
         let name = row.querySelector(".resident-name").textContent.toLowerCase();
+        let surname = row.querySelector(".resident-surname").textContent.toLowerCase();
         let room = row.querySelector(".room-number").textContent.toLowerCase();
 
-        if (name.includes(filter) || room.includes(filter)) {
+        if (name.includes(filter) || room.includes(filter) || surname.includes(filter)) {
             row.style.display = "";
         } else {
             row.style.display = "none";

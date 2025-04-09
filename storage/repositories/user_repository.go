@@ -3,7 +3,7 @@ package repositories
 import (
 	"database/sql"
 	"fmt"
-	"hostel-management/storage/db"
+	"hostel-management/internal/config/db"
 	"hostel-management/storage/models"
 )
 
@@ -16,16 +16,15 @@ type UserRepository interface {
 	GetAll() ([]models.User, error)
 	GetTotalCount(searchTerm, filterRole string) (int, error)
 	GetPasswordByEmail(email string) (string, error)
-	Update(user *models.User) error
+	Update(id int, user *models.User) error
 	UpdateByEmail(email string, user *models.User) error
 	Delete(id int) error
-	GetAdminInfo(role string) (*models.User, error)
 	GetResidentsCount() (int, error)
 	GetUserIDByEmail(email string) (int, error)
 	GetUsernameByID(id int) (string, error)
 	GetUserPasswordByEmail(email string) (string, error)
 	GetAdmin(role string) (*models.User, error)
-	UpdateAdminData(username, password string) error
+	UpdateAdminData(models.User) error
 }
 
 // userRepository реализует интерфейс UserRepository
@@ -42,8 +41,9 @@ func NewUserRepository() UserRepository {
 
 // Create создает нового пользователя
 func (r *userRepository) Create(user *models.User) error {
-	query := "INSERT INTO Users (name, email, password, institute, role, Rooms_id) VALUES (?, ?, ?, ?, ?, ?)"
-	_, err := r.db.Exec(query, user.Username, user.Email, user.Password, user.Institute, user.Role, user.Room_id)
+	query := `INSERT INTO Users (name, email, password, institute, role, Rooms_id) VALUES (?, ?, ?, ?, ?, 
+			(SELECT id FROM Rooms WHERE number = ?));`
+	_, err := r.db.Exec(query, user.Username, user.Email, user.Password, user.Institute, user.Role, user.RoomNumber)
 	return err
 }
 
@@ -104,7 +104,7 @@ func (r *userRepository) GetRole(email string) (string, error) {
 
 // GetAll получает всех пользователей
 func (r *userRepository) GetAll() ([]models.User, error) {
-	query := "SELECT u.id, u.name, u.email, u.password, u.institute, u.role, r.number FROM Users u JOIN Rooms r ON u.Rooms_id = r.id"
+	query := "SELECT u.id, u.name, u.surname, u.email, u.password, u.institute, u.role, r.number FROM Users u JOIN Rooms r ON u.Rooms_id = r.id"
 	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, err
@@ -114,7 +114,7 @@ func (r *userRepository) GetAll() ([]models.User, error) {
 	users := []models.User{}
 	for rows.Next() {
 		user := models.User{}
-		err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Institute, &user.Role, &user.RoomNumber)
+		err := rows.Scan(&user.ID, &user.Username, &user.Surname, &user.Email, &user.Password, &user.Institute, &user.Role, &user.RoomNumber)
 		if err != nil {
 			return nil, err
 		}
@@ -140,12 +140,12 @@ func (r *userRepository) GetPasswordByEmail(email string) (string, error) {
 }
 
 // Update обновляет данные пользователя
-func (r *userRepository) Update(user *models.User) error {
+func (r *userRepository) Update(id int, user *models.User) error {
 	_, err := r.db.Exec(`
         UPDATE Users 
-        SET name=?, email=?, institute=?, role=?, password=?
+        SET name=?, surname=?, email=?, institute=?, role=?, password=?
         WHERE id=?`,
-		user.Username, user.Email, user.Institute.String, user.Role, user.Password, user.ID,
+		user.Username, user.Surname, user.Email, user.Institute.String, user.Role, user.Password, id,
 	)
 	return err
 }
@@ -165,20 +165,6 @@ func (r *userRepository) UpdateByEmail(email string, user *models.User) error {
 func (r *userRepository) Delete(id int) error {
 	_, err := r.db.Exec("DELETE FROM Users WHERE id = ?", id)
 	return err
-}
-
-// GetAdminInfo получает информацию об администраторе
-func (r *userRepository) GetAdminInfo(role string) (*models.User, error) {
-	query := "SELECT id, name, email, role FROM Users WHERE role = ?"
-	row := r.db.QueryRow(query, role)
-
-	admin := &models.User{}
-	err := row.Scan(&admin.ID, &admin.Username, &admin.Email, &admin.Role)
-	if err != nil {
-		return nil, err
-	}
-
-	return admin, nil
 }
 
 // GetResidentsCount получает количество всех жильцов
@@ -211,15 +197,20 @@ func (r *userRepository) GetUserPasswordByEmail(email string) (string, error) {
 
 // GetAdmin получает информацию об администраторе
 func (r *userRepository) GetAdmin(role string) (*models.User, error) {
-	query := "SELECT id, name, email, role FROM Users WHERE role = ?"
+	query := "SELECT id, name, surname, email, role, password FROM Users WHERE role = ?"
 	row := r.db.QueryRow(query, role)
 
 	admin := &models.User{}
-	err := row.Scan(&admin.ID, &admin.Username, &admin.Email, &admin.Role)
+	err := row.Scan(&admin.ID, &admin.Username, &admin.Surname, &admin.Email, &admin.Role, &admin.Password)
 	return admin, err
 }
 
-func (r *userRepository) UpdateAdminData(username, password string) error {
-	_, err := r.db.Exec("UPDATE Users SET name = ?, password = ? WHERE role = ?", username, password, "admin")
+func (r *userRepository) UpdateAdminData(user models.User) error {
+	_, err := r.db.Exec(
+		`UPDATE Users SET name = ?, surname = ?, password = ? WHERE role = ?`,
+		user.Username,
+		user.Surname,
+		user.Password,
+		"admin")
 	return err
 }

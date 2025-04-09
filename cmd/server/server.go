@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
-	"hostel-management/middlewares"
+	"hostel-management/pkg/middlewares"
 	"log"
 	"net"
 	"net/http"

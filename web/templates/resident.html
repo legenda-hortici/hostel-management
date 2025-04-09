@@ -18,7 +18,6 @@
             </div>
 
             <div class="row">
-                <!-- Информация о жильце -->
                 <div class="col-md-8">
                     <div class="card shadow-sm mb-4">
                         <div class="card-header bg-light">
@@ -29,30 +28,38 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="username" class="form-label">Имя</label>
-                                        <input type="text" class="form-control" id="username" name="username" value="{{ .Resident.Username }}" disabled>
+                                        <input type="text" class="form-control" id="username" value="{{ .Resident.Username }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="surname" class="form-label">Фамилия</label>
+                                        <input type="text" class="form-control" id="surname" value="{{ .Resident.Surname }}">
                                     </div>
                                     <div class="mb-3">
                                         <label for="email" class="form-label">Email</label>
-                                        <input type="email" class="form-control" id="email" name="email" value="{{ .Resident.Email }}">
+                                        <input type="email" class="form-control" id="email" value="{{ .Resident.Email }}">
                                     </div>
                                     <div class="mb-3">
                                         <label for="institute" class="form-label">Институт</label>
-                                        <input type="text" class="form-control" id="institute" name="institute" value="{{ if .Resident.Institute.Valid }}{{ .Resident.Institute.String }}{{ else }}Нет данных{{ end }}">
+                                        <input type="text" class="form-control" id="institute" value="{{ if .Resident.Institute.Valid }}{{ .Resident.Institute.String }}{{ else }}Нет данных{{ end }}">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="role" class="form-label">Роль</label>
-                                        <input type="text" class="form-control" id="role" name="role" value="{{ .Resident.Role }}">
+                                        <select class="form-select" id="role" name="role">
+                                            <option value="admin" {{ if eq .Resident.Role "admin" }}selected{{ end }}>Администратор</option>
+                                            <option value="headman" {{ if eq .Resident.Role "headman" }}selected{{ end }}>Комендант</option>
+                                            <option value="user" {{ if eq .Resident.Role "user" }}selected{{ end }}>Пользователь</option>
+                                        </select>
                                     </div>
                                     <div class="mb-3">
                                         <label for="room" class="form-label">Комната</label>
-                                        <input type="text" class="form-control" id="room" name="room" value="{{ .Resident.RoomNumber }}">
+                                        <input type="text" class="form-control" id="room" value="{{ .Resident.RoomNumber }}">
                                     </div>
                                     <div class="mb-3">
                                         <label for="password" class="form-label">Пароль</label>
                                         <div class="input-group">
-                                            <input type="password" class="form-control" id="password" name="password" value="{{ .Resident.Password }}">
+                                            <input type="password" class="form-control" id="password" value="{{ .Resident.Password }}">
                                             <button type="button" class="btn btn-outline-secondary" id="togglePassword">
                                                 <i class="bi bi-eye"></i>
                                             </button>
@@ -61,6 +68,8 @@
                                 </div>
                             </div>
                             <div class="d-flex justify-content-end mt-3">
+                                <input type="hidden" id="residentId" value="{{ .Resident.ID }}">
+                            
                                 <button type="button" class="btn btn-primary" id="saveButton">
                                     <i class="bi bi-save"></i> Сохранить изменения
                                 </button>

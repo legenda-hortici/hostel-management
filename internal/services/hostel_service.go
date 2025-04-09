@@ -30,6 +30,7 @@ func (s *hostelService) GetHostelsInfo(db *sql.DB) ([]map[string]interface{}, er
 	hostelData := []map[string]interface{}{}
 	for _, hostel := range hostels {
 		hostelData = append(hostelData, map[string]interface{}{
+			"ID":             hostel.HostelID,
 			"Number":         hostel.HostelNumber,
 			"RoomsCount":     hostel.OccupiedRooms + hostel.AvailableRooms,
 			"OccupiedRooms":  hostel.OccupiedRooms,

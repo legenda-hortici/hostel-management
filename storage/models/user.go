@@ -8,6 +8,7 @@ type User struct {
 	Number       int
 	ID           int
 	Username     string
+	Surname      string
 	Role         string
 	Password     string
 	Email        string
@@ -19,6 +20,7 @@ type User struct {
 
 type UserRequest struct {
 	Username  string `json:"username"`
+	Surname   string `json:"surname"`
 	Email     string `json:"email"`
 	Institute string `json:"institute"`
 	Role      string `json:"role"`

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"hostel-management/pkg/validation"
 	"hostel-management/internal/services"
 	"log"
 	"strconv"
@@ -22,7 +23,7 @@ func (h *NewsHandler) News(c *gin.Context) {
 
 	const op = "handlers.NewsHandler.NewsHandler"
 
-	role, err := ValidateUserByRole(c, op)
+	role, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		c.String(403, err.Error())
 		return
@@ -52,7 +53,7 @@ func (h *NewsHandler) CreateNewsPageHandler(c *gin.Context) {
 
 	const op = "handlers.CreateNewsPageHandler.CreateNewsPageHandler"
 
-	_, err := ValidateUserByRole(c, op)
+	_, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		c.String(403, err.Error())
 		return

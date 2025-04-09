@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"database/sql"
-	"hostel-management/storage/db"
+	"hostel-management/internal/config/db"
 	"hostel-management/storage/models"
 )
 
@@ -97,3 +97,10 @@ func (r *hostelRepository) GetHostelLocationByNumber(hostelNumber int) (string, 
 	}
 	return location, nil
 }
+
+// func (r *hostelRepository) GetHostelInfo(id int) (models.Hostel, error) {
+
+// 	query := `SELECT h.`
+
+// 	return models.Hostel{}, nil
+// }

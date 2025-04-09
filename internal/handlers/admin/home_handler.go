@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"hostel-management/pkg/validation"
 	"hostel-management/internal/services"
 	"hostel-management/pkg/helpers"
 	"hostel-management/pkg/session"
@@ -80,7 +81,7 @@ func (h *HomeHandler) UploadBannerHandler(c *gin.Context) {
 	}
 
 	// Получаем роль
-	_, err := ValidateUserByRole(c, op)
+	_, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		c.String(403, err.Error())
 		return
@@ -116,7 +117,7 @@ func (h *HomeHandler) DeleteBannerHandler(c *gin.Context) {
 	}
 
 	// Получаем роль
-	_, err := ValidateUserByRole(c, op)
+	_, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		c.String(403, err.Error())
 		return

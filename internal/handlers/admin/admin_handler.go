@@ -1,9 +1,13 @@
 package handlers
 
 import (
+	"fmt"
+	"hostel-management/internal/config/db"
 	"hostel-management/internal/services"
-	"hostel-management/storage/db"
+	handlers "hostel-management/pkg/validation"
+	"hostel-management/storage/models"
 	"log"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,9 +26,9 @@ func NewAdminHandler(userService services.UserService, hostelService services.Ho
 
 func (h *AdminHandler) AdminCabinetHandler(c *gin.Context) {
 
-	const op = "handlers.AdminHandler.AdminCabinetHandler"
+	const op = "handlers.admin.AdminHandler.AdminCabinetHandler"
 
-	role, err := ValidateUserByRole(c, op)
+	role, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		c.String(403, err.Error())
 		return
@@ -48,6 +52,7 @@ func (h *AdminHandler) AdminCabinetHandler(c *gin.Context) {
 		"Role": role,
 		"Admin": map[string]interface{}{
 			"Username": adminData.Username,
+			"Surname":  adminData.Surname,
 			"Email":    adminData.Email,
 			"Role":     adminData.Role,
 		},
@@ -59,20 +64,59 @@ func (h *AdminHandler) UpdateCabinetHandler(c *gin.Context) {
 
 	const op = "handlers.AdminHandler.UpdateCabinetHandler"
 
-	_, err := ValidateUserByRole(c, op)
+	_, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		c.String(403, err.Error())
 		return
 	}
 
 	username := c.PostForm("username")
+	surname := c.PostForm("surname")
 	password := c.PostForm("password")
 
-	err = h.userService.UpdateAdminData(username, password)
+	var req models.UserRequest
+
+	req.Username = username
+	req.Surname = surname
+	req.Password = password
+
+	err = h.userService.UpdateAdminData(req)
 	if err != nil {
 		c.String(500, err.Error()+": "+op)
 		return
 	}
 
 	c.Redirect(303, "/admin")
+}
+
+func (h *AdminHandler) HostelInfoHandler(c *gin.Context) {
+
+	const op = "handlers.AdminHandler.HostelInfoHandler"
+
+	_, err := handlers.ValidateUserByRole(c, op)
+	if err != nil {
+		c.String(403, err.Error())
+		return
+	}
+
+	hostelID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		log.Printf("Failed to get hostel ID: %v: %v", err, op)
+		c.String(400, "Invalid hostel ID")
+		return
+	}
+
+	fmt.Println(hostelID)
+
+	// hostel, err := h.hostelService.GetHostelInfo(hostelID)
+	// if err != nil {
+	// 	c.String(500, err.Error()+": "+op)
+	// 	return
+	// }
+
+	c.HTML(200, "layout.html", map[string]interface{}{
+		"Page": "hostel_info",
+		"Role": "admin",
+		// "Hostel": hostel,
+	})
 }

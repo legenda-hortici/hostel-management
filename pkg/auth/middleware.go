@@ -31,6 +31,17 @@ func AdminMiddleware() gin.HandlerFunc {
 	}
 }
 
+func HeadmanMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if !session.IsHeadman(c) {
+			c.Redirect(http.StatusFound, "/")
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
+
 // GuestMiddleware проверяет, что пользователь не аутентифицирован
 func GuestMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {

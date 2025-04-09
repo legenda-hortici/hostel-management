@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"hostel-management/pkg/validation"
 	"hostel-management/internal/services"
 	"log"
 	"strconv"
@@ -22,7 +23,7 @@ func NewRoomHandler(roomService services.RoomService) *RoomHandler {
 func (h *RoomHandler) RoomsHandler(c *gin.Context) {
 	const op = "handlers.RoomHandler.RoomsHandler"
 
-	_, err := ValidateUserByRole(c, op)
+	_, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		log.Printf("Access denied: %v", err)
 		c.String(403, err.Error())

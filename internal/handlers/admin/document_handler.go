@@ -10,7 +10,7 @@ import (
 
 func DocumentsHandler(c *gin.Context) {
 
-	const op = "handlers.DocumentsHandler.DocumentsHandler"
+	const op = "handlers.admin.DocumentsHandler.DocumentsHandler"
 
 	role, exists := session.GetUserRole(c)
 	if !exists || role != "admin" {
@@ -28,7 +28,7 @@ func DocumentsHandler(c *gin.Context) {
 
 func CreateContractHandler(c *gin.Context) {
 
-	const op = "handlers.DocumentsHandler.CreateContractHandler"
+	const op = "handlers.admin.DocumentsHandler.CreateContractHandler"
 
 	if c.Request.Method != "POST" {
 		c.String(405, "Method not allowed: %v: %v", c.Request.Method, op)

@@ -3,7 +3,7 @@ package repositories
 import (
 	"database/sql"
 	"fmt"
-	"hostel-management/storage/db"
+	"hostel-management/internal/config/db"
 	"hostel-management/storage/models"
 )
 

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"hostel-management/storage/db"
+	"hostel-management/internal/config/db"
 	"hostel-management/storage/models"
 )
 
@@ -159,7 +159,7 @@ func (r *roomRepository) GetRoomID(roomNumber string) (int, error) {
 }
 
 func (r *roomRepository) GetResidentsByRoomID(roomID int) ([]models.User, error) {
-	query := "SELECT * FROM Users WHERE Rooms_id = ?"
+	query := `SELECT id, name, surname, email, institute, role FROM Users WHERE Rooms_id = ?`
 	rows, err := r.db.Query(query, roomID)
 	if err != nil {
 		return nil, err
@@ -169,7 +169,7 @@ func (r *roomRepository) GetResidentsByRoomID(roomID int) ([]models.User, error)
 	residents := []models.User{}
 	for rows.Next() {
 		user := models.User{}
-		err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Institute, &user.Role, &user.Room_id)
+		err := rows.Scan(&user.ID, &user.Username, &user.Surname, &user.Email, &user.Institute, &user.Role)
 		if err != nil {
 			return nil, err
 		}

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"hostel-management/pkg/validation"
 	"hostel-management/internal/services"
 	"strconv"
 
@@ -23,7 +24,7 @@ func (h *InventoryHandler) InventoryHandler(c *gin.Context) {
 
 	const op = "handlers.InventoryHandler.InventoryHandler"
 
-	role, err := ValidateUserByRole(c, op)
+	role, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		c.String(403, err.Error())
 		return

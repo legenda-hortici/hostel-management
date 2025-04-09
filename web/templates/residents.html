@@ -4,9 +4,9 @@
         <!-- Основной контент -->
         <main class="col-12">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">Жильцы</h1>
+                <h1 class="h2">Пользователи</h1>
                 <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addResidentModal">
-                    <i class="bi bi-plus-circle"></i> Добавить жильца
+                    <i class="bi bi-plus-circle"></i> Добавить
                 </button>
             </div>
 
@@ -50,6 +50,7 @@
                                         <tr>
                                             <th>#</th>
                                             <th>Имя</th>
+                                            <th>Фамилия</th>
                                             <th>Email</th>
                                             <th>Комната</th>
                                             <th>Институт</th>
@@ -61,6 +62,7 @@
                                         <tr class="resident-row">
                                             <td>{{ .Number }}</td>
                                             <td class="resident-name">{{ .Username }}</td>
+                                            <td class="resident-surname">{{ .Surname }}</td>
                                             <td>{{ .Email }}</td>
                                             <td class="room-number">{{ .RoomNumber }}</td>
                                             <td class="institute-row">{{ if .Institute.Valid }}{{ .Institute.String }}{{ else }}Нет данных{{ end }}</td>

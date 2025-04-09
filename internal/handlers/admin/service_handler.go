@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"hostel-management/pkg/validation"
 	"hostel-management/internal/services"
 	"log"
 	"strconv"
@@ -31,14 +32,14 @@ func NewServiceHandler(
 func (h *ServiceHandler) ServicesHandler(c *gin.Context) {
 	const op = "handlers.ServiceHandler.ServicesHandler"
 
-	role, err := ValidateUserByRole(c, op)
+	role, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		log.Printf("Access denied: %v", err)
 		c.String(403, err.Error())
 		return
 	}
 
-	email, err := ValidateUserByEmail(c, op)
+	email, err := handlers.ValidateUserByEmail(c, op)
 	if err != nil {
 		log.Printf("Access denied: %v", err)
 		c.String(403, err.Error())
@@ -106,7 +107,7 @@ func (h *ServiceHandler) ServiceInfoHandler(c *gin.Context) {
 
 	const op = "handlers.ServiceHandler.ServiceInfoHandler"
 
-	role, err := ValidateUserByRole(c, op)
+	role, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		log.Printf("Access denied: %v", err)
 		c.String(403, err.Error())
@@ -199,7 +200,7 @@ func (h *ServiceHandler) RequestServiceHandler(c *gin.Context) {
 		return
 	}
 
-	email, err := ValidateUserByEmail(c, op)
+	email, err := handlers.ValidateUserByEmail(c, op)
 	if err != nil {
 		log.Printf("Access denied: %v", err)
 		c.String(403, err.Error())
@@ -240,7 +241,7 @@ func (h *ServiceHandler) RequestInfoHandler(c *gin.Context) {
 
 	const op = "handlers.ServiceHandler.RequestInfoHandler"
 
-	role, err := ValidateUserByRole(c, op)
+	role, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		log.Printf("Access denied: %v", err)
 		c.String(403, err.Error())

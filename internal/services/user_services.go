@@ -15,16 +15,15 @@ type UserService interface {
 	GetUserRole(email string) (string, error)
 	GetTotalCountUsers(searchTerm, filterRole string) (int, error)
 	GetPasswordByEmail(email string) (string, error)
-	UpdateUser(user *models.User) error
+	UpdateUser(id int, user *models.UserRequest) error
 	UpdateUserByEmail(email, name, emailUdp, password string) error
 	DeleteUser(id int) error
-	GetAdminInfo(role string) (*models.User, error)
 	GetResidentsCount() (int, error)
 	GetUserIDByEmail(email string) (int, error)
 	GetUsernameByID(id int) (string, error)
 	GetUserPasswordByEmail(email string) (string, error)
 	GetAdminData(role string) (*models.User, error)
-	UpdateAdminData(username, password string) error
+	UpdateAdminData(models.UserRequest) error
 }
 
 type userServiceImpl struct {
@@ -90,18 +89,16 @@ func (s *userServiceImpl) GetPasswordByEmail(email string) (string, error) {
 }
 
 // UpdateUser обновляет данные пользователя
-func (s *userServiceImpl) UpdateUser(req *models.User) error {
+func (s *userServiceImpl) UpdateUser(id int, req *models.UserRequest) error {
 	resident := models.User{
-		Username: req.Username,
-		Email:    req.Email,
-		Institute: sql.NullString{
-			String: req.Institute.String,
-			Valid:  req.Institute.Valid,
-		},
-		Role:     req.Role,
-		Password: req.Password,
+		Username:  req.Username,
+		Surname:   req.Surname,
+		Email:     req.Email,
+		Institute: sql.NullString{String: req.Institute, Valid: req.Institute != ""},
+		Role:      req.Role,
+		Password:  req.Password,
 	}
-	return s.userRepo.Update(&resident)
+	return s.userRepo.Update(id, &resident)
 }
 
 // UpdateUserByEmail обновляет данные пользователя
@@ -126,11 +123,6 @@ func (s *userServiceImpl) UpdateUserByEmail(email, name, emailUdp, password stri
 // DeleteUser удаляет пользователя
 func (s *userServiceImpl) DeleteUser(id int) error {
 	return s.userRepo.Delete(id)
-}
-
-// GetAdminInfo возвращает информацию о администраторе
-func (s *userServiceImpl) GetAdminInfo(role string) (*models.User, error) {
-	return s.userRepo.GetAdminInfo(role)
 }
 
 // GetResidentsCount возвращает количество жильцов
@@ -159,6 +151,11 @@ func (s *userServiceImpl) GetAdminData(role string) (*models.User, error) {
 }
 
 // UpdateAdminData обновляет данные администратора
-func (s *userServiceImpl) UpdateAdminData(username, password string) error {
-	return s.userRepo.UpdateAdminData(username, password)
+func (s *userServiceImpl) UpdateAdminData(req models.UserRequest) error {
+	admin := models.User{
+		Username: req.Username,
+		Surname:  req.Surname,
+		Password: req.Password,
+	}
+	return s.userRepo.UpdateAdminData(admin)
 }

@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"database/sql"
-	"hostel-management/storage/db"
+	"hostel-management/internal/config/db"
 	"hostel-management/storage/models"
 )
 

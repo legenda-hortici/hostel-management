@@ -1,7 +1,9 @@
 package routes
 
 import (
-	"hostel-management/internal/handlers"
+	adm "hostel-management/internal/handlers/admin"
+	head "hostel-management/internal/handlers/headman"
+	user "hostel-management/internal/handlers/user"
 	"hostel-management/internal/services"
 	"hostel-management/pkg/auth"
 	"hostel-management/storage/redis"
@@ -37,16 +39,17 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 	noticeService := services.NewNoticeService(noticeRepo)
 
 	authHandler := auth.NewAuthHandler(authService)
-	userHandler := handlers.NewUserHandler(userService, roomService)
-	adminHandler := handlers.NewAdminHandler(userService, hostelService)
-	roomHandler := handlers.NewRoomHandler(roomService)
-	serviceHandler := handlers.NewServiceHandler(serviceService, userService, statementService, roomService)
-	inventoryHandler := handlers.NewInventoryHandler(inventoryService)
-	faqhandler := handlers.NewFaqHandler(faqService)
-	homeHandler := handlers.NewHomeHandler(newsService, noticeService)
-	newsHandler := handlers.NewNewsHandler(newsService)
-	noticeHandler := handlers.NewNoticeHandler(noticeService)
-	profileHandler := handlers.NewProfileHandler(userService)
+	userHandler := adm.NewUserHandler(userService, roomService)
+	adminHandler := adm.NewAdminHandler(userService, hostelService)
+	headmanHandler := head.NewHeadmanHandler(userService, hostelService)
+	roomHandler := adm.NewRoomHandler(roomService)
+	serviceHandler := adm.NewServiceHandler(serviceService, userService, statementService, roomService)
+	inventoryHandler := adm.NewInventoryHandler(inventoryService)
+	faqhandler := adm.NewFaqHandler(faqService)
+	homeHandler := adm.NewHomeHandler(newsService, noticeService)
+	newsHandler := adm.NewNewsHandler(newsService)
+	noticeHandler := adm.NewNoticeHandler(noticeService)
+	profileHandler := user.NewProfileHandler(userService)
 
 	// Публичные маршруты
 	public := r.Group("/")
@@ -93,18 +96,26 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 		protected.POST("/notices/:id/delete", noticeHandler.DeleteNoticeHandler)
 	}
 
+	headman := r.Group("/headman")
+	headman.Use(auth.HeadmanMiddleware())
+	{
+		headman.GET("/", headmanHandler.HeadmanCabinetHandler)
+	}
+
 	// Административные маршруты
 	admin := r.Group("/admin")
 	admin.Use(auth.AdminMiddleware())
 	{
 		admin.GET("/", adminHandler.AdminCabinetHandler)
 		admin.POST("/update_profile", adminHandler.UpdateCabinetHandler)
+		admin.GET("/hostel/:id", adminHandler.HostelInfoHandler)
 
 		rooms := admin.Group("/rooms")
 		{
 			rooms.GET("/", roomHandler.RoomsHandler)
 			rooms.POST("/add_room", roomHandler.AddRoomHandler)
 			rooms.GET("/room_info/:id", roomHandler.RoomInfoHandler)
+			rooms.GET("/room_info/resident/:id", userHandler.ResidentInfoHandler)
 			rooms.POST("/room_info/:id/add_resident_into_room", roomHandler.AddResidentIntoRoomHandler)
 			rooms.POST("/room_info/delete_from_room", roomHandler.DeleteResidentFromRoomHandler)
 			rooms.POST("/room_info/:id/freeze", roomHandler.FreezeRoomHandler)
@@ -117,7 +128,7 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 			residents.POST("/add_resident", userHandler.AddResidentHandler)
 			residents.POST("/:id", userHandler.UpdateResidentDataHandler)
 			residents.POST("/resident/:id/delete_resident", userHandler.DeleteResidentHandler)
-			residents.POST("/resident/:id/update_info", userHandler.UpdateResidentDataHandler)
+			residents.PUT("/resident/:id/edit", userHandler.UpdateResidentDataHandler)
 		}
 
 		services := admin.Group("/services")
@@ -134,8 +145,8 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 
 		documents := admin.Group("/documents")
 		{
-			documents.GET("/", handlers.DocumentsHandler)
-			documents.POST("/create_contract", handlers.CreateContractHandler)
+			documents.GET("/", adm.DocumentsHandler)
+			documents.POST("/create_contract", adm.CreateContractHandler)
 		}
 
 		inventory := admin.Group("/inventory")

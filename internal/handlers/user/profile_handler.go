@@ -1,9 +1,8 @@
 package handlers
 
 import (
-	"errors"
+	"hostel-management/pkg/validation"
 	"hostel-management/internal/services"
-	"hostel-management/pkg/session"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -19,25 +18,16 @@ func NewProfileHandler(userService services.UserService) *ProfileHandler {
 	}
 }
 
-func ValidateUserByEmail(c *gin.Context, op string) (string, error) {
-	email, exists := session.GetUserEmail(c)
-	if !exists {
-		log.Printf("Access denied: %v: %v", email, op)
-		return "", errors.New("access denied")
-	}
-	return email, nil
-}
-
 func (h *ProfileHandler) Profile(c *gin.Context) {
 	const op = "handlers.ProfileHandler.ProfileHandler"
 
-	role, err := ValidateUserByRole(c, op)
+	role, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		c.String(403, err.Error())
 		return
 	}
 
-	email, err := ValidateUserByEmail(c, op)
+	email, err := handlers.ValidateUserByEmail(c, op)
 	if err != nil {
 		c.String(403, err.Error())
 		return
@@ -59,7 +49,7 @@ func (h *ProfileHandler) Profile(c *gin.Context) {
 func (h *ProfileHandler) UpdateProfileHandler(c *gin.Context) {
 	const op = "handlers.ProfileHandler.UpdateProfileHandler"
 
-	email, err := ValidateUserByEmail(c, op)
+	email, err := handlers.ValidateUserByEmail(c, op)
 	if err != nil {
 		c.String(403, err.Error())
 		return

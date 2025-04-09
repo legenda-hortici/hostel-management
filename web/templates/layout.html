@@ -53,7 +53,7 @@
                         <i class="bi bi-door-open"></i>Комнаты
                     </a>
                     <a href="/admin/residents" class="btn btn-light w-100 border-0 rounded-0 py-2 d-flex gap-2">
-                        <i class="bi bi-people"></i>Жильцы
+                        <i class="bi bi-people"></i>Пользователи
                     </a>
                     <a href="/admin/documents" class="btn btn-light w-100 border-0 rounded-0 py-2 d-flex gap-2">
                         <i class="bi bi-file-earmark-text"></i>Документы
@@ -65,8 +65,32 @@
                         <i class="bi bi-question-circle"></i>Поддержка
                     </a>
                 {{ end }}
+
+                {{ if eq .Role "headman" }}
+                    <a href="/" class="btn btn-light w-100 border-0 rounded-0 py-2 d-flex gap-2">
+                        <i class="bi bi-house"></i> Главная
+                    </a>
+                    <a href="/headman" class="btn btn-light w-100 border-0 rounded-0 py-2 d-flex gap-2">
+                        <i class="bi bi-speedometer2"></i> Панель коменданта
+                    </a>
+                    <a href="/headman/services" class="btn btn-light w-100 border-0 rounded-0 py-2 d-flex gap-2">
+                        <i class="bi bi-tools"></i>Услуги
+                    </a>
+                    <a href="/headman/rooms" class="btn btn-light w-100 border-0 rounded-0 py-2 d-flex gap-2">
+                        <i class="bi bi-door-open"></i>Комнаты
+                    </a>
+                    <a href="/headman/residents" class="btn btn-light w-100 border-0 rounded-0 py-2 d-flex gap-2">
+                        <i class="bi bi-people"></i>Пользователи
+                    </a>
+                    <a href="/headman/inventory" class="btn btn-light w-100 border-0 rounded-0 py-2 d-flex gap-2">
+                        <i class="bi bi-box"></i>Инвентарь
+                    </a>
+                    <a href="/headman/support" class="btn btn-light w-100 border-0 rounded-0 py-2 d-flex gap-2">
+                        <i class="bi bi-question-circle"></i>Поддержка
+                    </a>
+                {{ end }}
     
-                {{ if or (eq .Role "user") (eq .Role "headman") }}
+                {{ if eq .Role "user" }}
                     <a href="/" class="btn btn-light w-100 border-0 rounded-0 py-2 d-flex align-items-center gap-2">
                         <i class="bi bi-house"></i> Главная
                     </a>

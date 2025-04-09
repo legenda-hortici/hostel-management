@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"hostel-management/internal/services"
 	"hostel-management/storage/models"
 	"log"
@@ -71,7 +70,7 @@ func (h *UserHandler) ResidentInfoHandler(c *gin.Context) {
 
 func (h *UserHandler) AddResidentHandler(c *gin.Context) {
 
-	const op = "handlers.AddResidentHandler.AddResidentHandler"
+	const op = "handlers.user_handler.AddResidentHandler"
 
 	if c.Request.Method != "POST" {
 		log.Printf("Method not allowed: %v", op)
@@ -119,7 +118,7 @@ func (h *UserHandler) UpdateResidentDataHandler(c *gin.Context) {
 		return
 	}
 
-	var req models.User
+	var req models.UserRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Printf("Invalid JSON: %v: %v", err, op)
@@ -127,14 +126,18 @@ func (h *UserHandler) UpdateResidentDataHandler(c *gin.Context) {
 		return
 	}
 
-	err = h.userService.UpdateUser(&req)
+	err = h.userService.UpdateUser(idInt, &req)
 	if err != nil {
 		log.Printf("Failed to update resident data: %v: %v", err, op)
 		c.String(500, "Failed to update resident data")
 		return
 	}
 
-	c.Redirect(303, fmt.Sprintf("/admin/residents/%d", idInt))
+	c.JSON(200, gin.H{
+		"message": "Resident data updated successfully",
+		"status":  "success",
+		"data":    req,
+	})
 }
 
 func (h *UserHandler) DeleteResidentHandler(c *gin.Context) {

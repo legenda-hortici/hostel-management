@@ -8,6 +8,7 @@
             <div>
                 <h5 class="card-title"><i class="bi bi-person-circle"></i> Личные данные</h5>
                 <p class="mb-1"><strong>Имя:</strong> {{ .Admin.Username }}</p>
+                <p class="mb-1"><strong>Фамилия:</strong> {{ .Admin.Surname }}</p>
                 <p class="mb-1"><strong>Роль:</strong> {{ .Admin.Role }}</p>
                 <p><strong>Email:</strong> {{ .Admin.Email }}</p>
             </div>
@@ -27,23 +28,25 @@
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3">
         {{ range .Hostels }}
         <div class="col mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="bi bi-building"></i> Общежитие №{{ .Number }}</h5>
-                    <div class="row">
-                        <div class="col-6">
-                            <p><strong>Адрес:</strong> {{ .Location }}</p>
-                            <p><strong>Жильцы:</strong> <span class="badge bg-primary">{{ .ResidentsCount }}</span></p>
-                        </div>
-                        <div class="col-6">
-                            <p><strong>Комнаты:</strong> <span class="badge bg-secondary">{{ .RoomsCount }}</span></p>
-                            <p><strong>Занятые:</strong> <span class="badge bg-danger">{{ .OccupiedRooms }}</span></p>
-                            <p><strong>Свободные:</strong> <span class="badge bg-success">{{ .AvailableRooms }}</span></p>
+            <a href="/admin/hostel/{{ .ID }}" class="text-decoration-none text-dark">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-building"></i> Общежитие №{{ .Number }}</h5>
+                        <div class="row">
+                            <div class="col-6">
+                                <p><strong>Адрес:</strong> {{ .Location }}</p>
+                                <p><strong>Жильцы:</strong> <span class="badge bg-primary">{{ .ResidentsCount }}</span></p>
+                            </div>
+                            <div class="col-6">
+                                <p><strong>Комнаты:</strong> <span class="badge bg-secondary">{{ .RoomsCount }}</span></p>
+                                <p><strong>Занятые:</strong> <span class="badge bg-danger">{{ .OccupiedRooms }}</span></p>
+                                <p><strong>Свободные:</strong> <span class="badge bg-success">{{ .AvailableRooms }}</span></p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </a>
+        </div>        
         {{ end }}
     </div>
     {{ else }}
@@ -83,12 +86,16 @@
             <div class="modal-body">
                 <form action="/admin/update_profile" method="POST">
                     <div class="mb-3">
-                        <label for="username" class="form-label">Логин</label>
+                        <label for="username" class="form-label">Имя</label>
                         <input type="text" class="form-control" id="username" name="username" value="{{ .Admin.Username }}">
                     </div>
                     <div class="mb-3">
+                        <label for="surname" class="form-label">Фамилия</label>
+                        <input type="text" class="form-control" id="surname" name="surname" value="{{ .Admin.Surname }}">
+                    </div>
+                    <div class="mb-3">
                         <label for="password" class="form-label">Новый пароль</label>
-                        <input type="password" class="form-control" id="password" name="password">
+                        <input type="password" class="form-control" id="password" name="password" value="{{ .Admin.Password }}">
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Сохранить</button>
                 </form>
