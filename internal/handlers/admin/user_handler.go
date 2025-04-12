@@ -79,6 +79,7 @@ func (h *UserHandler) AddResidentHandler(c *gin.Context) {
 	}
 
 	username := c.PostForm("username")
+	surname := c.PostForm("surname")
 	email := c.PostForm("email")
 	password := c.PostForm("password")
 	institute := c.PostForm("institute")
@@ -90,7 +91,7 @@ func (h *UserHandler) AddResidentHandler(c *gin.Context) {
 		return
 	}
 
-	err = h.userService.CreateUser(username, email, password, institute, roomNumberInt)
+	err = h.userService.CreateUser(username, surname, email, password, institute, roomNumberInt)
 	if err != nil {
 		log.Printf("Failed to add resident: %v: %v", err, op)
 		c.String(400, "Failed to add resident: "+err.Error())

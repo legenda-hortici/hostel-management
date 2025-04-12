@@ -3,11 +3,12 @@ package services
 import (
 	"hostel-management/storage/models"
 	"hostel-management/storage/repositories"
+	"log"
 )
 
 type InventoryService interface {
 	GetAllInventory() ([]models.Inventory, error)
-	InsertIntoInventory(furniture string, invNumber, room int) error
+	InsertIntoInventory(furniture, invNumber string, room int) error
 	DeleteInventoryItem(id int) error
 	GetInventoryByRoomID(roomID int) ([]models.Inventory, error)
 }
@@ -34,10 +35,9 @@ func (s *inventoryService) GetAllInventory() ([]models.Inventory, error) {
 	return inventory, nil
 }
 
-func (s *inventoryService) InsertIntoInventory(furniture string, invNumber, room int) error {
+func (s *inventoryService) InsertIntoInventory(furniture, invNumber string, room int) error {
 	inventory := models.Inventory{
 		Name:       furniture,
-		Count:      1,
 		InvNumber:  invNumber,
 		RoomNumber: room,
 	}
@@ -56,6 +56,8 @@ func (s *inventoryService) InsertIntoInventory(furniture string, invNumber, room
 	case "Стеллаж":
 		inventory.Icon = "img/svg/bookshelf-svgrepo-com.svg"
 	}
+
+	log.Println(inventory)
 
 	return s.inventoryRepo.InsertIntoInventory(inventory)
 }

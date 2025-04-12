@@ -1,14 +1,14 @@
 package services
 
 import (
-	"database/sql"
 	"errors"
 	"hostel-management/storage/models"
 	"hostel-management/storage/repositories"
+	"time"
 )
 
 type UserService interface {
-	CreateUser(username, email, password, institute string, roomNumber int) error
+	CreateUser(username, surname, email, password, institute string, roomNumber int) error
 	GetAllUsers() ([]models.User, error)
 	GetUserByID(id int) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
@@ -16,14 +16,16 @@ type UserService interface {
 	GetTotalCountUsers(searchTerm, filterRole string) (int, error)
 	GetPasswordByEmail(email string) (string, error)
 	UpdateUser(id int, user *models.UserRequest) error
-	UpdateUserByEmail(email, name, emailUdp, password string) error
+	UpdateUserByEmail(email, name, surname, password string) error
 	DeleteUser(id int) error
 	GetResidentsCount() (int, error)
 	GetUserIDByEmail(email string) (int, error)
 	GetUsernameByID(id int) (string, error)
 	GetUserPasswordByEmail(email string) (string, error)
 	GetAdminData(role string) (*models.User, error)
+	GetHeadmanData(role string) (*models.User, error)
 	UpdateAdminData(models.UserRequest) error
+	UpdateHeadmanData(models.UserRequest) error
 }
 
 type userServiceImpl struct {
@@ -34,14 +36,16 @@ func NewUserService(userRepo repositories.UserRepository) UserService {
 	return &userServiceImpl{userRepo: userRepo}
 }
 
-func (s *userServiceImpl) CreateUser(username, email, password, institute string, roomNumber int) error {
+func (s *userServiceImpl) CreateUser(username, surname, email, password, institute string, roomNumber int) error {
 	resident := models.User{
-		Username:   username,
-		Email:      email,
-		Password:   password,
-		Role:       "user",
-		Institute:  sql.NullString{String: institute, Valid: institute != ""},
-		RoomNumber: roomNumber,
+		Username:     username,
+		Surname:      surname,
+		Email:        email,
+		Password:     password,
+		Role:         "user",
+		Institute:    institute,
+		RoomNumber:   roomNumber,
+		SettlingDate: time.Now().Format("2006-01-02"),
 	}
 	return s.userRepo.Create(&resident)
 }
@@ -94,7 +98,7 @@ func (s *userServiceImpl) UpdateUser(id int, req *models.UserRequest) error {
 		Username:  req.Username,
 		Surname:   req.Surname,
 		Email:     req.Email,
-		Institute: sql.NullString{String: req.Institute, Valid: req.Institute != ""},
+		Institute: req.Institute,
 		Role:      req.Role,
 		Password:  req.Password,
 	}
@@ -102,19 +106,13 @@ func (s *userServiceImpl) UpdateUser(id int, req *models.UserRequest) error {
 }
 
 // UpdateUserByEmail обновляет данные пользователя
-func (s *userServiceImpl) UpdateUserByEmail(email, name, emailUdp, password string) error {
-	if email == emailUdp {
-		return s.userRepo.UpdateByEmail(email, &models.User{
-			Username: name,
-			Password: password,
-		})
-	}
-	if email == "" || emailUdp == "" || name == "" || password == "" {
+func (s *userServiceImpl) UpdateUserByEmail(email, name, surname, password string) error {
+	if email == "" || name == "" || password == "" {
 		return errors.New("fields cannot be empty")
 	}
 	user := &models.User{
 		Username: name,
-		Email:    emailUdp,
+		Surname:  surname,
 		Password: password,
 	}
 	return s.userRepo.UpdateByEmail(email, user)
@@ -150,6 +148,10 @@ func (s *userServiceImpl) GetAdminData(role string) (*models.User, error) {
 	return s.userRepo.GetAdmin(role)
 }
 
+func (s *userServiceImpl) GetHeadmanData(role string) (*models.User, error) {
+	return s.userRepo.GetHeadman(role)
+}
+
 // UpdateAdminData обновляет данные администратора
 func (s *userServiceImpl) UpdateAdminData(req models.UserRequest) error {
 	admin := models.User{
@@ -158,4 +160,14 @@ func (s *userServiceImpl) UpdateAdminData(req models.UserRequest) error {
 		Password: req.Password,
 	}
 	return s.userRepo.UpdateAdminData(admin)
+}
+
+// UpdateHeadmanData обновляет данные администратора
+func (s *userServiceImpl) UpdateHeadmanData(req models.UserRequest) error {
+	headman := models.User{
+		Username: req.Username,
+		Surname:  req.Surname,
+		Password: req.Password,
+	}
+	return s.userRepo.UpdateHeadmanData(headman)
 }

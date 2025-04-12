@@ -63,7 +63,7 @@ func main() {
 
 	// Настраиваем сессии
 	store := cookie.NewStore([]byte("secret"))
-	router.Use(sessions.Sessions("hostel_session", store))
+	router.Use(sessions.Sessions("mysession", store))
 
 	// Регистрируем маршруты
 	if err := routes.RegisterRoutes(router, redisCache); err != nil {

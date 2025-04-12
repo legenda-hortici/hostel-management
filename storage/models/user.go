@@ -1,9 +1,5 @@
 package models
 
-import (
-	"database/sql"
-)
-
 type User struct {
 	Number       int
 	ID           int
@@ -12,7 +8,8 @@ type User struct {
 	Role         string
 	Password     string
 	Email        string
-	Institute    sql.NullString
+	Institute    string
+	SettlingDate string
 	Room_id      int
 	RoomNumber   int
 	HostelNumber int

@@ -35,59 +35,13 @@ func NewRoomService(roomRepo repositories.RoomRepository) RoomService {
 	return &roomServiceImpl{roomRepo: roomRepo}
 }
 
-// Функция для перевода типа комнаты на русский
-func TranslateRoomType(roomType string) string {
-	switch roomType {
-	case "once":
-		return "Одноместная"
-	case "double":
-		return "Двухместная"
-	case "triple":
-		return "Трехместная"
-	case "premium double":
-		return "Двухместная (комфорт)"
-	case "premium triple":
-		return "Трехместная (комфорт)"
-	default:
-		return "Неизвестный тип"
-	}
-}
-
-// Функция для перевода статуса комнаты на русский
-func TranslateRoomStatus(status string) string {
-	switch status {
-	case "unoccupied":
-		return "Доступна"
-	case "occupied":
-		return "Занята"
-	case "renovation":
-		return "На ремонте"
-	default:
-		return "Неизвестный статус"
-	}
-}
-
-// Функция для перевода информации о жильцах на русский
-func TranslateUserCount(userCount int) int {
-	// Оставляем только само число
-	return userCount
-}
-
-func (s *roomServiceImpl) TranslateRoom(room models.Room) models.Room {
-	room.Type = TranslateRoomType(room.Type)
-	room.Status = TranslateRoomStatus(room.Status)
-	room.UserCount = TranslateUserCount(room.UserCount)
-
-	return room
-}
-
 func (s *roomServiceImpl) DefineRoomStatus(roomType string, userCount int, roomNumber int) (string, error) {
 	roomCapacity := map[string]int{
-		"once":           1,
-		"double":         2,
-		"triple":         3,
-		"premium double": 2,
-		"premium triple": 3,
+		"одноместная":           1,
+		"двухместная":           2,
+		"трехместная":           3,
+		"двухместная (премиум)": 2,
+		"трехместная (премиум)": 3,
 	}
 
 	capacity, exists := roomCapacity[roomType]
@@ -96,17 +50,17 @@ func (s *roomServiceImpl) DefineRoomStatus(roomType string, userCount int, roomN
 	}
 
 	if userCount == capacity {
-		err := s.UpdateRoomStatus(roomNumber, "occupied")
+		err := s.UpdateRoomStatus(roomNumber, "Занята")
 		if err != nil {
 			return "", errors.New("DefineRoomStatus: ошибка при обновлении статуса комнаты")
 		}
-		return "occupied", nil
+		return "Занята", nil
 	}
-	err := s.UpdateRoomStatus(roomNumber, "unoccupied")
+	err := s.UpdateRoomStatus(roomNumber, "Доступна")
 	if err != nil {
 		return "", errors.New("DefineRoomStatus: ошибка при обновлении статуса комнаты")
 	}
-	return "unoccupied", nil
+	return "Доступна", nil
 }
 
 func (s *roomServiceImpl) CreateRoom(roomType, status string, number, userCount, hostelNumber int) error {
@@ -115,17 +69,17 @@ func (s *roomServiceImpl) CreateRoom(roomType, status string, number, userCount,
 	}
 
 	validTypes := map[string]bool{
-		"once":           true,
-		"double":         true,
-		"triple":         true,
-		"premium double": true,
-		"premium triple": true,
+		"одноместная":           true,
+		"двухместная":           true,
+		"трехместная":           true,
+		"двухместная (премиум)": true,
+		"трехместная (премиум)": true,
 	}
 
 	validStatuses := map[string]bool{
-		"unoccupied": true,
-		"occupied":   true,
-		"renovation": true,
+		"Доступна":   true,
+		"Занята":     true,
+		"На ремонте": true,
 	}
 
 	if !validTypes[roomType] {
@@ -153,10 +107,9 @@ func (s *roomServiceImpl) GetAllRooms() ([]models.Room, error) {
 		return nil, err
 	}
 	for room := range rooms {
-		if rooms[room].Status != "renovation" {
+		if rooms[room].Status != "На ремонте" {
 			s.DefineRoomStatus(rooms[room].Type, rooms[room].UserCount, rooms[room].Number)
 		}
-		rooms[room] = s.TranslateRoom(rooms[room])
 	}
 	return rooms, nil
 }
@@ -178,7 +131,6 @@ func (s *roomServiceImpl) GetRoomByID(roomID int) (models.Room, error) {
 		return models.Room{}, err
 	}
 	room.UserCount = len(residents)
-	room = s.TranslateRoom(room)
 
 	return room, nil
 }

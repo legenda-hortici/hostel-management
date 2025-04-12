@@ -100,6 +100,44 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 	headman.Use(auth.HeadmanMiddleware())
 	{
 		headman.GET("/", headmanHandler.HeadmanCabinetHandler)
+		headman.POST("/update_profile", headmanHandler.UpdateHeadmanData)
+
+		rooms := headman.Group("/rooms")
+		{
+			rooms.GET("/", roomHandler.RoomsHandler)
+			rooms.GET("/room_info/:id", roomHandler.RoomInfoHandler)
+			rooms.GET("/room_info/resident/:id", userHandler.ResidentInfoHandler)
+			rooms.POST("/room_info/:id/add_resident_into_room", roomHandler.AddResidentIntoRoomHandler)
+			rooms.POST("/room_info/delete_from_room", roomHandler.DeleteResidentFromRoomHandler)
+			// TODO: Исправить заморозку комнаты
+			rooms.POST("/room_info/:id/freeze", roomHandler.FreezeRoomHandler)
+		}
+
+		residents := headman.Group("/residents")
+		{
+			residents.GET("/", userHandler.ResidentsHandler)
+			residents.GET("/resident/:id", userHandler.ResidentInfoHandler)
+			residents.POST("/add_resident", userHandler.AddResidentHandler)
+			residents.POST("/:id", userHandler.UpdateResidentDataHandler)
+			residents.POST("/resident/:id/delete_resident", userHandler.DeleteResidentHandler)
+			residents.PUT("/resident/:id/edit", userHandler.UpdateResidentDataHandler)
+		}
+
+		services := headman.Group("/services")
+		{
+			services.GET("/", serviceHandler.ServicesHandler)
+			services.GET("/service/:id", serviceHandler.ServiceInfoHandler)
+			services.GET("/request_info/:id", serviceHandler.RequestInfoHandler)
+			services.POST("/request_info/:id/approve", serviceHandler.AcceptRequestHandler)
+			services.POST("/request_info/:id/reject", serviceHandler.RejectRequestHandler)
+		}
+
+		inventory := headman.Group("/inventory")
+		{
+			inventory.GET("/", inventoryHandler.InventoryHandler)
+			inventory.POST("/:id/delete", inventoryHandler.DeleteInventoryItemHandler)
+			inventory.POST("/add_item", inventoryHandler.AddInventoryItemHandler)
+		}
 	}
 
 	// Административные маршруты
@@ -108,7 +146,13 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 	{
 		admin.GET("/", adminHandler.AdminCabinetHandler)
 		admin.POST("/update_profile", adminHandler.UpdateCabinetHandler)
-		admin.GET("/hostel/:id", adminHandler.HostelInfoHandler)
+		admin.POST("/create_contract", adm.CreateContractHandler)
+
+		hostel := admin.Group("/hostel")
+		{
+			hostel.GET("/:id", adminHandler.HostelInfoHandler)
+			hostel.POST(":id/assign_headman", adminHandler.AssignCommandantHandler)
+		}
 
 		rooms := admin.Group("/rooms")
 		{
@@ -118,6 +162,7 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 			rooms.GET("/room_info/resident/:id", userHandler.ResidentInfoHandler)
 			rooms.POST("/room_info/:id/add_resident_into_room", roomHandler.AddResidentIntoRoomHandler)
 			rooms.POST("/room_info/delete_from_room", roomHandler.DeleteResidentFromRoomHandler)
+			// TODO: Исправить заморозку комнаты
 			rooms.POST("/room_info/:id/freeze", roomHandler.FreezeRoomHandler)
 		}
 
@@ -141,12 +186,6 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 			services.GET("/request_info/:id", serviceHandler.RequestInfoHandler)
 			services.POST("/request_info/:id/approve", serviceHandler.AcceptRequestHandler)
 			services.POST("/request_info/:id/reject", serviceHandler.RejectRequestHandler)
-		}
-
-		documents := admin.Group("/documents")
-		{
-			documents.GET("/", adm.DocumentsHandler)
-			documents.POST("/create_contract", adm.CreateContractHandler)
 		}
 
 		inventory := admin.Group("/inventory")

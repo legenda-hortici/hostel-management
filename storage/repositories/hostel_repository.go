@@ -9,7 +9,9 @@ import (
 type HostelRepository interface {
 	GetAllHostelNumbers() ([]int, error)
 	GetHostelsInfo(db *sql.DB) ([]models.Hostel, error)
+	GetHostelInfo(id int) (models.Hostel, error)
 	GetHostelLocationByNumber(hostelNumber int) (string, error)
+	AssignHeadmanToHostel(hostelID int, email string) error
 }
 
 type hostelRepository struct {
@@ -44,20 +46,33 @@ func (r *hostelRepository) GetAllHostelNumbers() ([]int, error) {
 func (r *hostelRepository) GetHostelsInfo(db *sql.DB) ([]models.Hostel, error) {
 	query := `
         SELECT 
-            h.id AS hostel_id,
-            h.number AS hostel_number,
+			h.id AS hostel_id,
+			h.number AS hostel_number,
 			h.location AS hostel_location,
-            COUNT(DISTINCT u.id) AS residents_count,
-            SUM(CASE WHEN r.status = 'occupied' THEN 1 ELSE 0 END) AS occupied_rooms,
-            SUM(CASE WHEN r.status = 'unoccupied' THEN 1 ELSE 0 END) AS available_rooms
-        FROM 
-            Hostels h
-        LEFT JOIN 
-            Rooms r ON r.Hostels_id = h.id
-        LEFT JOIN 
-            Users u ON u.Rooms_id = r.id
-        GROUP BY 
-            h.id, h.number;
+
+			-- Общее количество жильцов (через подзапрос)
+			(
+				SELECT COUNT(*) 
+				FROM Users u
+				JOIN Rooms r2 ON u.Rooms_id = r2.id
+				WHERE r2.Hostels_id = h.id
+			) AS residents_count,
+
+			-- Количество занятых комнат
+			SUM(CASE WHEN r.status = 'Занята' THEN 1 ELSE 0 END) AS occupied_rooms,
+
+			-- Количество доступных комнат
+			SUM(CASE WHEN r.status = 'Доступна' THEN 1 ELSE 0 END) AS available_rooms
+
+		FROM 
+			Hostels h
+
+		-- JOIN только с Rooms (без дублирования)
+		LEFT JOIN Rooms r ON r.Hostels_id = h.id
+
+		GROUP BY 
+			h.id, h.number, h.location;
+
     `
 
 	rows, err := db.Query(query)
@@ -98,9 +113,79 @@ func (r *hostelRepository) GetHostelLocationByNumber(hostelNumber int) (string, 
 	return location, nil
 }
 
-// func (r *hostelRepository) GetHostelInfo(id int) (models.Hostel, error) {
+func (r *hostelRepository) AssignHeadmanToHostel(hostelID int, email string) error {
+	// Обновляем запись в таблице Hostel, назначая коменданта по id общежития
+	query := "UPDATE Hostels SET headman_email = ? WHERE id = ?"
+	_, err := db.DB.Exec(query, email, hostelID)
+	return err
+}
 
-// 	query := `SELECT h.`
+func (r *hostelRepository) GetHostelInfo(id int) (models.Hostel, error) {
 
-// 	return models.Hostel{}, nil
-// }
+	query := `
+			SELECT 
+				h.id AS hostel_id,
+				h.number AS hostel_number,
+				h.location AS hostel_location,
+				h.contacts AS hostel_contacts,
+				h.room_count AS hostel_room_count,
+
+				-- Староста: ищем по email, указанному в общежитии
+				hu.name AS headman_name,
+				hu.surname AS headman_surname,
+				hu.email AS headman_email,
+
+				-- Кол-во жильцов, связанных с комнатами этого общежития
+				(
+					SELECT COUNT(*) 
+					FROM Users u
+					JOIN Rooms r ON u.Rooms_id = r.id
+					WHERE r.Hostels_id = h.id
+				) AS residents_count,
+
+				-- Комнаты по статусам
+				SUM(CASE WHEN r.status = 'Занята' THEN 1 ELSE 0 END) AS occupied_rooms,
+				SUM(CASE WHEN r.status = 'Доступна' THEN 1 ELSE 0 END) AS available_rooms
+
+			FROM 
+				Hostels h
+
+			-- JOIN всех комнат этого общежития (для подсчета статусов)
+			LEFT JOIN Rooms r ON r.Hostels_id = h.id
+
+			-- JOIN старосты по email
+			LEFT JOIN Users hu ON hu.email = h.headman_email
+
+			WHERE 
+				h.id = ?
+
+			GROUP BY 
+				h.id, h.number, h.location, h.contacts, h.room_count,
+				hu.name, hu.surname, hu.email
+
+			`
+
+	row := r.db.QueryRow(query, id)
+
+	hostel := &models.Hostel{}
+	err := row.Scan(&hostel.HostelID,
+		&hostel.HostelNumber,
+		&hostel.HostelLocation,
+		&hostel.HostelContacts,
+		&hostel.RoomCount,
+		&hostel.HeadmanName,
+		&hostel.HeadmanSurname,
+		&hostel.HeadmanEmail,
+		&hostel.ResidentsCount,
+		&hostel.OccupiedRooms,
+		&hostel.AvailableRooms)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return models.Hostel{}, nil
+		}
+		return models.Hostel{}, err
+	}
+
+	return *hostel, nil
+}

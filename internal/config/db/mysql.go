@@ -41,7 +41,7 @@ func InitDB() error {
 		log.Fatalf("Database connection failed: %v", err)
 	}
 
-	fmt.Println("Successfully connected to the database")
+	log.Println("Successfully connected to the database")
 
 	return nil
 }

@@ -31,11 +31,11 @@
                                 <label for="filterType" class="form-label">Тип комнаты</label>
                                 <select name="type" class="form-select" id="filterType" onchange="applyFilters()">
                                     <option value="">Все</option>
-                                    <option value="Одноместная">Одноместная</option>
-                                    <option value="Двухместная">Двухместная</option>
-                                    <option value="Трёхместная">Трёхместная</option>
-                                    <option value="Двухместная (комфорт)">Двухместная (комфорт)</option>
-                                    <option value="Трёхместная (комфорт)">Трёхместная (комфорт)</option>
+                                    <option value="одноместная">Одноместная</option>
+                                    <option value="двухместная">Двухместная</option>
+                                    <option value="трёхместная">Трёхместная</option>
+                                    <option value="двухместная (премиум)">Двухместная (премиум)</option>
+                                    <option value="трёхместная (премиум)">Трёхместная (премиум)</option>
                                 </select>
                             </div>
                             <div class="mb-3">
@@ -91,9 +91,6 @@
                                             </span>
                                         </li>
                                         <li class="list-group-item">
-                                            <i class="bi bi-people"></i> Жильцов: {{ .UserCount }}
-                                        </li>
-                                        <li class="list-group-item">
                                             <i class="bi bi-building"></i> Общежитие: {{ .HostelNumber }}
                                         </li>
                                     </ul>
@@ -126,19 +123,19 @@
                     <div class="mb-3">
                         <label for="roomType" class="form-label">Тип комнаты</label>
                         <select class="form-select" id="roomType" name="roomType" required>
-                            <option value="once">Одноместная</option>
-                            <option value="double">Двухместная</option>
-                            <option value="triple">Трёхместная</option>
-                            <option value="premium double">Двухместная (комфорт)</option>
-                            <option value="premium triple">Трёхместная (комфорт)</option>
+                            <option value="одноместная">Одноместная</option>
+                            <option value="двухместная">Двухместная</option>
+                            <option value="трехместная">Трёхместная</option>
+                            <option value="двухместная (премиум)">Двухместная (премиум)</option>
+                            <option value="трехместная (премиум)">Трёхместная (премиум)</option>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="roomStatus" class="form-label">Статус</label>
                         <select class="form-select" id="roomStatus" name="roomStatus" required>
-                            <option value="unoccupied">Свободна</option>
-                            <option value="occupied">Занята</option>
-                            <option value="renovation">На ремонте</option>
+                            <option value="Доступна">Доступна</option>
+                            <option value="Занята">Занята</option>
+                            <option value="На ремонте">На ремонте</option>
                         </select>
                     </div>
                     <div class="mb-3">

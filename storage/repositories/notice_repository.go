@@ -27,7 +27,7 @@ func NewNoticeRepository() NoticeRepository {
 
 func (r *noticeRepository) CreateNotice(notice models.Notice) error {
 	query := "INSERT INTO News (title, annotation, text, date, type) VALUES (?, ?, ?, ?, ?)"
-	_, err := db.DB.Exec(query, notice.Title, notice.Annotation, notice.Text, notice.Date, "breaking")
+	_, err := db.DB.Exec(query, notice.Title, notice.Annotation, notice.Text, notice.Date, "Срочная")
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -36,7 +36,7 @@ func (r *noticeRepository) CreateNotice(notice models.Notice) error {
 }
 
 func (r *noticeRepository) GetAllNotices() ([]models.Notice, error) {
-	query := "SELECT * FROM News WHERE type = 'breaking'"
+	query := "SELECT * FROM News WHERE type = 'Срочная'"
 	rows, err := db.DB.Query(query)
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func (r *noticeRepository) GetAllNotices() ([]models.Notice, error) {
 }
 
 func (r *noticeRepository) GetLatestNotices() ([]models.Notice, error) {
-	query := "SELECT * FROM News WHERE type = 'breaking' ORDER BY date DESC LIMIT 3"
+	query := "SELECT * FROM News WHERE type = 'Срочная' ORDER BY date DESC LIMIT 3"
 	rows, err := db.DB.Query(query)
 	if err != nil {
 		return nil, err

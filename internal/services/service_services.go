@@ -65,7 +65,7 @@ func (s *serviceService) UpdateServiceByID(idInt int, c *gin.Context) error {
 			Name:        c.PostForm("name"),
 			Type:        c.PostForm("type"),
 			Description: c.PostForm("description"),
-			Amount:      0,
+			Amount:      c.GetInt("amount"),
 			Is_date:     c.PostForm("is_date") == "on",
 			Is_hostel:   c.PostForm("is_hostel") == "on",
 			Is_phone:    c.PostForm("is_phone") == "on",

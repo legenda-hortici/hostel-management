@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"hostel-management/pkg/validation"
 	"hostel-management/internal/services"
+	handlers "hostel-management/pkg/validation"
 	"log"
 	"strconv"
 
@@ -269,14 +269,6 @@ func (h *ServiceHandler) RequestInfoHandler(c *gin.Context) {
 		c.String(500, "Failed to get user")
 		return
 	}
-	// TODO: fix
-	roomNumber, err := h.roomService.GetRoomNumberByRoomID(user.Room_id)
-	if err != nil {
-		log.Printf("Failed to get room number: %v: %v", err, op)
-		c.String(500, "Failed to get room number")
-		return
-	}
-	user.RoomNumber = roomNumber
 
 	c.HTML(200, "layout.html", map[string]interface{}{
 		"Page":      "request_info",
@@ -304,7 +296,7 @@ func (h *ServiceHandler) AcceptRequestHandler(c *gin.Context) {
 		return
 	}
 
-	err = h.statementService.UpdateStatementRequestStatus(id, "approved")
+	err = h.statementService.UpdateStatementRequestStatus(id, "Одобрена")
 	if err != nil {
 		log.Printf("Failed to accept request: %v: %v", err, op)
 		c.String(500, "Failed to accept request")
@@ -332,7 +324,7 @@ func (h *ServiceHandler) RejectRequestHandler(c *gin.Context) {
 		return
 	}
 
-	err = h.statementService.UpdateStatementRequestStatus(id, "denied")
+	err = h.statementService.UpdateStatementRequestStatus(id, "Отклонена")
 	if err != nil {
 		log.Printf("Failed to reject request: %v: %v", err, op)
 		c.String(500, "Failed to reject request")

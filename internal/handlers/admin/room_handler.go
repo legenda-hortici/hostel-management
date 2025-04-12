@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"fmt"
-	"hostel-management/pkg/validation"
 	"hostel-management/internal/services"
+	handlers "hostel-management/pkg/validation"
 	"log"
 	"strconv"
 
@@ -108,6 +108,8 @@ func (h *RoomHandler) AddRoomHandler(c *gin.Context) {
 	}
 	roomType := c.PostForm("roomType")
 	roomStatus := c.PostForm("roomStatus")
+
+	// log.Println(roomType, roomStatus, number, hostelNumber)
 
 	err = h.roomService.CreateRoom(roomType, roomStatus, number, 0, hostelNumber)
 	if err != nil {

@@ -20,8 +20,12 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label text-muted">Имя пользователя</label>
+                                        <label class="form-label text-muted">Имя</label>
                                         <p class="mb-0">{{ .User.Username }}</p>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Фамилия</label>
+                                        <p class="mb-0">{{ .User.Surname }}</p>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label text-muted">Email</label>
@@ -39,7 +43,7 @@
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label text-muted">Институт</label>
-                                        <p class="mb-0">{{ .User.Institute.String }}</p>
+                                        <p class="mb-0">{{ .User.Institute }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -98,12 +102,12 @@
             <div class="modal-body">
                 <form action="/profile/update_profile" method="POST">
                     <div class="mb-3">
-                        <label for="username" class="form-label">Имя пользователя</label>
+                        <label for="username" class="form-label">Имя</label>
                         <input type="text" class="form-control" id="username" name="username" value="{{ .User.Username }}">
                     </div>
                     <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" value="{{ .User.Email }}">
+                        <label for="surname" class="form-label">Фамилия</label>
+                        <input type="text" class="form-control" id="surname" name="surname" value="{{ .User.Surname }}">
                     </div>
                     <div class="mb-3">
                         <label for="password" class="form-label">Пароль</label>

@@ -4,8 +4,7 @@ type Inventory struct {
 	Point      int
 	ID         int
 	Name       string
-	Count      int
-	InvNumber  int
+	InvNumber  string
 	Rooms_id   int
 	RoomNumber int
 	Icon       string

@@ -65,7 +65,7 @@
                                             <td class="resident-surname">{{ .Surname }}</td>
                                             <td>{{ .Email }}</td>
                                             <td class="room-number">{{ .RoomNumber }}</td>
-                                            <td class="institute-row">{{ if .Institute.Valid }}{{ .Institute.String }}{{ else }}Нет данных{{ end }}</td>
+                                            <td class="institute-row">{{ if .Institute }}{{ .Institute }}{{ else }}Нет данных{{ end }}</td>
                                             <td>
                                                 <a href="/admin/residents/resident/{{ .ID }}" class="btn btn-sm btn-outline-primary">
                                                     <i class="bi bi-info-circle"></i>
@@ -97,6 +97,10 @@
                     <div class="mb-3">
                         <label for="username" class="form-label">Имя</label>
                         <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="surname" class="form-label">Фамилия</label>
+                        <input type="text" class="form-control" id="surname" name="surname" required>
                     </div>
                     <div class="mb-3">
                         <label for="email" class="form-label">Email</label>

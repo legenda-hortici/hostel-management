@@ -27,7 +27,7 @@ func NewNewsRepository() NewsRepository {
 
 func (r *newsRepository) CreateNews(news models.News) error {
 	query := "INSERT INTO News (title, annotation, text, date, type) VALUES (?, ?, ?, ?, ?)"
-	_, err := db.DB.Exec(query, news.Title, news.Annotation, news.Text, news.Date, "regular")
+	_, err := db.DB.Exec(query, news.Title, news.Annotation, news.Text, news.Date, "Регулярная")
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -37,7 +37,7 @@ func (r *newsRepository) CreateNews(news models.News) error {
 
 func (r *newsRepository) GetAllNews() ([]models.News, error) {
 
-	query := "SELECT * FROM News WHERE type = 'regular'"
+	query := "SELECT * FROM News WHERE type = 'Регулярная'"
 	rows, err := db.DB.Query(query)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (r *newsRepository) GetAllNews() ([]models.News, error) {
 }
 
 func (r *newsRepository) GetLatestNews() ([]models.News, error) {
-	query := "SELECT * FROM News WHERE type = 'regular' ORDER BY date DESC LIMIT 3"
+	query := "SELECT * FROM News WHERE type = 'Регулярная' ORDER BY date DESC LIMIT 3"
 	rows, err := db.DB.Query(query)
 	if err != nil {
 		return nil, err

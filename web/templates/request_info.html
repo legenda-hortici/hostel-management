@@ -31,7 +31,7 @@
                                 <div class="col-md-6">
                                     <ul class="list-group list-group-flush">
                                         <li class="list-group-item">
-                                            <i class="bi bi-tag"></i> Тип: {{ if eq .Statement.Type "payment" }}Платная{{ else }}Бесплатная{{ end }}
+                                            <i class="bi bi-tag"></i> Тип: {{ if eq .Statement.Type "Платная" }}Платная{{ else }}Бесплатная{{ end }}
                                         </li>
                                         <li class="list-group-item">
                                             <i class="bi bi-person"></i> От кого: {{ .User.Username }}
@@ -45,13 +45,13 @@
                                         <li class="list-group-item">
                                             <i class="bi bi-circle-fill"></i> Статус:
                                             <span class="badge 
-                                                {{ if eq .Statement.Status "awaits" }}bg-warning
-                                                {{ else if eq .Statement.Status "approved" }}bg-success
-                                                {{ else if eq .Statement.Status "denied" }}bg-danger
+                                                {{ if eq .Statement.Status "Ожидает" }}bg-warning
+                                                {{ else if eq .Statement.Status "Одобрена" }}bg-success
+                                                {{ else if eq .Statement.Status "Отклонена" }}bg-danger
                                                 {{ end }} text-white">
-                                                {{ if eq .Statement.Status "awaits" }}Ожидает
-                                                {{ else if eq .Statement.Status "approved" }}Одобрено
-                                                {{ else if eq .Statement.Status "denied" }}Отклонено
+                                                {{ if eq .Statement.Status "Ожидает" }}Ожидает
+                                                {{ else if eq .Statement.Status "Одобрена" }}Одобрено
+                                                {{ else if eq .Statement.Status "Отклонена" }}Отклонено
                                                 {{ end }}
                                             </span>
                                         </li>
@@ -71,7 +71,7 @@
                                         {{ end }}
                                         {{ if .Statement.Date }}
                                         <li class="list-group-item">
-                                            <i class="bi bi-calendar"></i> Дата: {{ .Statement.Date }}
+                                            <i class="bi bi-calendar"></i> Планируемая дата: {{ .Statement.Date }}
                                         </li>
                                         {{ end }}
                                     </ul>

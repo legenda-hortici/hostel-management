@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"hostel-management/pkg/validation"
 	"hostel-management/internal/services"
+	handlers "hostel-management/pkg/validation"
 	"strconv"
 
 	"log"
@@ -83,12 +83,7 @@ func (h *InventoryHandler) AddInventoryItemHandler(c *gin.Context) {
 	}
 
 	furniture := c.PostForm("furniture")
-	invNumber, err := strconv.Atoi(c.PostForm("inv_number"))
-	if err != nil {
-		c.String(400, "Invalid amount")
-		log.Printf("Failed to get inv_number to add inventory item: %v: %v", err, op)
-		return
-	}
+	invNumber := c.PostForm("inv_number")
 	room, err := strconv.Atoi(c.PostForm("room"))
 	if err != nil {
 		c.String(400, "Invalid room")

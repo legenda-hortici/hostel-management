@@ -58,7 +58,7 @@ func (r *statementRepository) CreateStatementRequest(statement models.Statement)
 }
 
 func (r *statementRepository) GetStatementRequestByID(id int) (models.Statement, error) {
-	query := "SELECT * FROM Statements WHERE id = ?"
+	query := "SELECT id, name, type, amount, date, phone, status, Users_id, hostel FROM Statements WHERE id = ?"
 	row := db.DB.QueryRow(query, id)
 
 	statement := models.Statement{}
@@ -69,6 +69,8 @@ func (r *statementRepository) GetStatementRequestByID(id int) (models.Statement,
 		}
 		return models.Statement{}, err
 	}
+
+	// log.Println(statement)
 
 	return statement, nil
 }

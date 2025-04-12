@@ -24,7 +24,9 @@ type UserRepository interface {
 	GetUsernameByID(id int) (string, error)
 	GetUserPasswordByEmail(email string) (string, error)
 	GetAdmin(role string) (*models.User, error)
+	GetHeadman(role string) (*models.User, error)
 	UpdateAdminData(models.User) error
+	UpdateHeadmanData(user models.User) error
 }
 
 // userRepository реализует интерфейс UserRepository
@@ -41,15 +43,15 @@ func NewUserRepository() UserRepository {
 
 // Create создает нового пользователя
 func (r *userRepository) Create(user *models.User) error {
-	query := `INSERT INTO Users (name, email, password, institute, role, Rooms_id) VALUES (?, ?, ?, ?, ?, 
-			(SELECT id FROM Rooms WHERE number = ?));`
-	_, err := r.db.Exec(query, user.Username, user.Email, user.Password, user.Institute, user.Role, user.RoomNumber)
+	query := `INSERT INTO Users (name, surname, email, password, institute, role, Rooms_id, settling_date) VALUES (?, ?, ?, ?, ?, ?,  
+			(SELECT id FROM Rooms WHERE number = ? LIMIT 1), ?);`
+	_, err := r.db.Exec(query, user.Username, user.Surname, user.Email, user.Password, user.Institute, user.Role, user.RoomNumber, user.SettlingDate)
 	return err
 }
 
 // GetByID получает пользователя по ID
 func (r *userRepository) GetByID(id int) (*models.User, error) {
-	query := `SELECT u.id, u.name, u.email, u.password, u.institute, u.role, r.number 
+	query := `SELECT u.id, u.name, u.surname, u.email, u.password, u.institute, u.role, u.settling_date, r.number 
 			FROM Users u 
 			JOIN Rooms r ON u.Rooms_id = r.id 
 			WHERE u.id = ?`
@@ -60,7 +62,7 @@ func (r *userRepository) GetByID(id int) (*models.User, error) {
 	}
 
 	user := &models.User{}
-	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Institute, &user.Role, &user.RoomNumber)
+	err := row.Scan(&user.ID, &user.Username, &user.Surname, &user.Email, &user.Password, &user.Institute, &user.Role, &user.SettlingDate, &user.RoomNumber)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -75,7 +77,7 @@ func (r *userRepository) GetByID(id int) (*models.User, error) {
 // GetByEmail получает пользователя по email
 func (r *userRepository) GetByEmail(email string) (*models.User, error) {
 	query := `
-		SELECT u.id, u.name, u.email, u.password, u.role, u.institute, r.number, h.number
+		SELECT u.id, u.name, u.surname, u.email, u.password, u.role, u.institute, r.number, h.number
 		FROM Users u
 		JOIN Rooms r ON u.Rooms_id = r.id 
 		JOIN Hostels h ON r.Hostels_id = h.id
@@ -84,7 +86,7 @@ func (r *userRepository) GetByEmail(email string) (*models.User, error) {
 	row := r.db.QueryRow(query, email)
 
 	user := &models.User{}
-	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Role, &user.Institute, &user.RoomNumber, &user.HostelNumber)
+	err := row.Scan(&user.ID, &user.Username, &user.Surname, &user.Email, &user.Password, &user.Role, &user.Institute, &user.RoomNumber, &user.HostelNumber)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("пользователь не найден")
@@ -145,7 +147,7 @@ func (r *userRepository) Update(id int, user *models.User) error {
         UPDATE Users 
         SET name=?, surname=?, email=?, institute=?, role=?, password=?
         WHERE id=?`,
-		user.Username, user.Surname, user.Email, user.Institute.String, user.Role, user.Password, id,
+		user.Username, user.Surname, user.Email, user.Institute, user.Role, user.Password, id,
 	)
 	return err
 }
@@ -154,9 +156,9 @@ func (r *userRepository) Update(id int, user *models.User) error {
 func (r *userRepository) UpdateByEmail(email string, user *models.User) error {
 	_, err := r.db.Exec(`
 		UPDATE Users 
-		SET name=?, email=?, password=?
+		SET name=?, surname=?, password=?
 		WHERE email=?`,
-		user.Username, user.Email, user.Password, email,
+		user.Username, user.Surname, user.Password, email,
 	)
 	return err
 }
@@ -205,6 +207,15 @@ func (r *userRepository) GetAdmin(role string) (*models.User, error) {
 	return admin, err
 }
 
+func (r *userRepository) GetHeadman(role string) (*models.User, error) {
+	query := "SELECT id, name, surname, email, role, password FROM Users WHERE role = ?"
+	row := r.db.QueryRow(query, role)
+
+	headman := &models.User{}
+	err := row.Scan(&headman.ID, &headman.Username, &headman.Surname, &headman.Email, &headman.Role, &headman.Password)
+	return headman, err
+}
+
 func (r *userRepository) UpdateAdminData(user models.User) error {
 	_, err := r.db.Exec(
 		`UPDATE Users SET name = ?, surname = ?, password = ? WHERE role = ?`,
@@ -212,5 +223,15 @@ func (r *userRepository) UpdateAdminData(user models.User) error {
 		user.Surname,
 		user.Password,
 		"admin")
+	return err
+}
+
+func (r *userRepository) UpdateHeadmanData(user models.User) error {
+	_, err := r.db.Exec(
+		`UPDATE Users SET name = ?, surname = ?, password = ? WHERE role = ?`,
+		user.Username,
+		user.Surname,
+		user.Password,
+		"headman")
 	return err
 }

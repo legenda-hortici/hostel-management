@@ -23,28 +23,12 @@ func NewStatementService(repo repositories.StatementRepository) StatementService
 	}
 }
 
-func (s *statementService) TranslateStatus(status string) string {
-	switch status {
-	case "awaits":
-		return "Ожидает"
-	case "approved":
-		return "Одобрено"
-	case "denied":
-		return "Отклонено"
-	default:
-		return "Не указан"
-	}
-}
-
 func (s *statementService) GetAllStatements() ([]models.Statement, error) {
 	statements, err := s.statementRepo.GetAllStatements()
 	if err != nil {
 		return nil, err
 	}
 
-	for statement := range statements {
-		statements[statement].Status = s.TranslateStatus(statements[statement].Status)
-	}
 	return statements, nil
 }
 
@@ -56,7 +40,7 @@ func (s *statementService) CreateStatementRequest(user_id int, name string, type
 		Amount:   amount,
 		Date:     request_date,
 		Phone:    phone,
-		Status:   "awaits",
+		Status:   "Ожидает",
 		Hostel:   hostel,
 		Users_id: user_id,
 	}
@@ -71,9 +55,6 @@ func (s *statementService) CreateStatementRequest(user_id int, name string, type
 
 	if statement.Type == "Бесплатная" {
 		statement.Amount = 0
-		statement.Type = "free"
-	} else {
-		statement.Type = "payment"
 	}
 
 	return s.statementRepo.CreateStatementRequest(statement)

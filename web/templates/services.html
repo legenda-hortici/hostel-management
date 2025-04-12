@@ -52,10 +52,10 @@
                                 <button type="button" class="btn btn-outline-secondary" data-status="Ожидает" onclick="filterStatements(this)">
                                     Ожидает
                                 </button>
-                                <button type="button" class="btn btn-outline-secondary" data-status="Одобрено" onclick="filterStatements(this)">
+                                <button type="button" class="btn btn-outline-secondary" data-status="Одобрена" onclick="filterStatements(this)">
                                     Одобрено
                                 </button>
-                                <button type="button" class="btn btn-outline-secondary" data-status="Отклонено" onclick="filterStatements(this)">
+                                <button type="button" class="btn btn-outline-secondary" data-status="Отклонена" onclick="filterStatements(this)">
                                     Отклонено
                                 </button>
                             </div>
@@ -70,8 +70,8 @@
                                         <div>
                                             <span class="badge 
                                                 {{ if eq .Status "Ожидает" }}bg-warning
-                                                {{ else if eq .Status "Одобрено" }}bg-success
-                                                {{ else if eq .Status "Отклонено" }}bg-danger
+                                                {{ else if eq .Status "Одобрена" }}bg-success
+                                                {{ else if eq .Status "Отклонена" }}bg-danger
                                                 {{ end }}">
                                                 {{ .Status }}
                                             </span>
@@ -105,8 +105,8 @@
                                 <div class="mb-3">
                                     <label class="form-label">Тип</label>
                                     <select class="form-select" name="type" required>
-                                        <option value="payment">Платная</option>
-                                        <option value="free">Бесплатная</option>
+                                        <option value="Платная">Платная</option>
+                                        <option value="Бесплатная">Бесплатная</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
@@ -183,13 +183,13 @@
                                         </div>
                                         <div>
                                             <span class="badge 
-                                                {{ if eq .Status "awaits" }}bg-warning
-                                                {{ else if eq .Status "approved" }}bg-success
-                                                {{ else if eq .Status "denied" }}bg-danger
+                                                {{ if eq .Status "Ожидает" }}bg-warning
+                                                {{ else if eq .Status "Одобрена" }}bg-success
+                                                {{ else if eq .Status "Отклонена" }}bg-danger
                                                 {{ end }}">
-                                                {{if eq .Status "awaits"}}Ожидает
-                                                {{else if eq .Status "approved"}}Одобрено
-                                                {{else if eq .Status "denied"}}Отклонено
+                                                {{if eq .Status "Ожидает"}}Ожидает
+                                                {{else if eq .Status "Одобрена"}}Одобрено
+                                                {{else if eq .Status "Отклонена"}}Отклонено
                                                 {{end}}
                                             </span>
                                             <a href="/services/request_info/{{ .ID }}" class="btn btn-outline-info btn-sm">

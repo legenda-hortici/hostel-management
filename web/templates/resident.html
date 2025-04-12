@@ -40,7 +40,7 @@
                                     </div>
                                     <div class="mb-3">
                                         <label for="institute" class="form-label">Институт</label>
-                                        <input type="text" class="form-control" id="institute" value="{{ if .Resident.Institute.Valid }}{{ .Resident.Institute.String }}{{ else }}Нет данных{{ end }}">
+                                        <input type="text" class="form-control" id="institute" value="{{ if .Resident.Institute }}{{ .Resident.Institute }}{{ else }}Нет данных{{ end }}">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -54,7 +54,7 @@
                                     </div>
                                     <div class="mb-3">
                                         <label for="room" class="form-label">Комната</label>
-                                        <input type="text" class="form-control" id="room" value="{{ .Resident.RoomNumber }}">
+                                        <input type="text" class="form-control" id="room" value="{{ .Resident.RoomNumber }}" disabled>
                                     </div>
                                     <div class="mb-3">
                                         <label for="password" class="form-label">Пароль</label>
@@ -87,7 +87,7 @@
                         <div class="card-body">
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item">
-                                    <i class="bi bi-calendar"></i> Дата заселения
+                                    <i class="bi bi-calendar"></i> Дата заселения: {{ .Resident.SettlingDate }}
                                 </li>
                                 <li class="list-group-item">
                                     <i class="bi bi-chat"></i> Заявки и обращения

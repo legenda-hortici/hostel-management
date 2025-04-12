@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"hostel-management/internal/config/db"
 	"hostel-management/storage/models"
+	"log"
 )
 
 type RoomRepository interface {
@@ -305,8 +306,9 @@ func (r *roomRepository) GetInventoryByRoomID(id int) ([]models.Inventory, error
 }
 
 func (r *roomRepository) GetRoomNumberByRoomID(roomID int) (int, error) {
+	log.Println(roomID)
 	var roomNumber int
-	err := r.db.QueryRow("SELECT r.number FROM Rooms r JOIN Users u ON r.id = u.Rooms_id WHERE u.Rooms_id = ?", roomID).Scan(&roomNumber)
+	err := r.db.QueryRow("SELECT r.number FROM Rooms r LEFT JOIN Users u ON r.id = u.Rooms_id WHERE u.Rooms_id = ?", roomID).Scan(&roomNumber)
 	if err != nil {
 		return 0, err
 	}

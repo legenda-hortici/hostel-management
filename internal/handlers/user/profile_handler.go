@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"hostel-management/pkg/validation"
 	"hostel-management/internal/services"
+	handlers "hostel-management/pkg/validation"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -62,10 +62,10 @@ func (h *ProfileHandler) UpdateProfileHandler(c *gin.Context) {
 	}
 
 	name := c.PostForm("username")
-	emailUdp := c.PostForm("email")
+	surname := c.PostForm("surname")
 	password := c.PostForm("password")
 
-	err = h.userService.UpdateUserByEmail(email, name, emailUdp, password)
+	err = h.userService.UpdateUserByEmail(email, name, surname, password)
 	if err != nil {
 		log.Printf("Failed to update user: %v: %v", err, op)
 		c.String(500, "failed to update user")
