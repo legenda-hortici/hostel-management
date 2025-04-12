@@ -40,8 +40,8 @@
                                 <div class="mb-3">
                                     <label class="form-label">Тип</label>
                                     <select class="form-select" name="type" required>
-                                        <option value="payment" {{ if eq .Service.Type "payment" }}selected{{ end }}>Платная</option>
-                                        <option value="free" {{ if eq .Service.Type "free" }}selected{{ end }}>Бесплатная</option>
+                                        <option value="Платная" {{ if eq .Service.Type "Платная" }}selected{{ end }}>Платная</option>
+                                        <option value="Бесплатная" {{ if eq .Service.Type "Бесплатная" }}selected{{ end }}>Бесплатная</option>
                                     </select>
                                 </div>
 
@@ -92,7 +92,7 @@
                                 <h5 class="card-title">Информация об услуге</h5>
                                 <ul class="list-group list-group-flush">
                                     <li class="list-group-item">
-                                        <i class="bi bi-tag"></i> Тип: {{ if eq .Service.Type "payment" }}Платная{{ else }}Бесплатная{{ end }}
+                                        <i class="bi bi-tag"></i> Тип: {{ if eq .Service.Type "Платная" }}Платная{{ else }}Бесплатная{{ end }}
                                     </li>
                                     {{ if eq .Service.Type "Платная" }}
                                     <li class="list-group-item">
@@ -132,7 +132,7 @@
 
                     <div class="mb-3">
                         <label for="serviceType" class="form-label">Тип</label>
-                        <input type="text" class="form-control" id="serviceType" name="type" value="{{ if eq .Service.Type "payment" }}Платная{{ else }}Бесплатная{{ end }}" readonly>
+                        <input type="text" class="form-control" id="serviceType" name="type" value="{{ if eq .Service.Type "Платная" }}{{ .Service.Type }}{{ else }}{{ .Service.Type }}{{ end }}" readonly>
                     </div>
 
                     {{ if eq .Service.Type "Платная" }}
