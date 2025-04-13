@@ -26,6 +26,7 @@ type RoomRepository interface {
 	GetHostelNumberByID(hostelID int) (int, error)
 	UpdateRoomStatus(roomID int, status string) error
 	FreezeRoom(roomID int) error
+	UnfreezeRoom(roomID int) error
 	GetInventoryByRoomID(id int) ([]models.Inventory, error)
 	GetRoomNumberByRoomID(userID int) (int, error)
 }
@@ -97,9 +98,9 @@ func (r *roomRepository) GetRoomByID(roomID int) (models.Room, error) {
 				CASE 
 					WHEN r.type = 'одноместная' THEN 1 
 					WHEN r.type = 'двухместная' THEN 2 
-					WHEN r.type = 'трёхместная' THEN 3 
-					WHEN r.type = 'двухместная (комфорт)' THEN 2 
-					WHEN r.type = 'трёхместная (комфорт)' THEN 3 
+					WHEN r.type = 'трехместная' THEN 3 
+					WHEN r.type = 'двухместная (премиум)' THEN 2 
+					WHEN r.type = 'трехместная (премиум)' THEN 3 
 					ELSE 0 
 				END) AS user_count,
 			h.number
@@ -183,37 +184,79 @@ func (r *roomRepository) GetResidentsByRoomID(roomID int) ([]models.User, error)
 func (r *roomRepository) InsertResidentIntoRoom(roomID int, email string) error {
 	tx, err := r.db.Begin()
 	if err != nil {
-		return err
+		return fmt.Errorf("не удалось начать транзакцию: %w", err)
 	}
 	defer tx.Rollback()
 
 	var oldRoomID *int
-	query := "SELECT Rooms_id FROM Users WHERE email = ?;"
-	err = tx.QueryRow(query, email).Scan(&oldRoomID)
+	err = tx.QueryRow("SELECT Rooms_id FROM Users WHERE email = ?;", email).
+		Scan(&oldRoomID)
 	if err != nil && err != sql.ErrNoRows {
-		return err
+		return fmt.Errorf("ошибка при получении старой комнаты: %w", err)
 	}
 
-	updateUserQuery := "UPDATE Users SET Rooms_id = ? WHERE email = ?;"
-	_, err = tx.Exec(updateUserQuery, roomID, email)
+	_, err = tx.Exec("UPDATE Users SET Rooms_id = ? WHERE email = ?;", roomID, email)
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка при обновлении комнаты пользователя: %w", err)
 	}
 
-	incrementRoomQuery := "UPDATE Rooms SET user_count = user_count + 1 WHERE id = ?;"
-	_, err = tx.Exec(incrementRoomQuery, roomID)
+	_, err = tx.Exec("UPDATE Rooms SET user_count = user_count + 1 WHERE id = ?;", roomID)
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка при увеличении user_count: %w", err)
 	}
 
-	if oldRoomID != nil {
-		decrementRoomQuery := "UPDATE Rooms SET user_count = user_count - 1 WHERE id = ? AND user_count > 0;"
-		_, err = tx.Exec(decrementRoomQuery, *oldRoomID)
+	// Получаем статус, user_count и тип комнаты
+	var status, roomType string
+	var userCount int
+	err = tx.QueryRow("SELECT status, user_count, type FROM Rooms WHERE id = ?;", roomID).
+		Scan(&status, &userCount, &roomType)
+	if err != nil {
+		return fmt.Errorf("не удалось получить данные комнаты: %w", err)
+	}
+
+	// Определяем макс. количество мест по типу комнаты
+	maxPlaces := 1
+	switch roomType {
+	case "одноместная":
+		maxPlaces = 1
+	case "двухместная":
+		maxPlaces = 2
+	case "трехместная":
+		maxPlaces = 3
+	case "двухместная (премиум)":
+		maxPlaces = 2
+	case "трехместная (премиум)":
+		maxPlaces = 3
+	}
+
+	// Если комната в статусе "На ремонте", меняем статус на "Доступна"
+	if status == "На ремонте" {
+		_, err = tx.Exec("UPDATE Rooms SET status = 'Доступна' WHERE id = ?;", roomID)
 		if err != nil {
-			return err
+			return fmt.Errorf("не удалось изменить статус на 'Доступна': %w", err)
+		}
+		status = "Доступна"
+	}
+
+	// Проверяем, если количество жильцов достигло максимума, меняем статус на "Занята"
+	if userCount >= maxPlaces {
+		if status != "Занята" {
+			_, err = tx.Exec("UPDATE Rooms SET status = 'Занята' WHERE id = ?;", roomID)
+			if err != nil {
+				return fmt.Errorf("не удалось установить статус 'Занята': %w", err)
+			}
 		}
 	}
 
+	// Если пользователь перемещается в другую комнату, уменьшаем user_count в старой комнате
+	if oldRoomID != nil && *oldRoomID != roomID {
+		_, err = tx.Exec("UPDATE Rooms SET user_count = user_count - 1 WHERE id = ? AND user_count > 0;", *oldRoomID)
+		if err != nil {
+			return fmt.Errorf("ошибка при уменьшении user_count в старой комнате: %w", err)
+		}
+	}
+
+	// Завершаем транзакцию
 	return tx.Commit()
 }
 
@@ -297,7 +340,12 @@ func (r *roomRepository) UpdateRoomStatus(roomNumber int, status string) error {
 }
 
 func (r *roomRepository) FreezeRoom(roomID int) error {
-	_, err := r.db.Exec("UPDATE Rooms SET status = 'renovation' WHERE id = ? AND (SELECT COUNT(*) FROM Users WHERE room_id = Rooms.id) = 0", roomID)
+	_, err := r.db.Exec("UPDATE Rooms SET status = 'На ремонте' WHERE id = ? AND (SELECT COUNT(*) FROM Users WHERE Rooms_id = Rooms.id) = 0", roomID)
+	return err
+}
+
+func (r *roomRepository) UnfreezeRoom(roomID int) error {
+	_, err := r.db.Exec("UPDATE Rooms SET status = 'Доступна' WHERE id = ?", roomID)
 	return err
 }
 

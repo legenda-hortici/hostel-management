@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"database/sql"
+	"fmt"
 	"hostel-management/internal/config/db"
 	"hostel-management/storage/models"
 )
@@ -59,10 +60,10 @@ func (r *hostelRepository) GetHostelsInfo(db *sql.DB) ([]models.Hostel, error) {
 			) AS residents_count,
 
 			-- Количество занятых комнат
-			SUM(CASE WHEN r.status = 'Занята' THEN 1 ELSE 0 END) AS occupied_rooms,
+			SUM(CASE WHEN r.status = 'Занята' AND r.id != 999 THEN 1 ELSE 0 END) AS occupied_rooms,
 
-			-- Количество доступных комнат
-			SUM(CASE WHEN r.status = 'Доступна' THEN 1 ELSE 0 END) AS available_rooms
+			-- Количество доступных комнат (с учетом статуса "Доступна" или "На ремонте")
+			SUM(CASE WHEN r.status IN ('Доступна', 'На ремонте') AND r.id != 999 THEN 1 ELSE 0 END) AS available_rooms
 
 		FROM 
 			Hostels h
@@ -72,7 +73,6 @@ func (r *hostelRepository) GetHostelsInfo(db *sql.DB) ([]models.Hostel, error) {
 
 		GROUP BY 
 			h.id, h.number, h.location;
-
     `
 
 	rows, err := db.Query(query)
@@ -114,10 +114,24 @@ func (r *hostelRepository) GetHostelLocationByNumber(hostelNumber int) (string, 
 }
 
 func (r *hostelRepository) AssignHeadmanToHostel(hostelID int, email string) error {
-	// Обновляем запись в таблице Hostel, назначая коменданта по id общежития
-	query := "UPDATE Hostels SET headman_email = ? WHERE id = ?"
-	_, err := db.DB.Exec(query, email, hostelID)
-	return err
+	var userExists bool
+	queryCheck := "SELECT EXISTS(SELECT 1 FROM Users WHERE email = ?)"
+	err := db.DB.QueryRow(queryCheck, email).Scan(&userExists)
+	if err != nil {
+		return fmt.Errorf("ошибка при проверке email: %v", err)
+	}
+
+	if !userExists {
+		return fmt.Errorf("комендант с таким email не найден: %s", email)
+	}
+
+	queryUpdate := "UPDATE Hostels SET headman_email = ? WHERE id = ?"
+	_, err = db.DB.Exec(queryUpdate, email, hostelID)
+	if err != nil {
+		return fmt.Errorf("ошибка при назначении коменданта: %v", err)
+	}
+
+	return nil
 }
 
 func (r *hostelRepository) GetHostelInfo(id int) (models.Hostel, error) {
@@ -140,7 +154,7 @@ func (r *hostelRepository) GetHostelInfo(id int) (models.Hostel, error) {
 					SELECT COUNT(*) 
 					FROM Users u
 					JOIN Rooms r ON u.Rooms_id = r.id
-					WHERE r.Hostels_id = h.id
+					WHERE r.Hostels_id = h.id AND r.id != 999
 				) AS residents_count,
 
 				-- Комнаты по статусам
@@ -151,7 +165,7 @@ func (r *hostelRepository) GetHostelInfo(id int) (models.Hostel, error) {
 				Hostels h
 
 			-- JOIN всех комнат этого общежития (для подсчета статусов)
-			LEFT JOIN Rooms r ON r.Hostels_id = h.id
+			LEFT JOIN Rooms r ON r.Hostels_id = h.id AND r.id != 999
 
 			-- JOIN старосты по email
 			LEFT JOIN Users hu ON hu.email = h.headman_email

@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"database/sql"
+	"fmt"
 	"hostel-management/internal/config/db"
 	"hostel-management/storage/models"
 )
@@ -11,6 +12,7 @@ type InventoryRepository interface {
 	InsertIntoInventory(inventory models.Inventory) error
 	DeleteInventory(id int) error
 	GetInventoryByRoomID(roomID int) ([]models.Inventory, error)
+	UpdateInventoryItem(inventory models.Inventory) error
 }
 
 type inventoryRepository struct {
@@ -24,9 +26,19 @@ func NewInventoryRepository() InventoryRepository {
 }
 
 func (r *inventoryRepository) GetAllInventory() ([]models.Inventory, error) {
-	query := `SELECT i.id, i.name, i.inv_number, r.number, i.icon 
-				FROM Inventory i
-				JOIN Rooms r ON i.Rooms_id = r.id;`
+	query := `
+		SELECT 
+			i.id, 
+			i.name, 
+			i.inv_number, 
+			r.number AS room_number, 
+			i.icon, 
+			h.number AS hostel_number
+		FROM Inventory i
+		JOIN Rooms r ON i.Rooms_id = r.id
+		JOIN Hostels h ON r.Hostels_id = h.id;
+	`
+
 	var inventory []models.Inventory
 
 	rows, err := db.DB.Query(query)
@@ -37,7 +49,14 @@ func (r *inventoryRepository) GetAllInventory() ([]models.Inventory, error) {
 
 	for rows.Next() {
 		var inv models.Inventory
-		err := rows.Scan(&inv.ID, &inv.Name, &inv.InvNumber, &inv.RoomNumber, &inv.Icon)
+		err := rows.Scan(
+			&inv.ID,
+			&inv.Name,
+			&inv.InvNumber,
+			&inv.RoomNumber,
+			&inv.Icon,
+			&inv.HostelNumber,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -48,10 +67,25 @@ func (r *inventoryRepository) GetAllInventory() ([]models.Inventory, error) {
 }
 
 func (r *inventoryRepository) InsertIntoInventory(inventory models.Inventory) error {
-	_ = db.DB.QueryRow("SELECT id FROM Rooms WHERE number = ?", inventory.RoomNumber).Scan(&inventory.Rooms_id)
-	query := "INSERT INTO Inventory (name, inv_number, Rooms_id, icon) VALUES (?, ?, ?, ?)"
-	_, err := db.DB.Exec(query, inventory.Name, inventory.InvNumber, inventory.Rooms_id, inventory.Icon)
-	return err
+	query := `
+		SELECT Rooms.id 
+		FROM Rooms 
+		JOIN Hostels ON Rooms.Hostels_id = Hostels.id 
+		WHERE Rooms.number = ? AND Hostels.number = ?
+	`
+
+	err := db.DB.QueryRow(query, inventory.RoomNumber, inventory.HostelNumber).Scan(&inventory.Rooms_id)
+	if err != nil {
+		return fmt.Errorf("не найдена комната №%d в общежитии №%d: %w", inventory.RoomNumber, inventory.HostelNumber, err)
+	}
+
+	insertQuery := "INSERT INTO Inventory (name, inv_number, Rooms_id, icon) VALUES (?, ?, ?, ?)"
+	_, err = db.DB.Exec(insertQuery, inventory.Name, inventory.InvNumber, inventory.Rooms_id, inventory.Icon)
+	if err != nil {
+		return fmt.Errorf("ошибка при добавлении инвентаря: %w", err)
+	}
+
+	return nil
 }
 
 func (r *inventoryRepository) DeleteInventory(id int) error {
@@ -79,4 +113,22 @@ func (r *inventoryRepository) GetInventoryByRoomID(roomID int) ([]models.Invento
 	}
 
 	return inventory, nil
+}
+
+func (r *inventoryRepository) UpdateInventoryItem(inventory models.Inventory) error {
+	query := `
+		SELECT Rooms.id 
+		FROM Rooms 
+		JOIN Hostels ON Rooms.Hostels_id = Hostels.id 
+		WHERE Rooms.number = ? AND Hostels.number = ?
+	`
+
+	err := db.DB.QueryRow(query, inventory.RoomNumber, inventory.HostelNumber).Scan(&inventory.Rooms_id)
+	if err != nil {
+		return fmt.Errorf("не найдена комната №%d в общежитии №%d: %w", inventory.RoomNumber, inventory.HostelNumber, err)
+	}
+
+	query = "UPDATE Inventory SET name = ?, inv_number = ?, Rooms_id = ?, icon = ? WHERE id = ?"
+	_, err = db.DB.Exec(query, inventory.Name, inventory.InvNumber, inventory.Rooms_id, inventory.Icon, inventory.ID)
+	return err
 }

@@ -69,15 +69,6 @@ func (s *newsService) GetNewsByID(id int) (models.News, error) {
 		return models.News{}, err
 	}
 
-	switch news.NewsType {
-	case "regular":
-		news.NewsType = "Регулярная"
-	case "breaking":
-		news.NewsType = "Срочная"
-	default:
-		news.NewsType = "Неизвестно"
-	}
-
 	news.Date = news.Date[:10]
 
 	return news, err

@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"hostel-management/pkg/validation"
 	"hostel-management/internal/services"
+	handlers "hostel-management/pkg/validation"
 	"log"
 	"strconv"
 

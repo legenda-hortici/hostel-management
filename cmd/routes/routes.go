@@ -96,6 +96,7 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 		protected.POST("/notices/:id/delete", noticeHandler.DeleteNoticeHandler)
 	}
 
+	// TODO: Сделать обработчики для коменданта
 	headman := r.Group("/headman")
 	headman.Use(auth.HeadmanMiddleware())
 	{
@@ -109,7 +110,6 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 			rooms.GET("/room_info/resident/:id", userHandler.ResidentInfoHandler)
 			rooms.POST("/room_info/:id/add_resident_into_room", roomHandler.AddResidentIntoRoomHandler)
 			rooms.POST("/room_info/delete_from_room", roomHandler.DeleteResidentFromRoomHandler)
-			// TODO: Исправить заморозку комнаты
 			rooms.POST("/room_info/:id/freeze", roomHandler.FreezeRoomHandler)
 		}
 
@@ -140,6 +140,9 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 		}
 	}
 
+	// TODO: Сделать обработку ошибок с помощью JS
+	// TODO: Сделать фотографию в профиле у пользователей
+
 	// Административные маршруты
 	admin := r.Group("/admin")
 	admin.Use(auth.AdminMiddleware())
@@ -147,6 +150,7 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 		admin.GET("/", adminHandler.AdminCabinetHandler)
 		admin.POST("/update_profile", adminHandler.UpdateCabinetHandler)
 		admin.POST("/create_contract", adm.CreateContractHandler)
+		// TODO: Сделать выгрузку общей статистики по общежитиям
 
 		hostel := admin.Group("/hostel")
 		{
@@ -162,8 +166,8 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 			rooms.GET("/room_info/resident/:id", userHandler.ResidentInfoHandler)
 			rooms.POST("/room_info/:id/add_resident_into_room", roomHandler.AddResidentIntoRoomHandler)
 			rooms.POST("/room_info/delete_from_room", roomHandler.DeleteResidentFromRoomHandler)
-			// TODO: Исправить заморозку комнаты
 			rooms.POST("/room_info/:id/freeze", roomHandler.FreezeRoomHandler)
+			rooms.POST("/room_info/:id/unfreeze", roomHandler.UnfreezeRoomHandler)
 		}
 
 		residents := admin.Group("/residents")
@@ -193,6 +197,7 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 			inventory.GET("/", inventoryHandler.InventoryHandler)
 			inventory.POST("/:id/delete", inventoryHandler.DeleteInventoryItemHandler)
 			inventory.POST("/add_item", inventoryHandler.AddInventoryItemHandler)
+			inventory.POST("/update_item", inventoryHandler.UpdateInventoryItemHandler)
 		}
 
 		support := admin.Group("/support")

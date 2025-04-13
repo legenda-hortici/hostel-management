@@ -21,7 +21,7 @@ func NewRoomHandler(roomService services.RoomService) *RoomHandler {
 }
 
 func (h *RoomHandler) RoomsHandler(c *gin.Context) {
-	const op = "handlers.RoomHandler.RoomsHandler"
+	const op = "handlers.room_handler.RoomsHandler"
 
 	_, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
@@ -46,7 +46,7 @@ func (h *RoomHandler) RoomsHandler(c *gin.Context) {
 
 func (h *RoomHandler) RoomInfoHandler(c *gin.Context) {
 
-	const op = "handlers.RoomHandler.RoomInfoHandler"
+	const op = "handlers.room_handler.RoomInfoHandler"
 
 	idStr := c.Param("id")
 	idInt, err := strconv.Atoi(idStr)
@@ -87,7 +87,7 @@ func (h *RoomHandler) RoomInfoHandler(c *gin.Context) {
 }
 
 func (h *RoomHandler) AddRoomHandler(c *gin.Context) {
-	const op = "handlers.RoomHandler.AddRoomHandler"
+	const op = "handlers.room_handler.AddRoomHandler"
 	if c.Request.Method != "POST" {
 		log.Printf("Method not allowed: %v", op)
 		c.String(405, "Method not allowed")
@@ -109,8 +109,6 @@ func (h *RoomHandler) AddRoomHandler(c *gin.Context) {
 	roomType := c.PostForm("roomType")
 	roomStatus := c.PostForm("roomStatus")
 
-	// log.Println(roomType, roomStatus, number, hostelNumber)
-
 	err = h.roomService.CreateRoom(roomType, roomStatus, number, 0, hostelNumber)
 	if err != nil {
 		c.String(400, err.Error())
@@ -121,7 +119,7 @@ func (h *RoomHandler) AddRoomHandler(c *gin.Context) {
 }
 
 func (h *RoomHandler) AddResidentIntoRoomHandler(c *gin.Context) {
-	const op = "handlers.RoomHandler.AddResidentIntoRoomHandler"
+	const op = "handlers.room_handler.AddResidentIntoRoomHandler"
 	roomID := c.Param("id")
 	roomIDInt, err := strconv.Atoi(roomID)
 	if err != nil {
@@ -149,7 +147,7 @@ func (h *RoomHandler) AddResidentIntoRoomHandler(c *gin.Context) {
 }
 
 func (h *RoomHandler) DeleteResidentFromRoomHandler(c *gin.Context) {
-	const op = "handlers.RoomHandler.DeleteResidentFromRoomHandler"
+	const op = "handlers.room_handler.DeleteResidentFromRoomHandler"
 
 	if c.Request.Method != "POST" {
 		log.Printf("Method not allowed: %v", op)
@@ -175,7 +173,7 @@ func (h *RoomHandler) DeleteResidentFromRoomHandler(c *gin.Context) {
 }
 
 func (h *RoomHandler) FreezeRoomHandler(c *gin.Context) {
-	const op = "handlers.RoomHandler.FreezeRoomHandler"
+	const op = "handlers.room_handler.FreezeRoomHandler"
 
 	if c.Request.Method != "POST" {
 		log.Printf("Method not allowed: %v", op)
@@ -202,5 +200,36 @@ func (h *RoomHandler) FreezeRoomHandler(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(303, fmt.Sprintf("/room_info/%s", roomID))
+	c.Redirect(303, "/admin/rooms/room_info/"+roomID)
+}
+
+func (h *RoomHandler) UnfreezeRoomHandler(c *gin.Context) {
+	const op = "handlers.room_handler.UnfreezeRoomHandler"
+
+	if c.Request.Method != "POST" {
+		log.Printf("Method not allowed: %v", op)
+		c.String(405, "Method not allowed")
+		return
+	}
+
+	roomID := c.Param("id")
+	if roomID == "" {
+		log.Printf("Invalid room ID: %v", op)
+		c.String(400, "Invalid room ID")
+		return
+	}
+	roomIDInt, err := strconv.Atoi(roomID)
+	if err != nil {
+		log.Printf("Invalid room ID: %v: %v", err, op)
+		c.String(400, "Invalid room ID")
+		return
+	}
+	err = h.roomService.UnfreezeRoom(roomIDInt)
+	if err != nil {
+		log.Printf("Failed to unfreeze room: %v: %v", err, op)
+		c.String(500, "Failed to unfreeze room")
+		return
+	}
+
+	c.Redirect(303, "/admin/rooms/room_info/"+roomID)
 }

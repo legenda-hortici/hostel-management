@@ -90,20 +90,22 @@
                         <div class="card-body">
                             <div class="d-grid gap-2">
                                 <form action="/admin/services/request_info/{{ .Statement.ID }}/approve" method="POST">
-                                    <button type="submit" class="btn btn-success w-100">
+                                    <button type="submit" class="btn btn-success w-100"
+                                        {{ if or (eq .Statement.Status "Одобрена") (eq .Statement.Status "Отклонена") }}disabled{{ end }}>
                                         <i class="bi bi-check-circle"></i> Одобрить
                                     </button>
                                 </form>
-
+                
                                 <form action="/admin/services/request_info/{{ .Statement.ID }}/reject" method="POST">
-                                    <button type="submit" class="btn btn-danger w-100">
+                                    <button type="submit" class="btn btn-danger w-100"
+                                        {{ if or (eq .Statement.Status "Одобрена") (eq .Statement.Status "Отклонена") }}disabled{{ end }}>
                                         <i class="bi bi-x-circle"></i> Отклонить
                                     </button>
                                 </form>
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>                
                 {{ end }}
             </div>
         </main>

@@ -7,10 +7,6 @@
     <h2>{{ .Notices.Title }}</h2>
     <p class="text-muted">Дата публикации: {{ .Notices.Date }}</p>
 
-    <div class="badge {{ if eq .Notices.NewsType "Срочная" }}bg-danger{{ else }}bg-secondary{{ end }}">
-        {{ .Notices.NewsType }}
-    </div>
-
     <hr>
 
     <p>{{ .Notices.Text }}</p>

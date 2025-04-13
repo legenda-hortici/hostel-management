@@ -11,14 +11,48 @@
                     <h1 class="h2 d-inline">Комната №{{ .Room.Number }}</h1>
                 </div>
                 <div>
-                    <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#addResidentModal">
-                        <i class="bi bi-person-plus"></i> Добавить жильца
-                    </button>
-                    <form action="/admin/rooms/room_info/{{ .Room.ID }}/freeze" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-danger">
-                            <i class="bi bi-snow"></i> Заморозить
+                    <!-- Условие для блокировки кнопки "Добавить жильца" -->
+                    {{ $full := or
+                        (and (eq .Room.Type "одноместная") (eq .Room.UserCount 1))
+                        (and (eq .Room.Type "двухместная") (eq .Room.UserCount 2))
+                        (and (eq .Room.Type "двухместная (премиум)") (eq .Room.UserCount 2))
+                        (and (eq .Room.Type "трехместная") (eq .Room.UserCount 3))
+                        (and (eq .Room.Type "трехместная (премиум)") (eq .Room.UserCount 3))
+                    }}
+                    
+                    {{ if or $full (eq .Room.Status "На ремонте") }}
+                        <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#addResidentModal" disabled>
+                            <i class="bi bi-person-plus"></i> Добавить жильца
                         </button>
+                    {{ else }}
+                        <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#addResidentModal">
+                            <i class="bi bi-person-plus"></i> Добавить жильца
+                        </button>
+                    {{ end }}
+                    
+                    
+                    
+                    <!-- Условие для кнопки "Заморозить" -->
+                    <form action="/admin/rooms/room_info/{{ .Room.ID }}/freeze" method="post" class="d-inline">
+                        {{ if and (eq .Room.UserCount 0) (ne .Room.Status "На ремонте") }}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-snow"></i> Деактивировать
+                            </button>
+                        {{ else if and (ne .Room.UserCount 0) }}
+                            <button type="submit" class="btn btn-danger" disabled>
+                                <i class="bi bi-snow"></i> Деактивировать
+                            </button>
+                        {{ end }}
                     </form>
+
+                    <form action="/admin/rooms/room_info/{{ .Room.ID }}/unfreeze" method="post" class="d-inline">
+                        {{ if and (eq .Room.UserCount 0) (eq .Room.Status "На ремонте") }}
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-snow"></i> Активировать
+                            </button>
+                        {{ end }}
+                    </form>
+                    
                 </div>
             </div>
 

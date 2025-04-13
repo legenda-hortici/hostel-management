@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"database/sql"
-	"fmt"
 	"hostel-management/internal/config/db"
 	"hostel-management/storage/models"
 )
@@ -26,17 +25,16 @@ func NewNoticeRepository() NoticeRepository {
 }
 
 func (r *noticeRepository) CreateNotice(notice models.Notice) error {
-	query := "INSERT INTO News (title, annotation, text, date, type) VALUES (?, ?, ?, ?, ?)"
-	_, err := db.DB.Exec(query, notice.Title, notice.Annotation, notice.Text, notice.Date, "Срочная")
+	query := "INSERT INTO Notices (title, annotation, text, date) VALUES (?, ?, ?, ?)"
+	_, err := db.DB.Exec(query, notice.Title, notice.Annotation, notice.Text, notice.Date)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 	return nil
 }
 
 func (r *noticeRepository) GetAllNotices() ([]models.Notice, error) {
-	query := "SELECT * FROM News WHERE type = 'Срочная'"
+	query := "SELECT * FROM Notices"
 	rows, err := db.DB.Query(query)
 	if err != nil {
 		return nil, err
@@ -46,7 +44,7 @@ func (r *noticeRepository) GetAllNotices() ([]models.Notice, error) {
 	news := []models.Notice{}
 	for rows.Next() {
 		new := models.Notice{}
-		err := rows.Scan(&new.ID, &new.Title, &new.Annotation, &new.Text, &new.Date, &new.NewsType)
+		err := rows.Scan(&new.ID, &new.Title, &new.Annotation, &new.Text, &new.Date)
 		if err != nil {
 			return nil, err
 		}
@@ -57,7 +55,7 @@ func (r *noticeRepository) GetAllNotices() ([]models.Notice, error) {
 }
 
 func (r *noticeRepository) GetLatestNotices() ([]models.Notice, error) {
-	query := "SELECT * FROM News WHERE type = 'Срочная' ORDER BY date DESC LIMIT 3"
+	query := "SELECT * FROM Notices ORDER BY date DESC LIMIT 3"
 	rows, err := db.DB.Query(query)
 	if err != nil {
 		return nil, err
@@ -67,7 +65,7 @@ func (r *noticeRepository) GetLatestNotices() ([]models.Notice, error) {
 	notices := []models.Notice{}
 	for rows.Next() {
 		new := models.Notice{}
-		err := rows.Scan(&new.ID, &new.Title, &new.Annotation, &new.Text, &new.Date, &new.NewsType)
+		err := rows.Scan(&new.ID, &new.Title, &new.Annotation, &new.Text, &new.Date)
 		if err != nil {
 			return nil, err
 		}
@@ -78,10 +76,10 @@ func (r *noticeRepository) GetLatestNotices() ([]models.Notice, error) {
 }
 
 func (r *noticeRepository) GetNoticeByID(id int) (models.Notice, error) {
-	query := "SELECT * FROM News WHERE id = ?"
+	query := "SELECT * FROM Notices WHERE id = ?"
 	row := db.DB.QueryRow(query, id)
 	news := models.Notice{}
-	err := row.Scan(&news.ID, &news.Title, &news.Annotation, &news.Text, &news.Date, &news.NewsType)
+	err := row.Scan(&news.ID, &news.Title, &news.Annotation, &news.Text, &news.Date)
 	if err != nil {
 		return models.Notice{}, err
 	}
@@ -89,7 +87,7 @@ func (r *noticeRepository) GetNoticeByID(id int) (models.Notice, error) {
 }
 
 func (r *noticeRepository) DeleteNotice(id int) error {
-	query := "DELETE FROM News WHERE id = ?"
+	query := "DELETE FROM Notices WHERE id = ?"
 	_, err := db.DB.Exec(query, id)
 	if err != nil {
 		return err

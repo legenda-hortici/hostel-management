@@ -23,8 +23,10 @@ type RoomService interface {
 	GetHostelNumberByID(hostelID int) (int, error)
 	UpdateRoomStatus(roomID int, status string) error
 	FreezeRoom(roomID int) error
+	UnfreezeRoom(roomID int) error
 	GetInventoryByRoomID(id int) ([]models.Inventory, error)
 	GetRoomNumberByRoomID(roomID int) (int, error)
+	
 }
 
 type roomServiceImpl struct {
@@ -213,4 +215,8 @@ func (s *roomServiceImpl) GetInventoryByRoomID(id int) ([]models.Inventory, erro
 // Функция для получения номера комнаты по ее ID
 func (s *roomServiceImpl) GetRoomNumberByRoomID(roomID int) (int, error) {
 	return s.roomRepo.GetRoomNumberByRoomID(roomID)
+}
+
+func (s *roomServiceImpl) UnfreezeRoom(roomID int) error {
+	return s.roomRepo.UnfreezeRoom(roomID)
 }

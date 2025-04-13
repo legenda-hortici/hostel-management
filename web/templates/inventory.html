@@ -31,6 +31,22 @@
                                 </select>
                             </div>
                             <div class="mb-3">
+                                <label for="filterHostel" class="form-label">Общежитие</label>
+                                <select name="hostel" class="form-select" id="filterHostel" onchange="applyFilters()">
+                                    <option value="" selected>Все общежития</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                    <option value="9">9</option>
+                                    <option value="11">11</option>
+                                    <option value="12">12</option>
+                                </select>
+                            </div>                            
+                            <div class="mb-3">
                                 <label for="searchInput" class="form-label">Поиск</label>
                                 <input type="text" class="form-control" id="searchInput" placeholder="Поиск по комнате или инвентарному номеру...">
                             </div>
@@ -49,9 +65,10 @@
                                             <th>#</th>
                                             <th>Тип</th>
                                             <th>Инв. номер</th>
+                                            <th>Общежитие</th>
                                             <th>Комната</th>
                                             <th>Действия</th>
-                                        </tr>
+                                        </th>
                                     </thead>
                                     <tbody>
                                         {{ range .Inventory }}
@@ -59,6 +76,7 @@
                                             <td>{{ .Point }}</td>
                                             <td class="inv-name">{{ .Name }}</td>
                                             <td>{{ .InvNumber }}</td>
+                                            <td>{{ .HostelNumber }}</td>
                                             <td class="room-number">{{ .RoomNumber }}</td>
                                             <td>
                                                 <form action="/admin/inventory/{{ .ID }}/delete" method="post" class="d-inline">
@@ -66,6 +84,54 @@
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 </form>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary edit-btn"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#editInventoryModal"
+                                                    data-inv-id="{{ .ID }}"
+                                                    data-name="{{ .Name }}"
+                                                    data-invnumber="{{ .InvNumber }}"
+                                                    data-hostelnumber="{{ .HostelNumber }}"
+                                                    data-roomnumber="{{ .RoomNumber }}">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+
+                                                <!-- Modal -->
+                                                <div class="modal fade" id="editInventoryModal" tabindex="-1" aria-labelledby="editInventoryModalLabel" aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                    <form method="post" action="/admin/inventory/update_item">
+                                                        <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="editInventoryModalLabel">Редактировать инвентарь</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <input type="hidden" name="id" id="modal-id">
+                                                            <div class="mb-3">
+                                                                <label for="modal-name" class="form-label">Название</label>
+                                                                <input type="text" class="form-control" id="modal-name" name="name">
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label for="modal-invnumber" class="form-label">Инв. номер</label>
+                                                                <input type="text" class="form-control" id="modal-invnumber" name="invnumber">
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label for="modal-hostelnumber" class="form-label">Номер общежития</label>
+                                                                <input type="text" class="form-control" id="modal-hostelnumber" name="hostelnumber">
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label for="modal-roomnumber" class="form-label">Номер комнаты</label>
+                                                                <input type="text" class="form-control" id="modal-roomnumber" name="roomnumber">
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                                                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                                                        </div>
+                                                        </div>
+                                                    </form>
+                                                    </div>
+                                                </div>
+
                                             </td>
                                         </tr>
                                         {{ end }}
@@ -104,11 +170,26 @@
                     </div>
                     <div class="mb-3">
                         <label for="inv_number" class="form-label">Инвентарный номер</label>
-                        <input type="number" class="form-control" id="inv_number" name="inv_number">
+                        <input type="number" class="form-control" id="inv_number" name="inv_number" required min="1" max="100000000000000" placeholder="Не более 15 символов">
+                    </div>
+                    <div class="mb-3">
+                        <label for="hostel" class="form-label">Общежитие</label>
+                        <select name="hostel" class="form-select" id="hostel" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="9">9</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                        </select>
                     </div>         
                     <div class="mb-3">
                         <label for="room" class="form-label">Комната</label>
-                        <input type="number" class="form-control" id="room" name="room">
+                        <input type="number" class="form-control" id="room" name="room" required min="100" max="999">
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>

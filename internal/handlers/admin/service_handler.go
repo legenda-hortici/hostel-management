@@ -88,7 +88,7 @@ func (h *ServiceHandler) AddServiceHandler(c *gin.Context) {
 	name := c.PostForm("name")
 	typeService := c.PostForm("type")
 	description := c.PostForm("description")
-	amount, _ := strconv.Atoi(c.PostForm("amount"))
+	amount, _ := strconv.Atoi(c.PostForm("cost"))
 	isDate := c.PostForm("is_date") == "on"
 	isHostel := c.PostForm("is_hostel") == "on"
 	isPhone := c.PostForm("is_phone") == "on"
@@ -127,6 +127,8 @@ func (h *ServiceHandler) ServiceInfoHandler(c *gin.Context) {
 		c.String(500, "Failed to get service")
 		return
 	}
+
+	// log.Println(service)
 
 	c.HTML(200, "layout.html", map[string]interface{}{
 		"Page":    "service_info",
