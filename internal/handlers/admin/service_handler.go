@@ -3,6 +3,7 @@ package handlers
 import (
 	"hostel-management/internal/services"
 	handlers "hostel-management/pkg/validation"
+	"hostel-management/storage/models"
 	"log"
 	"strconv"
 
@@ -53,11 +54,21 @@ func (h *ServiceHandler) ServicesHandler(c *gin.Context) {
 		return
 	}
 
-	statements, err := h.statementService.GetAllStatements()
-	if err != nil {
-		log.Printf("Error getting statements: %v: %v", err, op)
-		c.String(500, "Error getting statements: "+err.Error())
-		return
+	var statements []models.Statement
+	if role == "admin" {
+		statements, err = h.statementService.GetAllStatements()
+		if err != nil {
+			log.Printf("Error getting statements: %v: %v", err, op)
+			c.String(500, "Error getting statements: "+err.Error())
+			return
+		}
+	} else if role == "headman" {
+		statements, err = h.statementService.GetAllStatementsByHeadman(email)
+		if err != nil {
+			log.Printf("Error getting statements: %v: %v", err, op)
+			c.String(500, "Error getting statements: "+err.Error())
+			return
+		}
 	}
 
 	userStatements, err := h.statementService.GetAllUserStatements(email)

@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"fmt"
 	"hostel-management/internal/services"
+	validate "hostel-management/pkg/validation"
 	"hostel-management/storage/models"
 	"log"
 	"strconv"
@@ -25,18 +27,43 @@ func (h *UserHandler) ResidentsHandler(c *gin.Context) {
 
 	const op = "handlers.ResidentsHandler.ResidentsHandler"
 
+	role, err := validate.ValidateUserByRole(c, op)
+	if err != nil {
+		log.Printf("Access denied: %v", err)
+		c.String(403, err.Error())
+		return
+	}
+
+	email, err := validate.ValidateUserByEmail(c, op)
+	if err != nil {
+		log.Printf("Access denied: %v", err)
+		c.String(403, err.Error())
+		return
+	}
+
 	searchTerm := c.Query("search")
 
-	residents, err := h.userService.GetAllUsers()
-	if err != nil {
-		log.Printf("Failed to get residents: %v: %v", err, op)
-		c.String(500, "ResidentsHandler: Failed to get residents")
-		return
+	var residents []models.User
+
+	if role == "admin" {
+		residents, err = h.userService.GetAllUsers()
+		if err != nil {
+			log.Printf("Failed to get residents: %v: %v", err, op)
+			c.String(500, "Failed to get residents")
+			return
+		}
+	} else if role == "headman" {
+		residents, err = h.userService.GetAllByHeadman(email)
+		if err != nil {
+			log.Printf("Failed to get residents: %v: %v", err, op)
+			c.String(500, "Failed to get residents")
+			return
+		}
 	}
 
 	c.HTML(200, "layout.html", map[string]interface{}{
 		"Page":       "admin_residents",
-		"Role":       "admin",
+		"Role":       role,
 		"Residents":  residents,
 		"SearchTerm": searchTerm,
 	})
@@ -45,6 +72,13 @@ func (h *UserHandler) ResidentsHandler(c *gin.Context) {
 func (h *UserHandler) ResidentInfoHandler(c *gin.Context) {
 
 	const op = "handlers.ResidentInfoHandler.ResidentInfoHandler"
+
+	role, err := validate.ValidateUserByRole(c, op)
+	if err != nil {
+		log.Printf("Access denied: %v", err)
+		c.String(403, err.Error())
+		return
+	}
 
 	idStr := c.Param("id")
 	idInt, err := strconv.Atoi(idStr)
@@ -63,7 +97,7 @@ func (h *UserHandler) ResidentInfoHandler(c *gin.Context) {
 
 	c.HTML(200, "layout.html", map[string]interface{}{
 		"Page":     "resident",
-		"Role":     "admin",
+		"Role":     role,
 		"Resident": resident,
 	})
 }
@@ -71,6 +105,13 @@ func (h *UserHandler) ResidentInfoHandler(c *gin.Context) {
 func (h *UserHandler) AddResidentHandler(c *gin.Context) {
 
 	const op = "handlers.user_handler.AddResidentHandler"
+
+	role, err := validate.ValidateUserByRole(c, op)
+	if err != nil {
+		log.Printf("Access denied: %v", err)
+		c.String(403, err.Error())
+		return
+	}
 
 	if c.Request.Method != "POST" {
 		log.Printf("Method not allowed: %v", op)
@@ -98,7 +139,7 @@ func (h *UserHandler) AddResidentHandler(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(303, "/admin/residents")
+	c.Redirect(303, fmt.Sprintf("/%s/residents", role))
 }
 
 func (h *UserHandler) UpdateResidentDataHandler(c *gin.Context) {
@@ -145,6 +186,13 @@ func (h *UserHandler) DeleteResidentHandler(c *gin.Context) {
 
 	const op = "handlers.DeleteResidentHandler.DeleteResidentHandler"
 
+	role, err := validate.ValidateUserByRole(c, op)
+	if err != nil {
+		log.Printf("Access denied: %v", err)
+		c.String(403, err.Error())
+		return
+	}
+
 	if c.Request.Method != "POST" {
 		log.Printf("Method not allowed: %v", op)
 		c.String(405, "Method not allowed")
@@ -172,5 +220,5 @@ func (h *UserHandler) DeleteResidentHandler(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(303, "/admin/residents")
+	c.Redirect(303, fmt.Sprintf("/%s/residents", role))
 }

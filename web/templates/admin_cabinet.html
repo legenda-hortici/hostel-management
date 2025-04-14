@@ -9,7 +9,7 @@
                 <h5 class="card-title"><i class="bi bi-person-circle"></i> Личные данные</h5>
                 <p class="mb-1"><strong>Имя:</strong> {{ .Admin.Username }}</p>
                 <p class="mb-1"><strong>Фамилия:</strong> {{ .Admin.Surname }}</p>
-                <p class="mb-1"><strong>Роль:</strong> {{ .Admin.Role }}</p>
+                <p class="mb-1"><strong>Роль:</strong> {{ if eq .Admin.Role "admin" }}Администратор{{ end }}</p>
                 <p><strong>Email:</strong> {{ .Admin.Email }}</p>
             </div>
             <div class="text-end">

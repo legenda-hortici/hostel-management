@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"fmt"
 	"hostel-management/internal/services"
 	handlers "hostel-management/pkg/validation"
+	"hostel-management/storage/models"
 	"strconv"
 
 	"log"
@@ -26,15 +28,33 @@ func (h *InventoryHandler) InventoryHandler(c *gin.Context) {
 
 	role, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
+		log.Printf("acces denied: %v", err)
 		c.String(403, err.Error())
 		return
 	}
 
-	inventory, err := h.inventoryService.GetAllInventory()
+	email, err := handlers.ValidateUserByEmail(c, op)
 	if err != nil {
-		c.String(500, err.Error())
-		log.Printf("Failed to get inventory: %v: %v", err, op)
+		log.Printf("acces denied: %v", err)
+		c.String(403, err.Error())
 		return
+	}
+
+	var inventory []models.Inventory
+	if role == "admin" {
+		inventory, err = h.inventoryService.GetAllInventory()
+		if err != nil {
+			c.String(500, err.Error())
+			log.Printf("Failed to get inventory: %v: %v", err, op)
+			return
+		}
+	} else if role == "headman" {
+		inventory, err = h.inventoryService.GetAllInventoryByHeadman(email)
+		if err != nil {
+			c.String(500, err.Error())
+			log.Printf("Failed to get inventory: %v: %v", err, op)
+			return
+		}
 	}
 
 	c.HTML(200, "layout.html", map[string]interface{}{
@@ -47,6 +67,13 @@ func (h *InventoryHandler) InventoryHandler(c *gin.Context) {
 func (h *InventoryHandler) DeleteInventoryItemHandler(c *gin.Context) {
 
 	const op = "handlers.inventory_handler.DeleteInventoryItemHandler"
+
+	role, err := handlers.ValidateUserByRole(c, op)
+	if err != nil {
+		log.Printf("acces denied: %v", err)
+		c.String(403, err.Error())
+		return
+	}
 
 	if c.Request.Method != "POST" {
 		c.String(405, "Method not allowed")
@@ -69,12 +96,19 @@ func (h *InventoryHandler) DeleteInventoryItemHandler(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(303, "/admin/inventory")
+	c.Redirect(303, fmt.Sprintf("/%s/inventory", role))
 }
 
 func (h *InventoryHandler) AddInventoryItemHandler(c *gin.Context) {
 
 	const op = "handlers.inventory_handler.AddInventoryItemHandler"
+
+	role, err := handlers.ValidateUserByRole(c, op)
+	if err != nil {
+		log.Printf("acces denied: %v", err)
+		c.String(403, err.Error())
+		return
+	}
 
 	if c.Request.Method != "POST" {
 		c.String(405, "Method not allowed")
@@ -90,6 +124,7 @@ func (h *InventoryHandler) AddInventoryItemHandler(c *gin.Context) {
 		log.Printf("Failed to get room to add inventory item: %v: %v", err, op)
 		return
 	}
+
 	hostel, err := strconv.Atoi(c.PostForm("hostel"))
 	if err != nil {
 		c.String(400, "Invalid hostel")
@@ -104,12 +139,19 @@ func (h *InventoryHandler) AddInventoryItemHandler(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(303, "/admin/inventory")
+	c.Redirect(303, fmt.Sprintf("/%s/inventory", role))
 }
 
 func (h *InventoryHandler) UpdateInventoryItemHandler(c *gin.Context) {
 
 	const op = "handlers.inventory_handler.UpdateInventoryItemHandler"
+
+	role, err := handlers.ValidateUserByRole(c, op)
+	if err != nil {
+		log.Printf("acces denied: %v", err)
+		c.String(403, err.Error())
+		return
+	}
 
 	if c.Request.Method != "POST" {
 		c.String(405, "Method not allowed")
@@ -123,6 +165,7 @@ func (h *InventoryHandler) UpdateInventoryItemHandler(c *gin.Context) {
 		log.Printf("ID is missing: %v", op)
 		return
 	}
+
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		c.String(400, "Invalid ID")
@@ -138,6 +181,7 @@ func (h *InventoryHandler) UpdateInventoryItemHandler(c *gin.Context) {
 		log.Printf("Failed to get room to update inventory item: %v: %v", err, op)
 		return
 	}
+
 	hostel, err := strconv.Atoi(c.PostForm("hostelnumber"))
 	if err != nil {
 		c.String(400, "Invalid hostel")
@@ -152,5 +196,5 @@ func (h *InventoryHandler) UpdateInventoryItemHandler(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(303, "/admin/inventory")
+	c.Redirect(303, fmt.Sprintf("/%s/inventory", role))
 }

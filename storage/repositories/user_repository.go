@@ -14,6 +14,7 @@ type UserRepository interface {
 	GetByEmail(email string) (*models.User, error)
 	GetRole(email string) (string, error)
 	GetAll() ([]models.User, error)
+	GetAllByHeadman(email string) ([]models.User, error)
 	GetTotalCount(searchTerm, filterRole string) (int, error)
 	GetPasswordByEmail(email string) (string, error)
 	Update(id int, user *models.User) error
@@ -234,4 +235,37 @@ func (r *userRepository) UpdateHeadmanData(user models.User) error {
 		user.Password,
 		"headman")
 	return err
+}
+
+func (r *userRepository) GetAllByHeadman(email string) ([]models.User, error) {
+	query := `
+		SELECT 
+			u.id, u.name, u.surname, u.email, u.password, u.institute, u.role, r.number
+		FROM 
+			Users u
+		JOIN 
+			Rooms r ON u.Rooms_id = r.id
+		JOIN 
+			Hostels h ON r.Hostels_id = h.id
+		WHERE 
+			h.headman_email = ?
+	`
+
+	rows, err := r.db.Query(query, email)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	users := []models.User{}
+	for rows.Next() {
+		user := models.User{}
+		err := rows.Scan(&user.ID, &user.Username, &user.Surname, &user.Email, &user.Password, &user.Institute, &user.Role, &user.RoomNumber)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
 }

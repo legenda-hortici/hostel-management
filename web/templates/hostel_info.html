@@ -23,15 +23,22 @@
 
         <!-- Карточка с информацией о коменданте -->
         <div class="card shadow-sm border-0 mb-4" style="width: 40%">
-            <div class="card-body d-flex justify-content-between align-items-center">
+            <div class="card-body d-flex justify-content-between align-items-start">
                 <div>
                     <h5 class="card-title"><i class="bi bi-person-badge"></i> Комендант</h5>
                     {{ if .Hostel.HeadmanEmail }}
-                        <p><strong>Имя:</strong> {{ .Hostel.HeadmanName}}</p>
+                        <p><strong>Имя:</strong> {{ .Hostel.HeadmanName }}</p>
                         <p><strong>Фамилия:</strong> {{ .Hostel.HeadmanSurname }}</p>
                         <p><strong>Телефон:</strong> {{ .Hostel.HostelContacts }}</p>
                         <p><strong>Email:</strong> {{ .Hostel.HeadmanEmail }}</p>
 
+                        <!-- Кнопка снятия коменданта -->
+                        <form method="POST" action="/admin/hostel/{{ .Hostel.HostelID }}/remove_headman" class="mt-3">
+                            <input type="hidden" name="hostel_id" value="{{ .Hostel.HostelID }}">
+                            <button type="submit" class="btn btn-outline-danger">
+                                <i class="bi bi-person-x"></i> Снять коменданта
+                            </button>
+                        </form>
                     {{ else }}
                         <p class="text-danger"><i class="bi bi-exclamation-circle"></i> Комендант не назначен</p>
                         <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#assignCommandantModal">
@@ -41,6 +48,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 

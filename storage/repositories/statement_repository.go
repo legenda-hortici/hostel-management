@@ -9,6 +9,7 @@ import (
 
 type StatementRepository interface {
 	GetAllStatements() ([]models.Statement, error)
+	GetAllStatementsByHeadman(email string) ([]models.Statement, error)
 	CreateStatementRequest(statement models.Statement) error
 	GetStatementRequestByID(id int) (models.Statement, error)
 	UpdateStatementRequestStatus(id int, status string) error
@@ -30,6 +31,48 @@ func (r *statementRepository) GetAllStatements() ([]models.Statement, error) {
 			FROM Statements s
 			JOIN Users u ON s.users_id = u.id;`
 	rows, err := db.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	statements := []models.Statement{}
+	for rows.Next() {
+		statement := models.Statement{}
+		err := rows.Scan(&statement.ID, &statement.Name, &statement.Type, &statement.Amount, &statement.Date, &statement.Phone, &statement.Status, &statement.Hostel, &statement.Username)
+		if err != nil {
+			return nil, err
+		}
+		statements = append(statements, statement)
+	}
+
+	return statements, nil
+}
+
+func (r *statementRepository) GetAllStatementsByHeadman(email string) ([]models.Statement, error) {
+	query := `
+		SELECT 
+			s.id, 
+			s.name, 
+			s.type, 
+			s.amount, 
+			s.date, 
+			s.phone, 
+			s.status, 
+			s.hostel, 
+			u.name 
+		FROM 
+			Statements s
+		JOIN 
+			Users u ON s.users_id = u.id
+		JOIN 
+			Rooms r ON u.Rooms_id = r.id
+		JOIN 
+			Hostels h ON r.Hostels_id = h.id
+		WHERE 
+			h.headman_email = ?;
+	`
+	rows, err := db.DB.Query(query, email)
 	if err != nil {
 		return nil, err
 	}

@@ -9,9 +9,11 @@ import (
 type HostelService interface {
 	GetAllHostelNumbers() ([]int, error)
 	GetHostelsInfo(db *sql.DB) ([]map[string]interface{}, error)
+	GetHostelInfoByHeadman(db *sql.DB, email string) (map[string]interface{}, error)
 	GetHostelInfo(hostelID int) (models.Hostel, error)
 	InsertHeadmanIntoHostel(hostelID int, email string) error
 	GetHostelLocationByNumber(hostelNumber int) (string, error)
+	DeleteHeadmanFromHostel(hostelID int) error
 }
 
 type hostelService struct {
@@ -46,6 +48,25 @@ func (s *hostelService) GetHostelsInfo(db *sql.DB) ([]map[string]interface{}, er
 	return hostelData, nil
 }
 
+func (s *hostelService) GetHostelInfoByHeadman(db *sql.DB, email string) (map[string]interface{}, error) {
+	hostel, err := s.hostelRepo.GetHostelInfoByHeadman(db, email)
+	if err != nil {
+		return nil, err
+	}
+
+	hostelData := map[string]interface{}{
+		"ID":             hostel.HostelID,
+		"Number":         hostel.HostelNumber,
+		"RoomsCount":     hostel.OccupiedRooms + hostel.AvailableRooms,
+		"OccupiedRooms":  hostel.OccupiedRooms,
+		"AvailableRooms": hostel.AvailableRooms,
+		"ResidentsCount": hostel.ResidentsCount,
+		"Location":       hostel.HostelLocation,
+	}
+
+	return hostelData, nil
+}
+
 func (s *hostelService) GetHostelInfo(hostelID int) (models.Hostel, error) {
 	hostel, err := s.hostelRepo.GetHostelInfo(hostelID)
 	if err != nil {
@@ -71,4 +92,8 @@ func (s *hostelService) GetAllHostelNumbers() ([]int, error) {
 
 func (s *hostelService) InsertHeadmanIntoHostel(hostelID int, email string) error {
 	return s.hostelRepo.AssignHeadmanToHostel(hostelID, email)
+}
+
+func (s *hostelService) DeleteHeadmanFromHostel(hostelID int) error {
+	return s.hostelRepo.DeleteHeadmanFromHostel(hostelID, "")
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"hostel-management/internal/services"
 	handlers "hostel-management/pkg/validation"
+	"hostel-management/storage/models"
 	"log"
 	"strconv"
 
@@ -23,23 +24,42 @@ func NewRoomHandler(roomService services.RoomService) *RoomHandler {
 func (h *RoomHandler) RoomsHandler(c *gin.Context) {
 	const op = "handlers.room_handler.RoomsHandler"
 
-	_, err := handlers.ValidateUserByRole(c, op)
+	role, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		log.Printf("Access denied: %v", err)
 		c.String(403, err.Error())
 		return
 	}
 
-	rooms, err := h.roomService.GetAllRooms()
+	email, err := handlers.ValidateUserByEmail(c, op)
 	if err != nil {
-		log.Printf("Unable to fetch rooms: %v: %v", err, op)
-		c.String(500, "Unable to fetch rooms")
+		log.Printf("Access denied: %v", err)
+		c.String(403, err.Error())
 		return
+	}
+
+	// log.Println(role)
+
+	var rooms []models.Room
+	if role == "admin" {
+		rooms, err = h.roomService.GetAllRooms()
+		if err != nil {
+			log.Printf("Unable to fetch rooms: %v: %v", err, op)
+			c.String(500, "Unable to fetch rooms")
+			return
+		}
+	} else if role == "headman" {
+		rooms, err = h.roomService.GetAllRoomsByHeadman(email)
+		if err != nil {
+			log.Printf("Unable to fetch rooms: %v: %v", err, op)
+			c.String(500, "Unable to fetch rooms")
+			return
+		}
 	}
 
 	c.HTML(200, "layout.html", map[string]interface{}{
 		"Page":  "admin_rooms",
-		"Role":  "admin",
+		"Role":  role,
 		"Rooms": rooms,
 	})
 }
@@ -47,6 +67,13 @@ func (h *RoomHandler) RoomsHandler(c *gin.Context) {
 func (h *RoomHandler) RoomInfoHandler(c *gin.Context) {
 
 	const op = "handlers.room_handler.RoomInfoHandler"
+
+	role, err := handlers.ValidateUserByRole(c, op)
+	if err != nil {
+		log.Printf("Access denied: %v", err)
+		c.String(403, err.Error())
+		return
+	}
 
 	idStr := c.Param("id")
 	idInt, err := strconv.Atoi(idStr)
@@ -79,7 +106,7 @@ func (h *RoomHandler) RoomInfoHandler(c *gin.Context) {
 
 	c.HTML(200, "layout.html", map[string]interface{}{
 		"Page":      "room",
-		"Role":      "admin",
+		"Role":      role,
 		"Room":      room,
 		"Residents": residents,
 		"Inventory": inventory,
@@ -119,7 +146,16 @@ func (h *RoomHandler) AddRoomHandler(c *gin.Context) {
 }
 
 func (h *RoomHandler) AddResidentIntoRoomHandler(c *gin.Context) {
+
 	const op = "handlers.room_handler.AddResidentIntoRoomHandler"
+
+	role, err := handlers.ValidateUserByRole(c, op)
+	if err != nil {
+		log.Printf("Access denied: %v", err)
+		c.String(403, err.Error())
+		return
+	}
+
 	roomID := c.Param("id")
 	roomIDInt, err := strconv.Atoi(roomID)
 	if err != nil {
@@ -143,11 +179,18 @@ func (h *RoomHandler) AddResidentIntoRoomHandler(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(303, fmt.Sprintf("/admin/rooms/room_info/%d", roomIDInt))
+	c.Redirect(303, fmt.Sprintf("/%s/rooms/room_info/%d", role, roomIDInt))
 }
 
 func (h *RoomHandler) DeleteResidentFromRoomHandler(c *gin.Context) {
 	const op = "handlers.room_handler.DeleteResidentFromRoomHandler"
+
+	role, err := handlers.ValidateUserByRole(c, op)
+	if err != nil {
+		log.Printf("Access denied: %v", err)
+		c.String(403, err.Error())
+		return
+	}
 
 	if c.Request.Method != "POST" {
 		log.Printf("Method not allowed: %v", op)
@@ -169,11 +212,18 @@ func (h *RoomHandler) DeleteResidentFromRoomHandler(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(303, fmt.Sprintf("/admin/rooms/room_info/%d", roomID))
+	c.Redirect(303, fmt.Sprintf("/%s/rooms/room_info/%d", role, roomID))
 }
 
 func (h *RoomHandler) FreezeRoomHandler(c *gin.Context) {
 	const op = "handlers.room_handler.FreezeRoomHandler"
+
+	role, err := handlers.ValidateUserByRole(c, op)
+	if err != nil {
+		log.Printf("Access denied: %v", err)
+		c.String(403, err.Error())
+		return
+	}
 
 	if c.Request.Method != "POST" {
 		log.Printf("Method not allowed: %v", op)
@@ -200,11 +250,18 @@ func (h *RoomHandler) FreezeRoomHandler(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(303, "/admin/rooms/room_info/"+roomID)
+	c.Redirect(303, fmt.Sprintf("/%s/rooms/room_info/%s", role, roomID))
 }
 
 func (h *RoomHandler) UnfreezeRoomHandler(c *gin.Context) {
 	const op = "handlers.room_handler.UnfreezeRoomHandler"
+
+	role, err := handlers.ValidateUserByRole(c, op)
+	if err != nil {
+		log.Printf("Access denied: %v", err)
+		c.String(403, err.Error())
+		return
+	}
 
 	if c.Request.Method != "POST" {
 		log.Printf("Method not allowed: %v", op)
@@ -231,5 +288,5 @@ func (h *RoomHandler) UnfreezeRoomHandler(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(303, "/admin/rooms/room_info/"+roomID)
+	c.Redirect(303, fmt.Sprintf("/%s/rooms/room_info/%s", role, roomID))
 }

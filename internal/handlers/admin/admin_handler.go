@@ -150,6 +150,32 @@ func (h *AdminHandler) AssignCommandantHandler(c *gin.Context) {
 	c.Redirect(303, "/admin/hostel/"+fmt.Sprint(hostelID))
 }
 
+func (h *AdminHandler) RemoveCommandantHandler(c *gin.Context) {
+
+	const op = "handlers.admin.RemoveCommandantHandler"
+
+	_, err := validators.ValidateUserByRole(c, op)
+	if err != nil {
+		c.String(403, err.Error())
+		return
+	}
+
+	hostelID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		log.Printf("Failed to get hostel ID: %v: %v", err, op)
+		c.String(400, "Invalid hostel ID")
+		return
+	}
+
+	err = h.hostelService.DeleteHeadmanFromHostel(hostelID)
+	if err != nil {
+		c.String(500, err.Error()+": "+op)
+		return
+	}
+
+	c.Redirect(303, "/admin/hostel/"+fmt.Sprint(hostelID))
+}
+
 func DocumentsHandler(c *gin.Context) {
 
 	const op = "handlers.admin.DocumentsHandler"

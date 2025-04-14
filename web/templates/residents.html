@@ -67,9 +67,15 @@
                                             <td class="room-number">{{ .RoomNumber }}</td>
                                             <td class="institute-row">{{ if .Institute }}{{ .Institute }}{{ else }}Нет данных{{ end }}</td>
                                             <td>
+                                                {{ if eq $.Role "admin" }}
                                                 <a href="/admin/residents/resident/{{ .ID }}" class="btn btn-sm btn-outline-primary">
                                                     <i class="bi bi-info-circle"></i>
                                                 </a>
+                                                {{ else if eq $.Role "headman" }}
+                                                <a href="/headman/residents/resident/{{ .ID }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-info-circle"></i>
+                                                </a>
+                                                {{ end }}
                                             </td>    
                                         </tr>
                                         {{ end }}
@@ -93,6 +99,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                {{ if eq .Role "admin" }}
                 <form action="/admin/residents/add_resident" method="post">
                     <div class="mb-3">
                         <label for="username" class="form-label">Имя</label>
@@ -138,6 +145,53 @@
                         <button type="submit" class="btn btn-primary">Добавить</button>
                     </div>
                 </form>
+                {{ else if eq .Role "headman" }}
+                <form action="/headman/residents/add_resident" method="post">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Имя</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="surname" class="form-label">Фамилия</label>
+                        <input type="text" class="form-control" id="surname" name="surname" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Пароль</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="password" name="password" required readonly>
+                            <button type="button" class="btn btn-outline-secondary" onclick="generatePassword()">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="institute" class="form-label">Институт</label>
+                        <select class="form-select" id="institute" name="institute" required>
+                            <option value="" selected disabled>Выберите институт</option>
+                            <option value="ИИК">ИИК</option>
+                            <option value="ИДЭУ">ИДЭУ</option>
+                            <option value="ИАТ">ИАТ</option>
+                            <option value="ИАРКТ">ИАРКТ</option>
+                            <option value="СГУ">СГУ</option>
+                            <option value="ИЭУ">ИЭУ</option>
+                            <option value="ЮИ">ЮИ</option>
+                            <option value="САТ">САТ</option>
+                        </select>
+                    </div>                    
+                    <div class="mb-3">
+                        <label for="room" class="form-label">Комната</label>
+                        <input type="number" class="form-control" id="room" name="room">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Добавить</button>
+                    </div>
+                </form>
+                {{ end }}
             </div>           
         </div>
     </div>

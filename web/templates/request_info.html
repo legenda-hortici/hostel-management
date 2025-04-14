@@ -13,6 +13,10 @@
                     <a href="/services" class="text-decoration-none text-dark me-3">
                         <i class="bi bi-arrow-left fs-4"></i>
                     </a>
+                    {{ else if eq .Role "headman"}}
+                    <a href="/headman/services" class="text-decoration-none text-dark me-3">
+                        <i class="bi bi-arrow-left fs-4"></i>
+                    </a>
                     {{ end }}
 
                     <h1 class="h2 d-inline">Заявка: {{ .Statement.Name }}</h1>
@@ -80,7 +84,7 @@
                         </div>
                     </div>
                 </div>
-                {{ if eq .Role "admin" }}
+                {{ if or (eq .Role "admin") (eq .Role "headman") }}
                 <!-- Действия -->
                 <div class="col-md-4">
                     <div class="card shadow-sm">
@@ -89,6 +93,7 @@
                         </div>
                         <div class="card-body">
                             <div class="d-grid gap-2">
+                                {{ if eq .Role "admin" }}
                                 <form action="/admin/services/request_info/{{ .Statement.ID }}/approve" method="POST">
                                     <button type="submit" class="btn btn-success w-100"
                                         {{ if or (eq .Statement.Status "Одобрена") (eq .Statement.Status "Отклонена") }}disabled{{ end }}>
@@ -102,6 +107,21 @@
                                         <i class="bi bi-x-circle"></i> Отклонить
                                     </button>
                                 </form>
+                                {{ else if eq .Role "headman" }}
+                                <form action="/headman/services/request_info/{{ .Statement.ID }}/approve" method="POST">
+                                    <button type="submit" class="btn btn-success w-100"
+                                        {{ if or (eq .Statement.Status "Одобрена") (eq .Statement.Status "Отклонена") }}disabled{{ end }}>
+                                        <i class="bi bi-check-circle"></i> Одобрить
+                                    </button>
+                                </form>
+                
+                                <form action="/headman/services/request_info/{{ .Statement.ID }}/reject" method="POST">
+                                    <button type="submit" class="btn btn-danger w-100"
+                                        {{ if or (eq .Statement.Status "Одобрена") (eq .Statement.Status "Отклонена") }}disabled{{ end }}>
+                                        <i class="bi bi-x-circle"></i> Отклонить
+                                    </button>
+                                </form>
+                                {{ end }}
                             </div>
                         </div>
                     </div>

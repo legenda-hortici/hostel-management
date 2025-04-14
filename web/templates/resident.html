@@ -5,16 +5,22 @@
         <main class="col-12">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <div>
+                    {{ if eq .Role "admin" }}
                     <a href="/admin/residents" class="text-decoration-none text-dark me-3">
                         <i class="bi bi-arrow-left fs-4"></i>
                     </a>
+                    {{ else if eq .Role "headman" }}
+                    <a href="/headman/residents" class="text-decoration-none text-dark me-3">
+                        <i class="bi bi-arrow-left fs-4"></i>
+                    </a>
+                    {{ end }}
                     <h1 class="h2 d-inline">Информация о пользователе: {{ .Resident.Username }} {{ .Resident.Surname }}</h1>
                 </div>
-                {{ if eq .Role "admin" }}
+
                 <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                     <i class="bi bi-trash"></i> Удалить пользователя
                 </button>
-                {{ end }}
+
             </div>
 
             <div class="row">
@@ -44,6 +50,7 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
+                                    {{ if eq .Role "admin" }}
                                     <div class="mb-3">
                                         <label for="role" class="form-label">Роль</label>
                                         <select class="form-select" id="role" name="role">
@@ -52,6 +59,7 @@
                                             <option value="user" {{ if eq .Resident.Role "user" }}selected{{ end }}>Пользователь</option>
                                         </select>
                                     </div>
+                                    {{ end }}
                                     <div class="mb-3">
                                         <label for="room" class="form-label">Комната</label>
                                         <input type="text" class="form-control" id="room" value="{{ .Resident.RoomNumber }}" disabled>
@@ -112,22 +120,27 @@
             <div class="modal-body">
                 <p>Вы уверены, что хотите удалить этого пользователя? Это действие необратимо.</p>
             </div>
+            
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                {{ if eq .Role "admin" }}
                 <form action="/admin/residents/resident/{{ .Resident.ID }}/delete_resident" method="POST" id="deleteForm">
                     <input type="hidden" name="_method" value="DELETE">
                     <button type="submit" class="btn btn-danger">
                         <i class="bi bi-trash"></i> Удалить
                     </button>
-                </form>                
+                </form>
+                {{ else if eq .Role "headman" }}
+                <form action="/headman/residents/resident/{{ .Resident.ID }}/delete_resident" method="POST" id="deleteForm">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Удалить
+                    </button>
+                </form>
+                {{ end }}       
             </div>
         </div>
     </div>
-</div>
-
-<!-- Контейнер для уведомлений -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-    <div id="toastContainer"></div>
 </div>
 
 <script src="/static/js/resident.js"></script>

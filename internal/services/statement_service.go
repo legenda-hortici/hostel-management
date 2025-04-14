@@ -7,6 +7,7 @@ import (
 
 type StatementService interface {
 	GetAllStatements() ([]models.Statement, error)
+	GetAllStatementsByHeadman(email string) ([]models.Statement, error)
 	CreateStatementRequest(user_id int, name string, typeStatement string, amount int, request_date string, phone string, hostel int) error
 	GetStatementRequestByID(id int) (models.Statement, error)
 	UpdateStatementRequestStatus(id int, status string) error
@@ -25,6 +26,15 @@ func NewStatementService(repo repositories.StatementRepository) StatementService
 
 func (s *statementService) GetAllStatements() ([]models.Statement, error) {
 	statements, err := s.statementRepo.GetAllStatements()
+	if err != nil {
+		return nil, err
+	}
+
+	return statements, nil
+}
+
+func (s *statementService) GetAllStatementsByHeadman(email string) ([]models.Statement, error) {
+	statements, err := s.statementRepo.GetAllStatementsByHeadman(email)
 	if err != nil {
 		return nil, err
 	}

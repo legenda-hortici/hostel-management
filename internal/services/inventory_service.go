@@ -7,6 +7,7 @@ import (
 
 type InventoryService interface {
 	GetAllInventory() ([]models.Inventory, error)
+	GetAllInventoryByHeadman(email string) ([]models.Inventory, error)
 	InsertIntoInventory(furniture, invNumber string, room, hostel int) error
 	DeleteInventoryItem(id int) error
 	GetInventoryByRoomID(roomID int) ([]models.Inventory, error)
@@ -25,6 +26,18 @@ func NewInventoryService(inventoryRepo repositories.InventoryRepository) Invento
 
 func (s *inventoryService) GetAllInventory() ([]models.Inventory, error) {
 	inventory, err := s.inventoryRepo.GetAllInventory()
+	if err != nil {
+		return []models.Inventory{}, err
+	}
+
+	for i := range inventory {
+		inventory[i].Point = i + 1
+	}
+	return inventory, nil
+}
+
+func (s *inventoryService) GetAllInventoryByHeadman(email string) ([]models.Inventory, error) {
+	inventory, err := s.inventoryRepo.GetAllInventoryByHeadman(email)
 	if err != nil {
 		return []models.Inventory{}, err
 	}

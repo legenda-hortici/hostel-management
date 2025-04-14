@@ -10,6 +10,7 @@ import (
 type UserService interface {
 	CreateUser(username, surname, email, password, institute string, roomNumber int) error
 	GetAllUsers() ([]models.User, error)
+	GetAllByHeadman(email string) ([]models.User, error)
 	GetUserByID(id int) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
 	GetUserRole(email string) (string, error)
@@ -170,4 +171,16 @@ func (s *userServiceImpl) UpdateHeadmanData(req models.UserRequest) error {
 		Password: req.Password,
 	}
 	return s.userRepo.UpdateHeadmanData(headman)
+}
+
+func (s *userServiceImpl) GetAllByHeadman(email string) ([]models.User, error) {
+	residents, err := s.userRepo.GetAllByHeadman(email)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range residents {
+		residents[i].Number = i + 1
+	}
+	return residents, nil
 }

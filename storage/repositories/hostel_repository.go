@@ -10,9 +10,11 @@ import (
 type HostelRepository interface {
 	GetAllHostelNumbers() ([]int, error)
 	GetHostelsInfo(db *sql.DB) ([]models.Hostel, error)
+	GetHostelInfoByHeadman(db *sql.DB, email string) (models.Hostel, error)
 	GetHostelInfo(id int) (models.Hostel, error)
 	GetHostelLocationByNumber(hostelNumber int) (string, error)
 	AssignHeadmanToHostel(hostelID int, email string) error
+	DeleteHeadmanFromHostel(hostelID int, email string) error
 }
 
 type hostelRepository struct {
@@ -104,6 +106,56 @@ func (r *hostelRepository) GetHostelsInfo(db *sql.DB) ([]models.Hostel, error) {
 	return hostels, nil
 }
 
+func (r *hostelRepository) GetHostelInfoByHeadman(db *sql.DB, email string) (models.Hostel, error) {
+	query := `
+        SELECT 
+			h.id AS hostel_id,
+			h.number AS hostel_number,
+			h.location AS hostel_location,
+
+			-- Общее количество жильцов (через подзапрос)
+			(
+				SELECT COUNT(*) 
+				FROM Users u
+				JOIN Rooms r2 ON u.Rooms_id = r2.id
+				WHERE r2.Hostels_id = h.id
+			) AS residents_count,
+
+			-- Количество занятых комнат
+			SUM(CASE WHEN r.status = 'Занята' AND r.id != 999 THEN 1 ELSE 0 END) AS occupied_rooms,
+
+			-- Количество доступных комнат (с учетом статуса "Доступна" или "На ремонте")
+			SUM(CASE WHEN r.status IN ('Доступна', 'На ремонте') AND r.id != 999 THEN 1 ELSE 0 END) AS available_rooms
+
+		FROM 
+			Hostels h
+		LEFT JOIN 
+			Rooms r ON r.Hostels_id = h.id
+
+		WHERE 
+			h.headman_email = ?
+
+		GROUP BY 
+			h.id, h.number, h.location;
+
+    `
+
+	var hostel models.Hostel
+	err := db.QueryRow(query, email).Scan(
+		&hostel.HostelID,
+		&hostel.HostelNumber,
+		&hostel.HostelLocation,
+		&hostel.ResidentsCount,
+		&hostel.OccupiedRooms,
+		&hostel.AvailableRooms,
+	)
+	if err != nil {
+		return models.Hostel{}, err
+	}
+
+	return hostel, nil
+}
+
 func (r *hostelRepository) GetHostelLocationByNumber(hostelNumber int) (string, error) {
 	var location string
 	err := db.DB.QueryRow("SELECT location FROM Hostels WHERE number = ?", hostelNumber).Scan(&location)
@@ -129,6 +181,16 @@ func (r *hostelRepository) AssignHeadmanToHostel(hostelID int, email string) err
 	_, err = db.DB.Exec(queryUpdate, email, hostelID)
 	if err != nil {
 		return fmt.Errorf("ошибка при назначении коменданта: %v", err)
+	}
+
+	return nil
+}
+
+func (r *hostelRepository) DeleteHeadmanFromHostel(hostelID int, email string) error {
+	queryUpdate := "UPDATE Hostels SET headman_email = 'Не указан' WHERE id = ?"
+	_, err := db.DB.Exec(queryUpdate, hostelID)
+	if err != nil {
+		return fmt.Errorf("ошибка при удалении коменданта: %v", err)
 	}
 
 	return nil

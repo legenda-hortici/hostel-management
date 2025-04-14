@@ -5,9 +5,15 @@
         <main class="col-12">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <div>
+                    {{ if eq .Role "admin" }}
                     <a href="/admin/rooms" class="text-decoration-none text-dark me-3">
                         <i class="bi bi-arrow-left fs-4"></i>
                     </a>
+                    {{ else if eq .Role "headman" }}
+                    <a href="/headman/rooms" class="text-decoration-none text-dark me-3">
+                        <i class="bi bi-arrow-left fs-4"></i>
+                    </a>
+                    {{ end }}
                     <h1 class="h2 d-inline">Комната №{{ .Room.Number }}</h1>
                 </div>
                 <div>
@@ -31,7 +37,7 @@
                     {{ end }}
                     
                     
-                    
+                    {{ if eq .Role "admin" }}
                     <!-- Условие для кнопки "Заморозить" -->
                     <form action="/admin/rooms/room_info/{{ .Room.ID }}/freeze" method="post" class="d-inline">
                         {{ if and (eq .Room.UserCount 0) (ne .Room.Status "На ремонте") }}
@@ -52,6 +58,31 @@
                             </button>
                         {{ end }}
                     </form>
+                    {{ else if eq .Role "headman" }}
+                    <!-- Условие для кнопки "Заморозить" -->
+                    <form action="/headman/rooms/room_info/{{ .Room.ID }}/freeze" method="post" class="d-inline">
+                        {{ if and (eq .Room.UserCount 0) (ne .Room.Status "На ремонте") }}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-snow"></i> Деактивировать
+                            </button>
+                        {{ else if and (ne .Room.UserCount 0) }}
+                            <button type="submit" class="btn btn-danger" disabled>
+                                <i class="bi bi-snow"></i> Деактивировать
+                            </button>
+                        {{ end }}
+                    </form>
+
+                    <form action="/headman/rooms/room_info/{{ .Room.ID }}/unfreeze" method="post" class="d-inline">
+                        {{ if and (eq .Room.UserCount 0) (eq .Room.Status "На ремонте") }}
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-snow"></i> Активировать
+                            </button>
+                        {{ end }}
+                    </form>
+                    {{ end }}
+                    
+
+                    
                     
                 </div>
             </div>
@@ -113,6 +144,7 @@
                                 <div class="card-body">
                                     <h6 class="card-title">{{ .Username }}</h6>
                                     <p class="card-text text-muted small">{{ .Email }}</p>
+                                    {{ if eq $.Role "admin" }}
                                     <div class="d-flex justify-content-between">
                                         <a href="/admin/rooms/room_info/resident/{{ .ID }}" class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-person-circle"></i> Профиль
@@ -124,6 +156,19 @@
                                             </button>
                                         </form>
                                     </div>
+                                    {{ else if eq $.Role "headman" }}
+                                    <div class="d-flex justify-content-between">
+                                        <a href="/headman/rooms/room_info/resident/{{ .ID }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-person-circle"></i> Профиль
+                                        </a>
+                                        <form action="/headman/rooms/room_info/delete_from_room" method="post" class="d-inline">
+                                            <input type="hidden" name="email" value="{{ .Email }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    {{ end }}
                                 </div>
                             </div>
                             {{ else }}
@@ -146,6 +191,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                {{ if eq .Role "admin" }}
                 <form action="/admin/rooms/room_info/{{ .Room.ID }}/add_resident_into_room" method="post">
                     <div class="mb-3">
                         <label for="username" class="form-label">Имя</label>
@@ -164,6 +210,26 @@
                         <button type="submit" class="btn btn-primary">Добавить</button>
                     </div>
                 </form>
+                {{ else if eq .Role "headman" }}
+                <form action="/headman/rooms/room_info/{{ .Room.ID }}/add_resident_into_room" method="post">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Имя</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="room" class="form-label">Комната</label>
+                        <input type="text" class="form-control" id="room" name="room" value="{{ .Room.Number }}" readonly>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Добавить</button>
+                    </div>
+                </form>
+                {{ end }}
             </div>
         </div>
     </div>

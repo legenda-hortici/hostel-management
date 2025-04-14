@@ -96,7 +96,6 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 		protected.POST("/notices/:id/delete", noticeHandler.DeleteNoticeHandler)
 	}
 
-	// TODO: Сделать обработчики для коменданта
 	headman := r.Group("/headman")
 	headman.Use(auth.HeadmanMiddleware())
 	{
@@ -111,6 +110,7 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 			rooms.POST("/room_info/:id/add_resident_into_room", roomHandler.AddResidentIntoRoomHandler)
 			rooms.POST("/room_info/delete_from_room", roomHandler.DeleteResidentFromRoomHandler)
 			rooms.POST("/room_info/:id/freeze", roomHandler.FreezeRoomHandler)
+			rooms.POST("/room_info/:id/unfreeze", roomHandler.UnfreezeRoomHandler)
 		}
 
 		residents := headman.Group("/residents")
@@ -137,11 +137,15 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 			inventory.GET("/", inventoryHandler.InventoryHandler)
 			inventory.POST("/:id/delete", inventoryHandler.DeleteInventoryItemHandler)
 			inventory.POST("/add_item", inventoryHandler.AddInventoryItemHandler)
+			inventory.POST("/update_item", inventoryHandler.UpdateInventoryItemHandler)
 		}
 	}
 
 	// TODO: Сделать обработку ошибок с помощью JS
 	// TODO: Сделать фотографию в профиле у пользователей
+	// TODO: Сделать отображение доп.информации у пользователей
+	// TODO: Сделать добавление админов и комендантов нормальным
+	// TODO: Поправить фильтры в комнатах
 
 	// Административные маршруты
 	admin := r.Group("/admin")
@@ -156,6 +160,7 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 		{
 			hostel.GET("/:id", adminHandler.HostelInfoHandler)
 			hostel.POST(":id/assign_headman", adminHandler.AssignCommandantHandler)
+			hostel.POST(":id/remove_headman", adminHandler.RemoveCommandantHandler)
 		}
 
 		rooms := admin.Group("/rooms")

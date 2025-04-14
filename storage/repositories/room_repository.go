@@ -29,6 +29,7 @@ type RoomRepository interface {
 	UnfreezeRoom(roomID int) error
 	GetInventoryByRoomID(id int) ([]models.Inventory, error)
 	GetRoomNumberByRoomID(userID int) (int, error)
+	GetAllRoomsByHeadman(email string) ([]models.Room, error)
 }
 
 type roomRepository struct {
@@ -361,4 +362,31 @@ func (r *roomRepository) GetRoomNumberByRoomID(roomID int) (int, error) {
 		return 0, err
 	}
 	return roomNumber, nil
+}
+
+func (r *roomRepository) GetAllRoomsByHeadman(email string) ([]models.Room, error) {
+	query := `
+		SELECT r.id, r.type, r.status, r.number, r.user_count, h.number AS hostel_number
+		FROM Rooms r
+		JOIN Hostels h ON r.Hostels_id = h.id
+		WHERE h.headman_email = ?;
+	`
+
+	rows, err := r.db.Query(query, email)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	rooms := []models.Room{}
+	for rows.Next() {
+		room := models.Room{}
+		err := rows.Scan(&room.ID, &room.Type, &room.Status, &room.Number, &room.UserCount, &room.HostelNumber)
+		if err != nil {
+			return nil, err
+		}
+		rooms = append(rooms, room)
+	}
+
+	return rooms, nil
 }

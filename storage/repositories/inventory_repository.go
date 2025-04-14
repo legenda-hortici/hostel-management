@@ -9,6 +9,7 @@ import (
 
 type InventoryRepository interface {
 	GetAllInventory() ([]models.Inventory, error)
+	GetAllInventoryByHeadman(email string) ([]models.Inventory, error)
 	InsertIntoInventory(inventory models.Inventory) error
 	DeleteInventory(id int) error
 	GetInventoryByRoomID(roomID int) ([]models.Inventory, error)
@@ -39,14 +40,13 @@ func (r *inventoryRepository) GetAllInventory() ([]models.Inventory, error) {
 		JOIN Hostels h ON r.Hostels_id = h.id;
 	`
 
-	var inventory []models.Inventory
-
 	rows, err := db.DB.Query(query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
+	var inventory []models.Inventory
 	for rows.Next() {
 		var inv models.Inventory
 		err := rows.Scan(
@@ -64,6 +64,52 @@ func (r *inventoryRepository) GetAllInventory() ([]models.Inventory, error) {
 	}
 
 	return inventory, nil
+}
+
+func (r *inventoryRepository) GetAllInventoryByHeadman(email string) ([]models.Inventory, error) {
+	query := `
+		SELECT 
+			i.id, 
+			i.name, 
+			i.inv_number, 
+			r.number AS room_number, 
+			i.icon, 
+			h.number AS hostel_number
+		FROM 
+			Inventory i
+		JOIN 
+			Rooms r ON i.Rooms_id = r.id
+		JOIN 
+			Hostels h ON r.Hostels_id = h.id
+		WHERE 
+			h.headman_email = ?;
+	`
+
+	rows, err := db.DB.Query(query, email)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var inventory []models.Inventory
+	for rows.Next() {
+		var inv models.Inventory
+		err := rows.Scan(
+			&inv.ID,
+			&inv.Name,
+			&inv.InvNumber,
+			&inv.RoomNumber,
+			&inv.Icon,
+			&inv.HostelNumber,
+		)
+		if err != nil {
+			return nil, err
+		}
+		inventory = append(inventory, inv)
+	}
+
+	return inventory, nil
+
 }
 
 func (r *inventoryRepository) InsertIntoInventory(inventory models.Inventory) error {

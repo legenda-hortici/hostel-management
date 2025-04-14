@@ -26,7 +26,7 @@ type RoomService interface {
 	UnfreezeRoom(roomID int) error
 	GetInventoryByRoomID(id int) ([]models.Inventory, error)
 	GetRoomNumberByRoomID(roomID int) (int, error)
-	
+	GetAllRoomsByHeadman(email string) ([]models.Room, error)
 }
 
 type roomServiceImpl struct {
@@ -219,4 +219,8 @@ func (s *roomServiceImpl) GetRoomNumberByRoomID(roomID int) (int, error) {
 
 func (s *roomServiceImpl) UnfreezeRoom(roomID int) error {
 	return s.roomRepo.UnfreezeRoom(roomID)
+}
+
+func (s *roomServiceImpl) GetAllRoomsByHeadman(email string) ([]models.Room, error) {
+	return s.roomRepo.GetAllRoomsByHeadman(email)
 }

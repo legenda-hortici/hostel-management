@@ -1,6 +1,7 @@
 package headman
 
 import (
+	"hostel-management/internal/config/db"
 	"hostel-management/internal/services"
 	handlers "hostel-management/pkg/validation"
 	"hostel-management/storage/models"
@@ -27,17 +28,33 @@ func (h *HeadmanHandler) HeadmanCabinetHandler(c *gin.Context) {
 
 	role, err := handlers.ValidateUserByRole(c, op)
 	if err != nil && role != "headman" {
+		log.Printf("access denied: %v", err)
+		c.String(403, err.Error())
+		return
+	}
+
+	email, err := handlers.ValidateUserByEmail(c, op)
+	if err != nil {
+		log.Printf("access denied: %v", err)
 		c.String(403, err.Error())
 		return
 	}
 
 	headmanData, err := h.userService.GetHeadmanData(role)
 	if err != nil {
+		log.Printf("failed to get headman data: %v", err)
 		c.String(500, err.Error()+": "+op)
 		return
 	}
 
-	// hostelData, err := h.hostelService.GetHostelInfo()
+	hostelData, err := h.hostelService.GetHostelInfoByHeadman(db.DB, email)
+	if err != nil {
+		log.Printf("failed to get hostel info: %v: %v", err, op)
+		c.String(500, err.Error()+": "+op)
+		return
+	}
+
+	log.Println(hostelData)
 
 	c.HTML(200, "layout.html", gin.H{
 		"Page": "headman_cabinet",
@@ -48,6 +65,7 @@ func (h *HeadmanHandler) HeadmanCabinetHandler(c *gin.Context) {
 			"Password": headmanData.Password,
 			"Email":    headmanData.Email,
 		},
+		"Hostel": hostelData,
 	})
 }
 
