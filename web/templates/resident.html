@@ -93,6 +93,16 @@
                             <h5 class="mb-0"><i class="bi bi-info-circle"></i> Дополнительная информация</h5>
                         </div>
                         <div class="card-body">
+                            <!-- Отображаем аватарку -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-center">
+                                    {{ if ne .Resident.Avatar "Не указана" }}
+                                    <img src="{{ .Resident.Avatar }}" alt="Аватарка" class="img-fluid rounded-circle" style="width: 100px; height: 100px;">
+                                    {{ else if eq .Resident.Avatar "Не указана" }}
+                                    <img src="/static/img/svg/avatars/person.svg" alt="Аватарка" class="img-fluid rounded-circle" style="width: 100px; height: 100px;">
+                                    {{ end }}
+                                </div>
+                            </div>
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item">
                                     <i class="bi bi-calendar"></i> Дата заселения: {{ .Resident.SettlingDate }}
@@ -102,6 +112,7 @@
                                 </li>
                             </ul>
                         </div>
+                        
                     </div>
                 </div>
             </div>

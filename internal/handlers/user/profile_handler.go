@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"hostel-management/internal/services"
+	"hostel-management/pkg/helpers"
 	handlers "hostel-management/pkg/validation"
 	"log"
 
@@ -49,6 +50,8 @@ func (h *ProfileHandler) Profile(c *gin.Context) {
 func (h *ProfileHandler) UpdateProfileHandler(c *gin.Context) {
 	const op = "handlers.ProfileHandler.UpdateProfileHandler"
 
+	c.Request.ParseMultipartForm(10 << 20) // Ограничение на 10 MB
+
 	email, err := handlers.ValidateUserByEmail(c, op)
 	if err != nil {
 		c.String(403, err.Error())
@@ -64,8 +67,25 @@ func (h *ProfileHandler) UpdateProfileHandler(c *gin.Context) {
 	name := c.PostForm("username")
 	surname := c.PostForm("surname")
 	password := c.PostForm("password")
+	// Загружаем аватар
+	avatarFile, _, err := c.Request.FormFile("avatar")
+	var avatarPath string
+	if err == nil && avatarFile != nil {
+		// Сохраняем файл в папку и получаем путь
+		avatarPath, err = helpers.SaveAvatar(avatarFile) // функция, которая сохраняет файл и возвращает путь
+		if err != nil {
+			log.Printf("Failed to save avatar: %v", err)
+			c.String(500, "Failed to save avatar")
+			return
+		}
+	}
 
-	err = h.userService.UpdateUserByEmail(email, name, surname, password)
+	// Если аватар не был загружен, оставляем путь старого аватара
+	if avatarPath == "" {
+		avatarPath = "Не указана"
+	}
+
+	err = h.userService.UpdateUserByEmail(email, name, surname, password, avatarPath)
 	if err != nil {
 		log.Printf("Failed to update user: %v: %v", err, op)
 		c.String(500, "failed to update user")

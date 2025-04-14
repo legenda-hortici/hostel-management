@@ -52,7 +52,7 @@ func (r *userRepository) Create(user *models.User) error {
 
 // GetByID получает пользователя по ID
 func (r *userRepository) GetByID(id int) (*models.User, error) {
-	query := `SELECT u.id, u.name, u.surname, u.email, u.password, u.institute, u.role, u.settling_date, r.number 
+	query := `SELECT u.id, u.name, u.surname, u.email, u.password, u.institute, u.avatar, u.role, u.settling_date, r.number 
 			FROM Users u 
 			JOIN Rooms r ON u.Rooms_id = r.id 
 			WHERE u.id = ?`
@@ -63,7 +63,7 @@ func (r *userRepository) GetByID(id int) (*models.User, error) {
 	}
 
 	user := &models.User{}
-	err := row.Scan(&user.ID, &user.Username, &user.Surname, &user.Email, &user.Password, &user.Institute, &user.Role, &user.SettlingDate, &user.RoomNumber)
+	err := row.Scan(&user.ID, &user.Username, &user.Surname, &user.Email, &user.Password, &user.Institute, &user.Avatar, &user.Role, &user.SettlingDate, &user.RoomNumber)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -78,7 +78,7 @@ func (r *userRepository) GetByID(id int) (*models.User, error) {
 // GetByEmail получает пользователя по email
 func (r *userRepository) GetByEmail(email string) (*models.User, error) {
 	query := `
-		SELECT u.id, u.name, u.surname, u.email, u.password, u.role, u.institute, r.number, h.number
+		SELECT u.id, u.name, u.surname, u.email, u.password, u.role, u.institute, u.avatar, r.number, h.number
 		FROM Users u
 		JOIN Rooms r ON u.Rooms_id = r.id 
 		JOIN Hostels h ON r.Hostels_id = h.id
@@ -87,7 +87,7 @@ func (r *userRepository) GetByEmail(email string) (*models.User, error) {
 	row := r.db.QueryRow(query, email)
 
 	user := &models.User{}
-	err := row.Scan(&user.ID, &user.Username, &user.Surname, &user.Email, &user.Password, &user.Role, &user.Institute, &user.RoomNumber, &user.HostelNumber)
+	err := row.Scan(&user.ID, &user.Username, &user.Surname, &user.Email, &user.Password, &user.Role, &user.Institute, &user.Avatar, &user.RoomNumber, &user.HostelNumber)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("пользователь не найден")
@@ -157,9 +157,9 @@ func (r *userRepository) Update(id int, user *models.User) error {
 func (r *userRepository) UpdateByEmail(email string, user *models.User) error {
 	_, err := r.db.Exec(`
 		UPDATE Users 
-		SET name=?, surname=?, password=?
+		SET name=?, surname=?, password=?, avatar=?
 		WHERE email=?`,
-		user.Username, user.Surname, user.Password, email,
+		user.Username, user.Surname, user.Password, user.Avatar, email,
 	)
 	return err
 }

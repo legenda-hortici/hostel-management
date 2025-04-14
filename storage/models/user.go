@@ -10,6 +10,7 @@ type User struct {
 	Email        string
 	Institute    string
 	SettlingDate string
+	Avatar       string
 	Room_id      int
 	RoomNumber   int
 	HostelNumber int

@@ -17,7 +17,7 @@ type UserService interface {
 	GetTotalCountUsers(searchTerm, filterRole string) (int, error)
 	GetPasswordByEmail(email string) (string, error)
 	UpdateUser(id int, user *models.UserRequest) error
-	UpdateUserByEmail(email, name, surname, password string) error
+	UpdateUserByEmail(email, name, surname, password, avatar string) error
 	DeleteUser(id int) error
 	GetResidentsCount() (int, error)
 	GetUserIDByEmail(email string) (int, error)
@@ -107,7 +107,7 @@ func (s *userServiceImpl) UpdateUser(id int, req *models.UserRequest) error {
 }
 
 // UpdateUserByEmail обновляет данные пользователя
-func (s *userServiceImpl) UpdateUserByEmail(email, name, surname, password string) error {
+func (s *userServiceImpl) UpdateUserByEmail(email, name, surname, password, avatar string) error {
 	if email == "" || name == "" || password == "" {
 		return errors.New("fields cannot be empty")
 	}
@@ -115,6 +115,7 @@ func (s *userServiceImpl) UpdateUserByEmail(email, name, surname, password strin
 		Username: name,
 		Surname:  surname,
 		Password: password,
+		Avatar:   avatar,
 	}
 	return s.userRepo.UpdateByEmail(email, user)
 }
