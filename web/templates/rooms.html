@@ -5,9 +5,11 @@
         <main class="col-12">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">Комнаты</h1>
+                {{ if eq .Role "admin" }}
                 <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addRoomModal">
                     <i class="bi bi-plus-circle"></i> Добавить комнату
                 </button>
+                {{ end }}
             </div>
 
             <div class="row">
@@ -38,6 +40,7 @@
                                     <option value="трёхместная (премиум)">Трёхместная (премиум)</option>
                                 </select>
                             </div>
+                            {{ if eq .Role "admin" }}
                             <div class="mb-3">
                                 <label for="filterHostel" class="form-label">Общежитие</label>
                                 <select name="hostel" class="form-select" id="filterHostel" onchange="applyFilters()">
@@ -54,6 +57,7 @@
                                     <option value="12">12</option>
                                 </select>
                             </div>
+                            {{ end }}
                             <div class="mb-3">
                                 <label for="searchRoomNumber" class="form-label">Поиск по номеру</label>
                                 <input type="text" class="form-control" id="searchRoomNumber" placeholder="Введите номер..." oninput="applyFilters()">
@@ -72,9 +76,16 @@
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <h5 class="card-title mb-0">Комната №{{ .Number }}</h5>
+                                        {{ if eq $.Role "admin" }}
                                         <a href="/admin/rooms/room_info/{{ .ID }}" class="text-primary">
                                             <i class="bi bi-info-circle"></i>
                                         </a>
+                                        {{ else if eq $.Role "headman" }}
+                                        <a href="/headman/rooms/room_info/{{ .ID }}" class="text-primary">
+                                            <i class="bi bi-info-circle"></i>
+                                        </a>
+                                        {{ end }}
+
                                     </div>
                                     <ul class="list-group list-group-flush">
                                         <li class="list-group-item">
