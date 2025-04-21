@@ -1,4 +1,5 @@
 {{ define "admin_rooms" }}
+
 <div class="container-fluid">
     <div class="row">
         <!-- Основной контент -->
@@ -129,7 +130,7 @@
                 <form action="/admin/rooms/add_room" method="post">
                     <div class="mb-3">
                         <label for="roomNumber" class="form-label">Номер комнаты</label>
-                        <input type="number" class="form-control" id="roomNumber" name="roomNumber" required>
+                        <input type="number" class="form-control" id="roomNumber" name="roomNumber" min="100" max="999" required>
                     </div>
                     <div class="mb-3">
                         <label for="roomType" class="form-label">Тип комнаты</label>
