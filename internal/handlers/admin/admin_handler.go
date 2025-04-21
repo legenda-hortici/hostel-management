@@ -5,12 +5,13 @@ import (
 	"hostel-management/internal/config/db"
 	"hostel-management/internal/services"
 	"hostel-management/pkg/helpers"
-	"hostel-management/pkg/session"
+	"hostel-management/pkg/middlewares"
 	validators "hostel-management/pkg/validation"
 	"hostel-management/storage/models"
 	"log"
 	"strconv"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -32,24 +33,28 @@ func (h *AdminHandler) AdminCabinetHandler(c *gin.Context) {
 
 	role, err := validators.ValidateUserByRole(c, op)
 	if err != nil {
-		c.String(403, err.Error())
+		middlewares.HandleError(c, 403, "Ошибка: доступ запрещен")
 		return
 	}
 
 	adminData, err := h.userService.GetAdminData(role)
 	if err != nil {
-		c.String(500, err.Error()+": "+op)
+		middlewares.HandleError(c, 500, "Ошибка: не удалось получить данные администратора")
 		return
 	}
 
 	hostelData, err := h.hostelService.GetHostelsInfo(db.DB)
 	if err != nil {
 		log.Printf("Failed to get hostels info: %v: %v", err, op)
-		c.String(500, err.Error()+": "+op)
+		middlewares.HandleError(c, 500, "Ошибка: не удалось получить информацию об общежитиях")
 		return
 	}
 
-	c.HTML(200, "layout.html", map[string]interface{}{
+	session := sessions.Default(c)
+	flashes := session.Flashes()
+	session.Save()
+
+	c.HTML(200, "layout.html", gin.H{
 		"Page": "admin_cabinet",
 		"Role": role,
 		"Admin": map[string]interface{}{
@@ -60,6 +65,7 @@ func (h *AdminHandler) AdminCabinetHandler(c *gin.Context) {
 			"Role":     adminData.Role,
 		},
 		"Hostels": hostelData,
+		"Flashes": flashes,
 	})
 }
 
@@ -69,7 +75,7 @@ func (h *AdminHandler) UpdateCabinetHandler(c *gin.Context) {
 
 	_, err := validators.ValidateUserByRole(c, op)
 	if err != nil {
-		c.String(403, err.Error())
+		middlewares.HandleError(c, 403, "Ошибка: доступ запрещен")
 		return
 	}
 
@@ -85,9 +91,13 @@ func (h *AdminHandler) UpdateCabinetHandler(c *gin.Context) {
 
 	err = h.userService.UpdateAdminData(req)
 	if err != nil {
-		c.String(500, err.Error()+": "+op)
+		middlewares.HandleError(c, 500, "Ошибка: не удалось обновить данные администратора")
 		return
 	}
+
+	session := sessions.Default(c)
+	session.AddFlash("Данные администратора успешно обновлены!")
+	session.Save()
 
 	c.Redirect(303, "/admin")
 }
@@ -98,27 +108,32 @@ func (h *AdminHandler) HostelInfoHandler(c *gin.Context) {
 
 	_, err := validators.ValidateUserByRole(c, op)
 	if err != nil {
-		c.String(403, err.Error())
+		middlewares.HandleError(c, 403, "Ошибка: доступ запрещен")
 		return
 	}
 
 	hostelID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		log.Printf("Failed to get hostel ID: %v: %v", err, op)
-		c.String(400, "Invalid hostel ID")
+		middlewares.HandleError(c, 400, "Ошибка: неверный ID")
 		return
 	}
 
 	hostelInfo, err := h.hostelService.GetHostelInfo(hostelID)
 	if err != nil {
-		c.String(500, err.Error()+": "+op)
+		middlewares.HandleError(c, 500, "Ошибка: не удалось получить информацию о хостеле")
 		return
 	}
 
-	c.HTML(200, "layout.html", map[string]interface{}{
-		"Page":   "hostel_info",
-		"Role":   "admin",
-		"Hostel": hostelInfo,
+	session := sessions.Default(c)
+	flashes := session.Flashes()
+	session.Save()
+
+	c.HTML(200, "layout.html", gin.H{
+		"Page":    "hostel_info",
+		"Role":    "admin",
+		"Hostel":  hostelInfo,
+		"Flashes": flashes,
 	})
 }
 
@@ -128,14 +143,14 @@ func (h *AdminHandler) AssignCommandantHandler(c *gin.Context) {
 
 	_, err := validators.ValidateUserByRole(c, op)
 	if err != nil {
-		c.String(403, err.Error())
+		middlewares.HandleError(c, 403, "Ошибка: доступ запрещен")
 		return
 	}
 
 	hostelID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		log.Printf("Failed to get hostel ID: %v: %v", err, op)
-		c.String(400, "Invalid hostel ID")
+		middlewares.HandleError(c, 400, "Ошибка: неверный ID")
 		return
 	}
 
@@ -143,9 +158,13 @@ func (h *AdminHandler) AssignCommandantHandler(c *gin.Context) {
 
 	err = h.hostelService.InsertHeadmanIntoHostel(hostelID, email)
 	if err != nil {
-		c.String(500, err.Error()+": "+op)
+		middlewares.HandleError(c, 500, "Ошибка: не удалось назначить команданта")
 		return
 	}
+
+	session := sessions.Default(c)
+	session.AddFlash("Командант успешно назначен!")
+	session.Save()
 
 	c.Redirect(303, "/admin/hostel/"+fmt.Sprint(hostelID))
 }
@@ -156,42 +175,29 @@ func (h *AdminHandler) RemoveCommandantHandler(c *gin.Context) {
 
 	_, err := validators.ValidateUserByRole(c, op)
 	if err != nil {
-		c.String(403, err.Error())
+		middlewares.HandleError(c, 403, "Ошибка: доступ запрещен")
 		return
 	}
 
 	hostelID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		log.Printf("Failed to get hostel ID: %v: %v", err, op)
-		c.String(400, "Invalid hostel ID")
+		middlewares.HandleError(c, 400, "Ошибка: неверный ID")
 		return
 	}
 
 	err = h.hostelService.DeleteHeadmanFromHostel(hostelID)
 	if err != nil {
-		c.String(500, err.Error()+": "+op)
+		log.Printf("Failed to delete headman from hostel: %v: %v", err, op)
+		middlewares.HandleError(c, 500, "Ошибка: не удалось удалить команданта")
 		return
 	}
+
+	session := sessions.Default(c)
+	session.AddFlash("Командант успешно удален!")
+	session.Save()
 
 	c.Redirect(303, "/admin/hostel/"+fmt.Sprint(hostelID))
-}
-
-func DocumentsHandler(c *gin.Context) {
-
-	const op = "handlers.admin.DocumentsHandler"
-
-	role, exists := session.GetUserRole(c)
-	if !exists || role != "admin" {
-		c.String(403, "Access denied: %v: %v", role, op)
-		return
-	}
-
-	data := map[string]interface{}{
-		"Page": "admin_documents",
-		"Role": role,
-	}
-
-	c.HTML(200, "layout.html", data)
 }
 
 func CreateContractHandler(c *gin.Context) {
@@ -199,7 +205,7 @@ func CreateContractHandler(c *gin.Context) {
 	const op = "handlers.admin.CreateContractHandler"
 
 	if c.Request.Method != "POST" {
-		c.String(405, "Method not allowed: %v: %v", c.Request.Method, op)
+		middlewares.HandleError(c, 303, "Ошибка: метод не разрешен")
 		return
 	}
 
@@ -215,7 +221,8 @@ func CreateContractHandler(c *gin.Context) {
 
 	fileBytes, err := helpers.GenerateContract(data)
 	if err != nil {
-		c.String(500, err.Error())
+		middlewares.HandleError(c, 500, "Ошибка: не удалось создать договор")
+		log.Printf("Failed to create contract: %v: %v", err, op)
 		return
 	}
 

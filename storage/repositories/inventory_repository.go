@@ -122,13 +122,13 @@ func (r *inventoryRepository) InsertIntoInventory(inventory models.Inventory) er
 
 	err := db.DB.QueryRow(query, inventory.RoomNumber, inventory.HostelNumber).Scan(&inventory.Rooms_id)
 	if err != nil {
-		return fmt.Errorf("не найдена комната №%d в общежитии №%d: %w", inventory.RoomNumber, inventory.HostelNumber, err)
+		return fmt.Errorf("не найдена комната №%d в общежитии №%d", inventory.RoomNumber, inventory.HostelNumber)
 	}
 
 	insertQuery := "INSERT INTO Inventory (name, inv_number, Rooms_id, icon) VALUES (?, ?, ?, ?)"
 	_, err = db.DB.Exec(insertQuery, inventory.Name, inventory.InvNumber, inventory.Rooms_id, inventory.Icon)
 	if err != nil {
-		return fmt.Errorf("ошибка при добавлении инвентаря: %w", err)
+		return fmt.Errorf("ошибка при добавлении инвентаря")
 	}
 
 	return nil

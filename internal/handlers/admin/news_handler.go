@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"hostel-management/internal/services"
+	"hostel-management/pkg/middlewares"
 	handlers "hostel-management/pkg/validation"
 	"log"
 	"strconv"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,21 +33,26 @@ func (h *NewsHandler) News(c *gin.Context) {
 
 	news, err := h.newsService.GetAllNews(c)
 	if err != nil {
-		c.String(500, "Ошибка получения новостей: "+err.Error())
+		middlewares.HandleError(c, 500, "Ошибка получения новостей")
 		return
 	}
 
 	latestNews, err := h.newsService.GetLatestNews()
 	if err != nil {
-		c.String(500, "Ошибка получения последних новостей: "+err.Error())
+		middlewares.HandleError(c, 500, "Ошибка получения последних новостей")
 		return
 	}
+
+	session := sessions.Default(c)
+	flashes := session.Flashes()
+	session.Save()
 
 	c.HTML(200, "layout.html", map[string]interface{}{
 		"Page":       "news",
 		"Role":       role,
 		"News":       news,
 		"LatestNews": latestNews,
+		"Flashes":    flashes,
 	})
 }
 
@@ -55,18 +62,23 @@ func (h *NewsHandler) CreateNewsPageHandler(c *gin.Context) {
 
 	_, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
-		c.String(403, err.Error())
+		middlewares.HandleError(c, 403, "Ошибка: доступ запрещен")
 		return
 	}
 
-	c.HTML(200, "layout.html", map[string]interface{}{
-		"Page": "create_news",
+	session := sessions.Default(c)
+	flashes := session.Flashes()
+	session.Save()
+
+	c.HTML(200, "layout.html", gin.H{
+		"Page":    "create_news",
+		"Flashes": flashes,
 	})
 }
 
 func (h *NewsHandler) CreateNewsHandler(c *gin.Context) {
 	if c.Request.Method != "POST" {
-		c.String(405, "CreateNewsHandler: Method not allowed")
+		middlewares.HandleError(c, 405, "Ошибка: метод не разрешен")
 		return
 	}
 
@@ -77,9 +89,13 @@ func (h *NewsHandler) CreateNewsHandler(c *gin.Context) {
 
 	err := h.newsService.CreateNews(c, title, annotation, text, date)
 	if err != nil {
-		c.String(400, err.Error())
+		middlewares.HandleError(c, 400, "Ошибка: не удалось создать новость")
 		return
 	}
+
+	session := sessions.Default(c)
+	session.AddFlash("Новость успешно создана!")
+	session.Save()
 
 	c.Redirect(303, "/")
 }
@@ -89,7 +105,7 @@ func (h *NewsHandler) NewsInfoHandler(c *gin.Context) {
 
 	if c.Request.Method != "GET" {
 		log.Printf("Method not allowed: %v", op)
-		c.String(405, "Method not allowed")
+		middlewares.HandleError(c, 405, "Ошибка: метод не разрешен")
 		return
 	}
 
@@ -97,20 +113,25 @@ func (h *NewsHandler) NewsInfoHandler(c *gin.Context) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		log.Printf("Failed to get ID for news: %v: %v", err, op)
-		c.String(400, "Invalid ID")
+		middlewares.HandleError(c, 400, "Ошибка: неверный ID")
 		return
 	}
 
 	news, err := h.newsService.GetNewsByID(id)
 	if err != nil {
 		log.Printf("Failed to get news: %v: %v", err, op)
-		c.String(500, "Failed to get news")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось получить новость")
 		return
 	}
 
+	session := sessions.Default(c)
+	flashes := session.Flashes()
+	session.Save()
+
 	c.HTML(200, "layout.html", map[string]interface{}{
-		"Page": "news_info",
-		"News": news,
+		"Page":    "news_info",
+		"News":    news,
+		"Flashes": flashes,
 	})
 }
 
@@ -119,7 +140,7 @@ func (h *NewsHandler) DeleteNewsHandler(c *gin.Context) {
 	const op = "handlers.DeleteNewsHandler.DeleteNewsHandler"
 
 	if c.Request.Method != "POST" {
-		c.String(405, "Method not allowed")
+		middlewares.HandleError(c, 405, "Ошибка: метод не разрешен")
 		log.Printf("Method not allowed: %v", op)
 		return
 	}
@@ -127,17 +148,21 @@ func (h *NewsHandler) DeleteNewsHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		c.String(400, "Invalid ID")
+		middlewares.HandleError(c, 400, "Ошибка: неверный ID")
 		log.Printf("Failed to get ID for news: %v: %v", err, op)
 		return
 	}
 
 	err = h.newsService.DeleteNews(c, id)
 	if err != nil {
-		c.String(500, "Failed to delete news")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось удалить новость")
 		log.Printf("Failed to delete news: %v: %v", err, op)
 		return
 	}
+
+	session := sessions.Default(c)
+	session.AddFlash("Новость успешно удалена!")
+	session.Save()
 
 	c.Redirect(303, "/news")
 }

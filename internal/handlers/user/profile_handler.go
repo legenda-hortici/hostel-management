@@ -3,9 +3,11 @@ package handlers
 import (
 	"hostel-management/internal/services"
 	"hostel-management/pkg/helpers"
+	"hostel-management/pkg/middlewares"
 	handlers "hostel-management/pkg/validation"
 	"log"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,26 +26,33 @@ func (h *ProfileHandler) Profile(c *gin.Context) {
 
 	role, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
-		c.String(403, err.Error())
+		log.Printf("Access denied: %v", err)
+		middlewares.HandleError(c, 403, "Ошибка: доступ запрещен")
 		return
 	}
 
 	email, err := handlers.ValidateUserByEmail(c, op)
 	if err != nil {
-		c.String(403, err.Error())
+		middlewares.HandleError(c, 403, "Ошибка: доступ запрещен")
+		log.Printf("Access denied: %v", err)
 		return
 	}
 
 	user, err := h.userService.GetUserByEmail(email)
 	if err != nil {
-		c.String(500, "failed to get user")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось получить пользователя")
 		log.Printf("Failed to get user: %v: %v", err, op)
 	}
 
+	session := sessions.Default(c)
+	flashes := session.Flashes()
+	session.Save()
+
 	c.HTML(200, "layout.html", gin.H{
-		"Page": "profile",
-		"Role": role,
-		"User": user,
+		"Page":    "profile",
+		"Role":    role,
+		"User":    user,
+		"Flashes": flashes,
 	})
 }
 
@@ -54,33 +63,32 @@ func (h *ProfileHandler) UpdateProfileHandler(c *gin.Context) {
 
 	email, err := handlers.ValidateUserByEmail(c, op)
 	if err != nil {
-		c.String(403, err.Error())
+		middlewares.HandleError(c, 403, "Ошибка: доступ запрещен")
+		log.Printf("Access denied: %v", err)
 		return
 	}
 
 	if c.Request.Method != "POST" {
 		log.Printf(" Method not allowed: %v", op)
-		c.String(405, "Method not allowed")
+		middlewares.HandleError(c, 405, "Ошибка: метод не разрешен")
 		return
 	}
 
 	name := c.PostForm("username")
 	surname := c.PostForm("surname")
 	password := c.PostForm("password")
-	// Загружаем аватар
+
 	avatarFile, _, err := c.Request.FormFile("avatar")
 	var avatarPath string
 	if err == nil && avatarFile != nil {
-		// Сохраняем файл в папку и получаем путь
-		avatarPath, err = helpers.SaveAvatar(avatarFile) // функция, которая сохраняет файл и возвращает путь
+		avatarPath, err = helpers.SaveAvatar(avatarFile)
 		if err != nil {
 			log.Printf("Failed to save avatar: %v", err)
-			c.String(500, "Failed to save avatar")
+			middlewares.HandleError(c, 500, "Ошибка: не удалось сохранить аватар")
 			return
 		}
 	}
 
-	// Если аватар не был загружен, оставляем путь старого аватара
 	if avatarPath == "" {
 		avatarPath = "Не указана"
 	}
@@ -88,9 +96,13 @@ func (h *ProfileHandler) UpdateProfileHandler(c *gin.Context) {
 	err = h.userService.UpdateUserByEmail(email, name, surname, password, avatarPath)
 	if err != nil {
 		log.Printf("Failed to update user: %v: %v", err, op)
-		c.String(500, "failed to update user")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось обновить данные пользователя")
 		return
 	}
+
+	session := sessions.Default(c)
+	session.AddFlash("Данные успешно обновлены")
+	session.Save()
 
 	c.Redirect(303, "/profile")
 }

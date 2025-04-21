@@ -1,11 +1,13 @@
 package handlers
 
 import (
-	"hostel-management/pkg/validation"
 	"hostel-management/internal/services"
+	"hostel-management/pkg/middlewares"
+	handlers "hostel-management/pkg/validation"
 	"log"
 	"strconv"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,20 +28,25 @@ func (h *FaqHandler) SupportHandler(c *gin.Context) {
 	role, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		log.Printf("Access denied: %v", err)
-		c.String(403, err.Error())
+		middlewares.HandleError(c, 403, "Ошибка: доступ запрещен")
 		return
 	}
 
 	faq, err := h.faqService.GetAllFaq()
 	if err != nil {
-		c.String(500, err.Error())
+		middlewares.HandleError(c, 500, "Ошибка: не удалось получить FAQ")
 		log.Printf("Failed to get faq: %v: %v", err, op)
 	}
 
+	session := sessions.Default(c)
+	flashes := session.Flashes()
+	session.Save()
+
 	c.HTML(200, "layout.html", gin.H{
-		"Page": "support",
-		"Role": role,
-		"FAQ":  faq,
+		"Page":    "support",
+		"Role":    role,
+		"FAQ":     faq,
+		"Flashes": flashes,
 	})
 }
 
@@ -50,7 +57,7 @@ func (h *FaqHandler) AddFaqHandler(c *gin.Context) {
 	_, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		log.Printf("Access denied: %v", err)
-		c.String(403, err.Error())
+		middlewares.HandleError(c, 403, "Ошибка: доступ запрещен")
 		return
 	}
 
@@ -60,9 +67,13 @@ func (h *FaqHandler) AddFaqHandler(c *gin.Context) {
 	err = h.faqService.CreateFaq(question, answer)
 	if err != nil {
 		log.Printf("Failed to create faq: %v: %v", err, op)
-		c.String(500, err.Error())
+		middlewares.HandleError(c, 500, "Ошибка: не удалось создать FAQ")
 		return
 	}
+
+	session := sessions.Default(c)
+	session.AddFlash("Успешно!")
+	session.Save()
 
 	c.Redirect(303, "/admin/support")
 }
@@ -72,7 +83,7 @@ func (h *FaqHandler) DeleteFaqHandler(c *gin.Context) {
 	const op = "handlers.SupportHandler.DeleteFaqHandler"
 
 	if c.Request.Method != "POST" {
-		c.String(405, "Method not allowed")
+		middlewares.HandleError(c, 405, "Ошибка: метод не разрешен")
 		log.Printf("Method not allowed: %v", op)
 		return
 	}
@@ -81,16 +92,20 @@ func (h *FaqHandler) DeleteFaqHandler(c *gin.Context) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		log.Printf("Failed to get ID for faq: %v: %v", err, op)
-		c.String(400, "Invalid ID")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось получить ID FAQ")
 		return
 	}
 
 	err = h.faqService.DeleteFaqItem(id)
 	if err != nil {
-		c.String(500, "Failed to delete faq")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось удалить FAQ")
 		log.Printf("Failed to delete faq: %v: %v", err, op)
 		return
 	}
+
+	session := sessions.Default(c)
+	session.AddFlash("Успешно!")
+	session.Save()
 
 	c.Redirect(303, "/admin/support")
 }
@@ -100,7 +115,7 @@ func (h *FaqHandler) UpdateFaqHandler(c *gin.Context) {
 	const op = "handlers.SupportHandler.UpdateFaqHandler"
 
 	if c.Request.Method != "POST" {
-		c.String(405, "Method not allowed")
+		middlewares.HandleError(c, 405, "Ошибка: метод не разрешен")
 		log.Printf("Method not allowed: %v", op)
 		return
 	}
@@ -108,7 +123,7 @@ func (h *FaqHandler) UpdateFaqHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		c.String(400, "Invalid ID")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось получить ID FAQ")
 		log.Printf("Failed to get ID for faq: %v: %v", err, op)
 		return
 	}
@@ -118,10 +133,14 @@ func (h *FaqHandler) UpdateFaqHandler(c *gin.Context) {
 
 	err = h.faqService.UpdateFaqItem(id, question, answer)
 	if err != nil {
-		c.String(500, "Failed to update faq")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось обновить FAQ")
 		log.Printf("Failed to update faq: %v: %v", err, op)
 		return
 	}
+
+	session := sessions.Default(c)
+	session.AddFlash("Успешно обновлено!")
+	session.Save()
 
 	c.Redirect(303, "/admin/support")
 }

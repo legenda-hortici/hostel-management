@@ -4,7 +4,7 @@
         <!-- Основной контент -->
         <main class="col-12">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">Главная страница</h1>
+                <h1 class="h2">Добрый день!</h1>
                 {{ if eq .Role "admin" }}
                 <div class="btn-group">
                     <button class="btn btn-secondary" type="button" id="toggleBannerSettings">
@@ -13,6 +13,7 @@
                 </div>
                 {{ end }}
             </div>
+            
 
             <!-- Карусель -->
             <div class="card shadow-sm mb-4">
@@ -165,7 +166,7 @@
 
 <style>
     .banner-image {
-        height: 300px;
+        height: 400px;
         object-fit: cover;
     }
 

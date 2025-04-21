@@ -4,7 +4,6 @@ import (
 	"errors"
 	"hostel-management/storage/models"
 	"hostel-management/storage/repositories"
-	"log"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -37,8 +36,6 @@ func (s *authService) Login(email, password string) (*models.User, error) {
 	if err != nil {
 		return nil, errors.New("неверный email или пароль")
 	}
-
-	log.Println(user)
 
 	// Проверяем пароль
 	// if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {

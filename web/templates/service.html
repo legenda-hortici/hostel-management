@@ -22,7 +22,7 @@
                 <div class="col-12">
                     <div class="card shadow-sm">
                         <div class="card-body">
-                            {{ if eq .Role "admin"}}
+                            {{ if eq .Role "admin" }}
                             <!-- Форма редактирования услуги (только для админа) -->
                             <form id="serviceForm" method="POST" action="/admin/services/service/{{ .Service.ID }}/edit">
                                 <input type="hidden" name="_method" value="PUT">
@@ -81,7 +81,7 @@
                                 </div>
                             </form>
 
-                            {{ else if eq .Role "user" }}
+                            {{ else if  or (eq .Role "headman") (eq .Role "user") }}
                             <!-- Отображение услуги для обычного пользователя -->
                             <div class="mb-4">
                                 <h5 class="card-title">Описание</h5>

@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"hostel-management/internal/services"
+	"hostel-management/pkg/middlewares"
 	handlers "hostel-management/pkg/validation"
 	"hostel-management/storage/models"
 	"log"
 	"strconv"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -36,21 +38,21 @@ func (h *ServiceHandler) ServicesHandler(c *gin.Context) {
 	role, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		log.Printf("Access denied: %v", err)
-		c.String(403, err.Error())
+		middlewares.HandleError(c, 403, "Ошибка: доступ запрещен")
 		return
 	}
 
 	email, err := handlers.ValidateUserByEmail(c, op)
 	if err != nil {
 		log.Printf("Access denied: %v", err)
-		c.String(403, err.Error())
+		middlewares.HandleError(c, 403, "Ошибка: доступ запрещен")
 		return
 	}
 
 	services, err := h.serviceService.GetAllServices()
 	if err != nil {
 		log.Printf("Error getting services: %v: %v", err, op)
-		c.String(500, "Error getting services: "+err.Error())
+		middlewares.HandleError(c, 500, "Ошибка: не удалось получить услуги")
 		return
 	}
 
@@ -59,14 +61,14 @@ func (h *ServiceHandler) ServicesHandler(c *gin.Context) {
 		statements, err = h.statementService.GetAllStatements()
 		if err != nil {
 			log.Printf("Error getting statements: %v: %v", err, op)
-			c.String(500, "Error getting statements: "+err.Error())
+			middlewares.HandleError(c, 500, "Ошибка: не удалось получить заявки")
 			return
 		}
 	} else if role == "headman" {
 		statements, err = h.statementService.GetAllStatementsByHeadman(email)
 		if err != nil {
 			log.Printf("Error getting statements: %v: %v", err, op)
-			c.String(500, "Error getting statements: "+err.Error())
+			middlewares.HandleError(c, 500, "Ошибка: не удалось получить заявки")
 			return
 		}
 	}
@@ -74,9 +76,13 @@ func (h *ServiceHandler) ServicesHandler(c *gin.Context) {
 	userStatements, err := h.statementService.GetAllUserStatements(email)
 	if err != nil {
 		log.Printf("Failed to get user statements: %v: %v", err, op)
-		c.String(500, "Failed to get user statements: "+err.Error())
+		middlewares.HandleError(c, 500, "Ошибка: не удалось получить заявки")
 		return
 	}
+
+	session := sessions.Default(c)
+	flashes := session.Flashes()
+	session.Save()
 
 	c.HTML(200, "layout.html", map[string]interface{}{
 		"Page":           "services",
@@ -84,6 +90,7 @@ func (h *ServiceHandler) ServicesHandler(c *gin.Context) {
 		"Services":       services,
 		"Statements":     statements,
 		"userStatements": userStatements,
+		"Flashes":        flashes,
 	})
 }
 
@@ -92,7 +99,7 @@ func (h *ServiceHandler) AddServiceHandler(c *gin.Context) {
 
 	if c.Request.Method != "POST" {
 		log.Printf("Method not allowed: %v", op)
-		c.String(405, "Method not allowed")
+		middlewares.HandleError(c, 405, "Ошибка: метод не разрешен")
 		return
 	}
 
@@ -107,9 +114,13 @@ func (h *ServiceHandler) AddServiceHandler(c *gin.Context) {
 	err := h.serviceService.CreateService(name, typeService, description, isDate, isHostel, isPhone, amount)
 	if err != nil {
 		log.Printf("Failed to create service: %v: %v", err, op)
-		c.String(500, "Failed to create service")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось создать услугу")
 		return
 	}
+
+	session := sessions.Default(c)
+	session.AddFlash("Услуга успешно создана!")
+	session.Save()
 
 	c.Redirect(303, "/admin/services")
 }
@@ -121,30 +132,33 @@ func (h *ServiceHandler) ServiceInfoHandler(c *gin.Context) {
 	role, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		log.Printf("Access denied: %v", err)
-		c.String(403, err.Error())
+		middlewares.HandleError(c, 403, "Ошибка: доступ запрещен")
 		return
 	}
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		log.Printf("Failed to get ID for service: %v: %v", err, op)
-		c.String(400, "Invalid ID")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось получить ID услуги")
 		return
 	}
 
 	service, err := h.serviceService.GetServiceByID(id)
 	if err != nil {
 		log.Printf("Failed to get service: %v: %v", err, op)
-		c.String(500, "Failed to get service")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось получить услугу")
 		return
 	}
 
-	// log.Println(service)
+	session := sessions.Default(c)
+	flashes := session.Flashes()
+	session.Save()
 
-	c.HTML(200, "layout.html", map[string]interface{}{
+	c.HTML(200, "layout.html", gin.H{
 		"Page":    "service_info",
 		"Role":    role,
 		"Service": service,
+		"Flashes": flashes,
 	})
 }
 
@@ -155,7 +169,7 @@ func (h *ServiceHandler) UpdateServiceHandler(c *gin.Context) {
 	// Проверяем скрытое поле _method
 	if c.Request.Method != "POST" || c.Request.FormValue("_method") != "PUT" {
 		log.Printf("Method not allowed: %v", op)
-		c.String(405, "Method not allowed")
+		middlewares.HandleError(c, 405, "Ошибка: метод не разрешен")
 		return
 	}
 
@@ -163,16 +177,20 @@ func (h *ServiceHandler) UpdateServiceHandler(c *gin.Context) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		log.Printf("Failed to get ID for service: %v: %v", err, op)
-		c.String(400, "Invalid ID")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось получить ID услуги")
 		return
 	}
 
 	err = h.serviceService.UpdateServiceByID(id, c)
 	if err != nil {
 		log.Printf("Failed to update service: %v: %v", err, op)
-		c.String(500, "Failed to update service")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось обновить услугу")
 		return
 	}
+
+	session := sessions.Default(c)
+	session.AddFlash("Услуга успешно обновлена!")
+	session.Save()
 
 	c.Redirect(303, "/admin/services/service/"+idStr)
 }
@@ -182,7 +200,7 @@ func (h *ServiceHandler) DeleteServiceHandler(c *gin.Context) {
 
 	if c.Request.Method != "POST" {
 		log.Printf("Method not allowed: %v", op)
-		c.String(405, "Method not allowed")
+		middlewares.HandleError(c, 405, "Ошибка: метод не разрешен")
 		return
 	}
 
@@ -190,16 +208,20 @@ func (h *ServiceHandler) DeleteServiceHandler(c *gin.Context) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		log.Printf("Failed to get ID for service: %v: %v", err, op)
-		c.String(400, "Invalid ID")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось получить ID услуги")
 		return
 	}
 
 	err = h.serviceService.DeleteService(id)
 	if err != nil {
 		log.Printf("Failed to delete service: %v: %v", err, op)
-		c.String(500, "Failed to delete service")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось удалить услугу")
 		return
 	}
+
+	session := sessions.Default(c)
+	session.AddFlash("Услуга удалена!")
+	session.Save()
 
 	c.Redirect(303, "/admin/services")
 }
@@ -209,30 +231,31 @@ func (h *ServiceHandler) RequestServiceHandler(c *gin.Context) {
 	const op = "handlers.ServiceHandler.RequestServiceHandler"
 
 	if c.Request.Method != "POST" {
-		c.String(405, "Method not allowed")
+		middlewares.HandleError(c, 405, "Ошибка: метод не разрешен")
 		return
 	}
 
 	email, err := handlers.ValidateUserByEmail(c, op)
 	if err != nil {
 		log.Printf("Access denied: %v", err)
-		c.String(403, err.Error())
+		middlewares.HandleError(c, 403, "Ошибка: доступ запрещен")
 		return
 	}
 
 	_, err = strconv.Atoi(c.Param("id"))
 	if err != nil {
 		log.Printf("Invalid service ID: %v: %v", err, op)
-		c.String(400, "Invalid service ID")
+		middlewares.HandleError(c, 400, "Ошибка: неверный ID услуги")
 		return
 	}
 
 	user, err := h.userService.GetUserByEmail(email)
 	if err != nil {
 		log.Printf("Failed to get user: %v: %v", err, op)
-		c.String(500, "Failed to get user")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось получить пользователя")
 		return
 	}
+
 	name := c.PostForm("name")
 	typeService := c.PostForm("type")
 	amount, _ := strconv.Atoi(c.PostForm("amount"))
@@ -243,9 +266,13 @@ func (h *ServiceHandler) RequestServiceHandler(c *gin.Context) {
 	err = h.statementService.CreateStatementRequest(user.ID, name, typeService, amount, request_date, phone, hostel)
 	if err != nil {
 		log.Printf("Failed to create service request: %v: %v", err, op)
-		c.String(500, "Failed to create service request")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось создать заявку на услугу")
 		return
 	}
+
+	session := sessions.Default(c)
+	session.AddFlash("Заявка отправлена!")
+	session.Save()
 
 	c.Redirect(303, "/services")
 }
@@ -257,7 +284,7 @@ func (h *ServiceHandler) RequestInfoHandler(c *gin.Context) {
 	role, err := handlers.ValidateUserByRole(c, op)
 	if err != nil {
 		log.Printf("Access denied: %v", err)
-		c.String(403, err.Error())
+		middlewares.HandleError(c, 403, "Ошибка: доступ запрещен")
 		return
 	}
 
@@ -265,29 +292,34 @@ func (h *ServiceHandler) RequestInfoHandler(c *gin.Context) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		log.Printf("Invalid ID: %v: %v", err, op)
-		c.String(400, "Invalid ID")
+		middlewares.HandleError(c, 400, "Ошибка: неверный ID")
 		return
 	}
 
 	request, err := h.statementService.GetStatementRequestByID(id)
 	if err != nil {
 		log.Printf("Failed to get service request: %v: %v", err, op)
-		c.String(500, "Failed to get service request")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось получить заявку на услугу")
 		return
 	}
 
 	user, err := h.userService.GetUserByID(request.Users_id)
 	if err != nil {
 		log.Printf("Failed to get user: %v: %v", err, op)
-		c.String(500, "Failed to get user")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось получить пользователя")
 		return
 	}
 
-	c.HTML(200, "layout.html", map[string]interface{}{
+	session := sessions.Default(c)
+	flashes := session.Flashes()
+	session.Save()
+
+	c.HTML(200, "layout.html", gin.H{
 		"Page":      "request_info",
 		"Role":      role,
 		"Statement": request,
 		"User":      user,
+		"Flashes":   flashes,
 	})
 }
 
@@ -297,7 +329,7 @@ func (h *ServiceHandler) AcceptRequestHandler(c *gin.Context) {
 
 	if c.Request.Method != "POST" {
 		log.Printf("Method not allowed: %v", op)
-		c.String(405, "Method not allowed")
+		middlewares.HandleError(c, 405, "Ошибка: метод не разрешен")
 		return
 	}
 
@@ -305,16 +337,20 @@ func (h *ServiceHandler) AcceptRequestHandler(c *gin.Context) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		log.Printf("Invalid ID: %v: %v", err, op)
-		c.String(400, "Invalid ID")
+		middlewares.HandleError(c, 400, "Ошибка: неверный ID")
 		return
 	}
 
 	err = h.statementService.UpdateStatementRequestStatus(id, "Одобрена")
 	if err != nil {
 		log.Printf("Failed to accept request: %v: %v", err, op)
-		c.String(500, "Failed to accept request")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось одобрить заявку")
 		return
 	}
+
+	session := sessions.Default(c)
+	session.AddFlash("Успешно!")
+	session.Save()
 
 	c.Redirect(303, "/admin/services/request_info/"+idStr)
 }
@@ -325,7 +361,7 @@ func (h *ServiceHandler) RejectRequestHandler(c *gin.Context) {
 
 	if c.Request.Method != "POST" {
 		log.Printf("Method not allowed: %v", op)
-		c.String(405, "Method not allowed")
+		middlewares.HandleError(c, 405, "Ошибка: метод не разрешен")
 		return
 	}
 
@@ -333,16 +369,20 @@ func (h *ServiceHandler) RejectRequestHandler(c *gin.Context) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		log.Printf("Invalid ID: %v: %v", err, op)
-		c.String(400, "Invalid ID")
+		middlewares.HandleError(c, 400, "Ошибка: неверный ID")
 		return
 	}
 
 	err = h.statementService.UpdateStatementRequestStatus(id, "Отклонена")
 	if err != nil {
 		log.Printf("Failed to reject request: %v: %v", err, op)
-		c.String(500, "Failed to reject request")
+		middlewares.HandleError(c, 500, "Ошибка: не удалось отклонить заявку")
 		return
 	}
+
+	session := sessions.Default(c)
+	session.AddFlash("Успешно!")
+	session.Save()
 
 	c.Redirect(303, "/admin/services/request_info/"+idStr)
 }
