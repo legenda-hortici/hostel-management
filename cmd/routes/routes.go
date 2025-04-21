@@ -35,7 +35,6 @@ func RegisterRoutes(r *gin.Engine, redisCache *redis.RedisCache) error {
 	RegisterHeadmanRoutes(headman, deps)
 
 	// TODO: Сделать добавление админов и комендантов нормальным
-
 	// Админы
 	admin := r.Group("/admin")
 	admin.Use(auth.AdminMiddleware())
