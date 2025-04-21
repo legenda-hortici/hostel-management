@@ -15,8 +15,8 @@ type NoticesHandler struct {
 	noticeService services.NoticeService
 }
 
-func NewNoticeHandler(noticeService services.NoticeService) NoticesHandler {
-	return NoticesHandler{
+func NewNoticeHandler(noticeService services.NoticeService) *NoticesHandler {
+	return &NoticesHandler{
 		noticeService: noticeService,
 	}
 }

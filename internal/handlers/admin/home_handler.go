@@ -20,8 +20,8 @@ type HomeHandler struct {
 	noticesService services.NoticeService
 }
 
-func NewHomeHandler(newsService services.NewsService, noticesService services.NoticeService) HomeHandler {
-	return HomeHandler{
+func NewHomeHandler(newsService services.NewsService, noticesService services.NoticeService) *HomeHandler {
+	return &HomeHandler{
 		newsService:    newsService,
 		noticesService: noticesService,
 	}

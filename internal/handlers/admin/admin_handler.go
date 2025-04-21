@@ -200,7 +200,7 @@ func (h *AdminHandler) RemoveCommandantHandler(c *gin.Context) {
 	c.Redirect(303, "/admin/hostel/"+fmt.Sprint(hostelID))
 }
 
-func CreateContractHandler(c *gin.Context) {
+func (h *AdminHandler) CreateContractHandler(c *gin.Context) {
 
 	const op = "handlers.admin.CreateContractHandler"
 
