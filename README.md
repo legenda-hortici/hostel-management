@@ -40,3 +40,7 @@ hostel-management
     ├── static/          # Статические файлы
     └── templates/       # HTML шаблоны
 ```
+
+## Профилирование
+brew install graphviz (MacOS)
+go tool pprof -http=:8080 my_binary cpu.prof
