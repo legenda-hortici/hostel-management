@@ -10,7 +10,10 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"runtime/pprof"
 	"syscall"
+
+	_ "net/http/pprof"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
@@ -21,6 +24,17 @@ func RunApp() {
 	// Создаем контекст с отменой
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	f, err := os.Create("cpu.prof")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	if err := pprof.StartCPUProfile(f); err != nil {
+		panic(err)
+	}
+	defer pprof.StopCPUProfile()
 
 	// Настраиваем обработку сигналов для graceful shutdown
 	sigChan := make(chan os.Signal, 1)
